@@ -1,0 +1,25 @@
+run:
+
+linters-settings:
+  lll:
+    line-length: 120
+
+issues:
+  exclude-rules:
+    linters:
+      - lll
+    source: "^//go:generate "
+
+linters:
+  disable-all: true
+  enable:
+    - goimports
+    - golint
+    - govet
+    - misspell
+    - errcheck
+    - staticcheck
+    - prealloc
+    - ineffassign
+    - interfacer
+    - lll

@@ -1,0 +1,12 @@
+FROM golang:1.15.8
+
+WORKDIR /app
+
+# COPY ./backend/go.mod .
+# COPY ./backend/go.sum .
+RUN apt-get update && apt-get -y install default-mysql-client
+# RUN go mod download
+
+RUN GO111MODULE=off go get -u github.com/oxequa/realize
+
+ENTRYPOINT ["sh", "./scripts/entrypoint.sh"]

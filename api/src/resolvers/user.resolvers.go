@@ -16,7 +16,7 @@ func (r *mutationResolver) AddUser(ctx context.Context) (*model.User, error) {
 
 func (r *queryResolver) GetUser(ctx context.Context) (*model.User, error) {
 	return &model.User{
-		ID: "112233",
+		ID:   "112233",
 		Name: "sam",
 	}, nil
 }

@@ -1,0 +1,43 @@
+version: "3.7"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile.dev
+    volumes:
+      - ./api:/app
+    environment:
+      - PORT=8080
+      - GO_ENV=development
+      - DB_USER=root
+      - DB_NAME=poi_dev
+      - DB_PASSWORD=password
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - TEST_DB_NAME=poi_test
+      - REDIS_URL=redis:6379
+      - REDIS_PASSWORD=
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+  mysql:
+    # restart: always
+    build:
+      context: ./db/mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_db:/var/lib/mysql:delegated
+    environment:
+      - MYSQL_DATABASE=poi_dev
+      - MYSQL_ROOT_PASSWORD=password
+
+volumes:
+  mysql_db:
+    driver: local

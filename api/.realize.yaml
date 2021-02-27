@@ -1,0 +1,25 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+schema:
+- name: minarai-operator-service
+  path: .
+  commands:
+    install:
+      status: true
+      method: go build -o tmp/server
+    run:
+      status: true
+      method: ./tmp/server
+  watcher:
+    extensions:
+    - go
+    paths:
+    - /
+    ignored_paths:
+    - .git
+    - .realize
+    - vendor
+    - test
+    - design
