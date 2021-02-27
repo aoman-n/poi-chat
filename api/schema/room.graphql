@@ -1,0 +1,16 @@
+input CreateRoomInput {
+  name: String!
+}
+
+extend type Query {
+  rooms: [RoomSummry!]!
+  room(id: ID!): [RoomDetail!]!
+}
+
+extend type Mutation {
+  createRoom(input: CreateRoomInput): RoomDetail!
+}
+
+extend type Subscription {
+  subMessage(roomId: ID!): Message!
+}

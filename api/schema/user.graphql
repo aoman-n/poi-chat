@@ -1,7 +1,0 @@
-extend type Query {
-  getUser: User!
-}
-
-extend type Mutation {
-  addUser: User!
-}
