@@ -1,4 +1,4 @@
-.PHONY: gen gqlgen fmt
+.PHONY: gen gqlgen fmt lint
 
 gen:
 	- go generate ./...
@@ -8,3 +8,6 @@ gqlgen:
 
 fmt:
 	- gofmt -w ./src/**/*.go
+
+lint:
+	golangci-lint run --tests
