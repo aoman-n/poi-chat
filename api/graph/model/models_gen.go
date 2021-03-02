@@ -23,7 +23,7 @@ type RoomDetail struct {
 	Messages []*Message `json:"messages"`
 }
 
-type RoomSummry struct {
+type RoomSummary struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }

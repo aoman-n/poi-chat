@@ -3,7 +3,7 @@ input CreateRoomInput {
 }
 
 extend type Query {
-  rooms: [RoomSummry!]!
+  rooms: [RoomSummary!]!
   room(id: ID!): [RoomDetail!]!
 }
 

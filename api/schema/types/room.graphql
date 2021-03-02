@@ -1,4 +1,4 @@
-type RoomSummry {
+type RoomSummary {
   id: ID!
   name: String!
 }

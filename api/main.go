@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/config"
-	"github.com/laster18/poi/api/src/resolvers"
+	"github.com/laster18/poi/api/src/resolver"
 	"github.com/rs/cors"
 )
 
@@ -33,7 +33,7 @@ func main() {
 
 	r := chi.NewRouter()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers.Resolver{}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
 
 	r.Use(cors.Default().Handler)
 	r.Handle("/", playground.Handler("GraphQL playground", "/query"))

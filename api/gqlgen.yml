@@ -11,9 +11,9 @@ model:
 
 resolver:
   layout: follow-schema
-  dir: src/resolvers
-  package: resolvers
-  filename_template: "{name}.resolvers.go"
+  dir: src/resolver
+  package: resolver
+  filename_template: "{name}.resolver.go"
 
 autobind:
   - "github.com/laster18/poi/api/graph/model"
@@ -24,3 +24,19 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  RoomSummary:
+    fields:
+      id:
+        resolver: true
+  Message:
+    fields:
+      id:
+        resolver: true
+  RoomDetail:
+    fields:
+      id:
+        resolver: true
+  User:
+    fields:
+      id:
+        resolver: true
