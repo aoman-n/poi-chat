@@ -7,21 +7,34 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type Environments struct {
-	Port             string `default:"8080"`
-	GoEnv            string `split_words:"true"`
-	DbUser           string `split_words:"true"`
-	DbName           string `split_words:"true"`
-	DbPassword       string `split_words:"true"`
-	DbHost           string `split_words:"true"`
-	DbPort           string `split_words:"true"`
-	RedisURL         string `split_words:"true"`
-	RedisPassowrd    string `split_words:"true"`
-	TwitterAPIKey    string `split_words:"true"`
-	TwitterSecretKey string `split_words:"true"`
+type Twitter struct {
+	CallbackURI string `split_words:"true"`
+	APIKey      string `split_words:"true"`
+	SecretKey   string `split_words:"true"`
 }
 
-var Env Environments
+type DB struct {
+	User     string `split_words:"true"`
+	Name     string `split_words:"true"`
+	Password string `split_words:"true"`
+	Host     string `split_words:"true"`
+	Port     string `split_words:"true"`
+}
+
+type Redis struct {
+	URL      string `split_words:"true"`
+	Passowrd string `split_words:"true"`
+}
+
+type Config struct {
+	Port    string `default:"8080"`
+	GoEnv   string `split_words:"true"`
+	Db      DB
+	Redis   Redis
+	Twitter Twitter
+}
+
+var Conf Config
 
 func init() {
 	err := godotenv.Load()
@@ -29,7 +42,7 @@ func init() {
 		log.Fatal("failed to load .env file, err:", err)
 	}
 
-	err = envconfig.Process("", &Env)
+	err = envconfig.Process("", &Conf)
 	if err != nil {
 		log.Fatal("failed to read env variables,  err:", err)
 	}
