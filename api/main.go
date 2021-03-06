@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/delivery/rest"
 	"github.com/laster18/poi/api/src/resolver"
 	"github.com/rs/cors"
 )
@@ -24,7 +25,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("conf: %+v \n\n", config.Env)
+	fmt.Printf("conf: %+v \n\n", config.Conf)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -38,6 +39,7 @@ func main() {
 	r.Use(cors.Default().Handler)
 	r.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	r.Handle("/query", srv)
+	rest.NewRoutes(r)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))

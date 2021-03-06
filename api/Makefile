@@ -7,7 +7,7 @@ gqlgen:
 	- gqlgen generate
 
 fmt:
-	- gofmt -w ./src/**/*.go
+	- gofmt -w ./src/**/*
 
 lint:
 	golangci-lint run --tests
