@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/url"
-	"os"
 
 	"github.com/garyburd/go-oauth/oauth"
 	"github.com/laster18/poi/api/src/config"
@@ -67,9 +66,10 @@ func GetMe(at *oauth.Credentials, user *Account) error {
 		return errors.New("Twitter request is invalid")
 	}
 
-	// debug print
 	var r io.Reader = resp.Body
-	r = io.TeeReader(r, os.Stdout)
+
+	// debug print
+	// r = io.TeeReader(r, os.Stdout)
 
 	err = json.NewDecoder(r).Decode(user)
 	if err != nil {

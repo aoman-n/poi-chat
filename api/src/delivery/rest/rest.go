@@ -4,51 +4,38 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/garyburd/go-oauth/oauth"
 	"github.com/go-chi/chi"
-	"github.com/gorilla/sessions"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/delivery"
 	"github.com/laster18/poi/api/src/lib/twitter"
 )
 
-var sessionKey string
-
-func init() {
-	sessionKey = config.Conf.SessionKey
-}
-
-var store = sessions.NewCookieStore([]byte(sessionKey))
-var authSessionName = "as"
-
 func authHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("start authHandler")
-	config := twitter.GetConnect()
+	twitterClient := twitter.GetConnect()
 
-	rt, err := config.RequestTemporaryCredentials(nil, "http://localhost:8080/twitter/callback", nil)
+	rt, err := twitterClient.RequestTemporaryCredentials(nil, config.Conf.Twitter.CallbackURI, nil)
 	if err != nil {
+		log.Print("failed to request credentials err:", err)
 		panic(err)
 	}
 
-	fmt.Printf("rt: %+v\n", rt)
-
-	session, err := store.Get(r, authSessionName)
+	session, err := delivery.GetAuthSession(r)
 	if err != nil {
+		log.Print("failed to get auth session err:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	session.Values["request_token"] = rt.Token
-	session.Values["request_token_secret"] = rt.Secret
-
-	err = session.Save(r, w)
-	if err != nil {
+	session.SetCredentials(rt.Token, rt.Secret)
+	if err := session.Save(r, w); err != nil {
+		log.Print("failed to set credentials to session err:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	url := config.AuthorizationURL(rt, nil)
+	url := twitterClient.AuthorizationURL(rt, nil)
 	w.Header().Set("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
@@ -58,28 +45,21 @@ var notExistErrFormat = "%s doese not exist in the session"
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("start callbackHandler")
 
-	session, err := store.Get(r, authSessionName)
+	session, err := delivery.GetAuthSession(r)
 	if err != nil {
-		log.Printf("failed to get session, the cause was %v", err)
+		log.Printf("failed to get auth session, the cause was %v", err)
 		handleSessionError(w, err)
 		return
 	}
 
-	requestToken, ok := session.Values["request_token"].(string)
-	if !ok {
-		log.Printf(notExistErrFormat, "request_token")
+	token, secret, err := session.GetCredentials()
+	if err != nil {
+		log.Print(err)
 		handleNotMatchToken(w)
 		return
 	}
 
-	requestTokenSecret, ok := session.Values["request_token_secret"].(string)
-	if !ok {
-		log.Printf(notExistErrFormat, "request_token_secret")
-		handleNotMatchToken(w)
-		return
-	}
-
-	if requestToken != r.URL.Query().Get("oauth_token") {
+	if token != r.URL.Query().Get("oauth_token") {
 		log.Println("request oauth_token not equal request_token_secret in session", "request_token_secret")
 		handleNotMatchToken(w)
 		return
@@ -87,8 +67,8 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	at, err := twitter.GetAccessToken(
 		&oauth.Credentials{
-			Token:  requestToken,
-			Secret: requestTokenSecret,
+			Token:  token,
+			Secret: secret,
 		},
 		r.URL.Query().Get("oauth_verifier"),
 	)
@@ -101,9 +81,23 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Println(strings.Repeat("#", 20))
-	fmt.Printf("\n\naccount: %#v\n\n", account)
-	fmt.Println(strings.Repeat("#", 20))
+	userSession, err := delivery.GetUserSession(r)
+	if err != nil {
+		log.Printf("failed to get user session, the cause was %v", err)
+		handleSessionError(w, err)
+		return
+	}
+
+	userSession.SetUser(&delivery.User{
+		ID:        account.ID,
+		Name:      account.Name,
+		AvatarURL: account.ProfileImageURL,
+	})
+	if err := userSession.Save(r, w); err != nil {
+		log.Print("failed to set user to session err:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "Success!!")
