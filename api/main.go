@@ -12,11 +12,11 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/delivery/rest"
+	"github.com/laster18/poi/api/src/infrastructure"
+	"github.com/laster18/poi/api/src/repository"
 	"github.com/laster18/poi/api/src/resolver"
 	"github.com/rs/cors"
 )
-
-const defaultPort = "8080"
 
 func main() {
 	defer func() {
@@ -29,8 +29,11 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = config.Conf.Port
 	}
+
+	db := infrastructure.NewDb()
+	_ = repository.NewRoomRepository(db)
 
 	r := chi.NewRouter()
 
