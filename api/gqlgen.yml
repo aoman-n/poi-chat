@@ -11,8 +11,8 @@ model:
 
 resolver:
   layout: follow-schema
-  dir: src/resolver
-  package: resolver
+  dir: src/delivery/graphql
+  package: graphql
   filename_template: "{name}.resolver.go"
 
 autobind:
@@ -24,15 +24,13 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  RoomSummary:
+  Room:
     fields:
       id:
+        resolver: true
+      messages:
         resolver: true
   Message:
-    fields:
-      id:
-        resolver: true
-  RoomDetail:
     fields:
       id:
         resolver: true

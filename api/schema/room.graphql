@@ -3,12 +3,12 @@ input CreateRoomInput {
 }
 
 extend type Query {
-  rooms: [RoomSummary!]!
-  room(id: ID!): [RoomDetail!]!
+  rooms: [Room!]!
+  room(id: ID!): Room!
 }
 
 extend type Mutation {
-  createRoom(input: CreateRoomInput): RoomDetail!
+  createRoom(input: CreateRoomInput): Room!
 }
 
 extend type Subscription {

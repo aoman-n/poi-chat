@@ -11,21 +11,17 @@ type CreateRoomInput struct {
 }
 
 type Message struct {
-	ID        string    `json:"id"`
-	User      *User     `json:"user"`
-	Message   string    `json:"message"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID            string    `json:"id"`
+	UserName      string    `json:"userName"`
+	UserAvatarURL string    `json:"userAvatarUrl"`
+	Text          string    `json:"text"`
+	CreatedAt     time.Time `json:"createdAt"`
 }
 
-type RoomDetail struct {
+type Room struct {
 	ID       string     `json:"id"`
 	Name     string     `json:"name"`
 	Messages []*Message `json:"messages"`
-}
-
-type RoomSummary struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 type User struct {

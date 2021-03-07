@@ -1,0 +1,11 @@
+type Message {
+  id: ID!
+  userName: String!
+  userAvatarUrl: String!
+  text: String!
+  createdAt: Time!
+}
+
+extend type Room {
+  messages(first: Int): [Message!]!
+}

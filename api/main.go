@@ -11,10 +11,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/delivery/graphql"
 	"github.com/laster18/poi/api/src/delivery/rest"
 	"github.com/laster18/poi/api/src/infrastructure"
 	"github.com/laster18/poi/api/src/repository"
-	"github.com/laster18/poi/api/src/resolver"
 	"github.com/rs/cors"
 )
 
@@ -37,12 +37,16 @@ func main() {
 
 	r := chi.NewRouter()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))
 
 	r.Use(cors.Default().Handler)
+
+	// rest
+	rest.NewRoutes(r)
+
+	// graphql
 	r.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	r.Handle("/query", srv)
-	rest.NewRoutes(r)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))

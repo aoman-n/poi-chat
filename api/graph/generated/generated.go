@@ -40,8 +40,7 @@ type ResolverRoot interface {
 	Message() MessageResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
-	RoomDetail() RoomDetailResolver
-	RoomSummary() RoomSummaryResolver
+	Room() RoomResolver
 	Subscription() SubscriptionResolver
 	User() UserResolver
 }
@@ -51,10 +50,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Message struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Message   func(childComplexity int) int
-		User      func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Text          func(childComplexity int) int
+		UserAvatarURL func(childComplexity int) int
+		UserName      func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -66,15 +66,10 @@ type ComplexityRoot struct {
 		Rooms func(childComplexity int) int
 	}
 
-	RoomDetail struct {
+	Room struct {
 		ID       func(childComplexity int) int
-		Messages func(childComplexity int) int
+		Messages func(childComplexity int, first *int) int
 		Name     func(childComplexity int) int
-	}
-
-	RoomSummary struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
 	}
 
 	Subscription struct {
@@ -91,17 +86,16 @@ type MessageResolver interface {
 	ID(ctx context.Context, obj *model.Message) (string, error)
 }
 type MutationResolver interface {
-	CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.RoomDetail, error)
+	CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.Room, error)
 }
 type QueryResolver interface {
-	Rooms(ctx context.Context) ([]*model.RoomSummary, error)
-	Room(ctx context.Context, id string) ([]*model.RoomDetail, error)
+	Rooms(ctx context.Context) ([]*model.Room, error)
+	Room(ctx context.Context, id string) (*model.Room, error)
 }
-type RoomDetailResolver interface {
-	ID(ctx context.Context, obj *model.RoomDetail) (string, error)
-}
-type RoomSummaryResolver interface {
-	ID(ctx context.Context, obj *model.RoomSummary) (string, error)
+type RoomResolver interface {
+	ID(ctx context.Context, obj *model.Room) (string, error)
+
+	Messages(ctx context.Context, obj *model.Room, first *int) ([]*model.Message, error)
 }
 type SubscriptionResolver interface {
 	SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error)
@@ -139,19 +133,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Message.ID(childComplexity), true
 
-	case "Message.message":
-		if e.complexity.Message.Message == nil {
+	case "Message.text":
+		if e.complexity.Message.Text == nil {
 			break
 		}
 
-		return e.complexity.Message.Message(childComplexity), true
+		return e.complexity.Message.Text(childComplexity), true
 
-	case "Message.user":
-		if e.complexity.Message.User == nil {
+	case "Message.userAvatarUrl":
+		if e.complexity.Message.UserAvatarURL == nil {
 			break
 		}
 
-		return e.complexity.Message.User(childComplexity), true
+		return e.complexity.Message.UserAvatarURL(childComplexity), true
+
+	case "Message.userName":
+		if e.complexity.Message.UserName == nil {
+			break
+		}
+
+		return e.complexity.Message.UserName(childComplexity), true
 
 	case "Mutation.createRoom":
 		if e.complexity.Mutation.CreateRoom == nil {
@@ -184,40 +185,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Rooms(childComplexity), true
 
-	case "RoomDetail.id":
-		if e.complexity.RoomDetail.ID == nil {
+	case "Room.id":
+		if e.complexity.Room.ID == nil {
 			break
 		}
 
-		return e.complexity.RoomDetail.ID(childComplexity), true
+		return e.complexity.Room.ID(childComplexity), true
 
-	case "RoomDetail.messages":
-		if e.complexity.RoomDetail.Messages == nil {
+	case "Room.messages":
+		if e.complexity.Room.Messages == nil {
 			break
 		}
 
-		return e.complexity.RoomDetail.Messages(childComplexity), true
+		args, err := ec.field_Room_messages_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
 
-	case "RoomDetail.name":
-		if e.complexity.RoomDetail.Name == nil {
+		return e.complexity.Room.Messages(childComplexity, args["first"].(*int)), true
+
+	case "Room.name":
+		if e.complexity.Room.Name == nil {
 			break
 		}
 
-		return e.complexity.RoomDetail.Name(childComplexity), true
-
-	case "RoomSummary.id":
-		if e.complexity.RoomSummary.ID == nil {
-			break
-		}
-
-		return e.complexity.RoomSummary.ID(childComplexity), true
-
-	case "RoomSummary.name":
-		if e.complexity.RoomSummary.Name == nil {
-			break
-		}
-
-		return e.complexity.RoomSummary.Name(childComplexity), true
+		return e.complexity.Room.Name(childComplexity), true
 
 	case "Subscription.subMessage":
 		if e.complexity.Subscription.SubMessage == nil {
@@ -326,17 +318,28 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "schema/message.graphql", Input: `type Message {
+  id: ID!
+  userName: String!
+  userAvatarUrl: String!
+  text: String!
+  createdAt: Time!
+}
+
+extend type Room {
+  messages(first: Int): [Message!]!
+}`, BuiltIn: false},
 	{Name: "schema/room.graphql", Input: `input CreateRoomInput {
   name: String!
 }
 
 extend type Query {
-  rooms: [RoomSummary!]!
-  room(id: ID!): [RoomDetail!]!
+  rooms: [Room!]!
+  room(id: ID!): Room!
 }
 
 extend type Mutation {
-  createRoom(input: CreateRoomInput): RoomDetail!
+  createRoom(input: CreateRoomInput): Room!
 }
 
 extend type Subscription {
@@ -352,22 +355,10 @@ type Query
 type Mutation
 type Subscription
 `, BuiltIn: false},
-	{Name: "schema/types/room.graphql", Input: `type RoomSummary {
+	{Name: "schema/types/page.graphql", Input: ``, BuiltIn: false},
+	{Name: "schema/types/room.graphql", Input: `type Room {
   id: ID!
   name: String!
-}
-
-type Message {
-  id: ID!
-  user: User!
-  message: String!
-  createdAt: Time!
-}
-
-type RoomDetail {
-  id: ID!
-  name: String!
-  messages: [Message!]!
 }
 `, BuiltIn: false},
 	{Name: "schema/types/scalar.graphql", Input: `scalar Time
@@ -426,6 +417,21 @@ func (ec *executionContext) field_Query_room_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Room_messages_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg0
 	return args, nil
 }
 
@@ -517,7 +523,7 @@ func (ec *executionContext) _Message_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Message_user(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_userName(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -535,7 +541,7 @@ func (ec *executionContext) _Message_user(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
+		return obj.UserName, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -547,12 +553,12 @@ func (ec *executionContext) _Message_user(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Message_message(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_userAvatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -570,7 +576,42 @@ func (ec *executionContext) _Message_message(ctx context.Context, field graphql.
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Message, nil
+		return obj.UserAvatarURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Message_text(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Message",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Text, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -659,9 +700,9 @@ func (ec *executionContext) _Mutation_createRoom(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.RoomDetail)
+	res := resTmp.(*model.Room)
 	fc.Result = res
-	return ec.marshalNRoomDetail2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetail(ctx, field.Selections, res)
+	return ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_rooms(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -694,9 +735,9 @@ func (ec *executionContext) _Query_rooms(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RoomSummary)
+	res := resTmp.([]*model.Room)
 	fc.Result = res
-	return ec.marshalNRoomSummary2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomSummaryᚄ(ctx, field.Selections, res)
+	return ec.marshalNRoom2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_room(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -736,9 +777,9 @@ func (ec *executionContext) _Query_room(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RoomDetail)
+	res := resTmp.(*model.Room)
 	fc.Result = res
-	return ec.marshalNRoomDetail2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetailᚄ(ctx, field.Selections, res)
+	return ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -812,7 +853,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RoomDetail_id(ctx context.Context, field graphql.CollectedField, obj *model.RoomDetail) (ret graphql.Marshaler) {
+func (ec *executionContext) _Room_id(ctx context.Context, field graphql.CollectedField, obj *model.Room) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -820,7 +861,7 @@ func (ec *executionContext) _RoomDetail_id(ctx context.Context, field graphql.Co
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "RoomDetail",
+		Object:     "Room",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   true,
@@ -830,7 +871,7 @@ func (ec *executionContext) _RoomDetail_id(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.RoomDetail().ID(rctx, obj)
+		return ec.resolvers.Room().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -847,7 +888,7 @@ func (ec *executionContext) _RoomDetail_id(ctx context.Context, field graphql.Co
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RoomDetail_name(ctx context.Context, field graphql.CollectedField, obj *model.RoomDetail) (ret graphql.Marshaler) {
+func (ec *executionContext) _Room_name(ctx context.Context, field graphql.CollectedField, obj *model.Room) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -855,7 +896,7 @@ func (ec *executionContext) _RoomDetail_name(ctx context.Context, field graphql.
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "RoomDetail",
+		Object:     "Room",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -882,7 +923,7 @@ func (ec *executionContext) _RoomDetail_name(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RoomDetail_messages(ctx context.Context, field graphql.CollectedField, obj *model.RoomDetail) (ret graphql.Marshaler) {
+func (ec *executionContext) _Room_messages(ctx context.Context, field graphql.CollectedField, obj *model.Room) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -890,17 +931,24 @@ func (ec *executionContext) _RoomDetail_messages(ctx context.Context, field grap
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "RoomDetail",
+		Object:     "Room",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Room_messages_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Messages, nil
+		return ec.resolvers.Room().Messages(rctx, obj, args["first"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -915,76 +963,6 @@ func (ec *executionContext) _RoomDetail_messages(ctx context.Context, field grap
 	res := resTmp.([]*model.Message)
 	fc.Result = res
 	return ec.marshalNMessage2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMessageᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomSummary_id(ctx context.Context, field graphql.CollectedField, obj *model.RoomSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.RoomSummary().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomSummary_name(ctx context.Context, field graphql.CollectedField, obj *model.RoomSummary) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomSummary",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Subscription_subMessage(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
@@ -2249,13 +2227,18 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
-		case "user":
-			out.Values[i] = ec._Message_user(ctx, field, obj)
+		case "userName":
+			out.Values[i] = ec._Message_userName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "message":
-			out.Values[i] = ec._Message_message(ctx, field, obj)
+		case "userAvatarUrl":
+			out.Values[i] = ec._Message_userAvatarUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "text":
+			out.Values[i] = ec._Message_text(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -2364,17 +2347,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var roomDetailImplementors = []string{"RoomDetail"}
+var roomImplementors = []string{"Room"}
 
-func (ec *executionContext) _RoomDetail(ctx context.Context, sel ast.SelectionSet, obj *model.RoomDetail) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, roomDetailImplementors)
+func (ec *executionContext) _Room(ctx context.Context, sel ast.SelectionSet, obj *model.Room) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, roomImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("RoomDetail")
+			out.Values[i] = graphql.MarshalString("Room")
 		case "id":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -2383,45 +2366,18 @@ func (ec *executionContext) _RoomDetail(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._RoomDetail_id(ctx, field, obj)
+				res = ec._Room_id(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
 				return res
 			})
 		case "name":
-			out.Values[i] = ec._RoomDetail_name(ctx, field, obj)
+			out.Values[i] = ec._Room_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "messages":
-			out.Values[i] = ec._RoomDetail_messages(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var roomSummaryImplementors = []string{"RoomSummary"}
-
-func (ec *executionContext) _RoomSummary(ctx context.Context, sel ast.SelectionSet, obj *model.RoomSummary) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, roomSummaryImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RoomSummary")
-		case "id":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2429,17 +2385,12 @@ func (ec *executionContext) _RoomSummary(ctx context.Context, sel ast.SelectionS
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._RoomSummary_id(ctx, field, obj)
+				res = ec._Room_messages(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
 				return res
 			})
-		case "name":
-			out.Values[i] = ec._RoomSummary_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2838,11 +2789,11 @@ func (ec *executionContext) marshalNMessage2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋa
 	return ec._Message(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRoomDetail2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetail(ctx context.Context, sel ast.SelectionSet, v model.RoomDetail) graphql.Marshaler {
-	return ec._RoomDetail(ctx, sel, &v)
+func (ec *executionContext) marshalNRoom2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx context.Context, sel ast.SelectionSet, v model.Room) graphql.Marshaler {
+	return ec._Room(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRoomDetail2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomDetail) graphql.Marshaler {
+func (ec *executionContext) marshalNRoom2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Room) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2866,7 +2817,7 @@ func (ec *executionContext) marshalNRoomDetail2ᚕᚖgithubᚗcomᚋlaster18ᚋp
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRoomDetail2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetail(ctx, sel, v[i])
+			ret[i] = ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2879,61 +2830,14 @@ func (ec *executionContext) marshalNRoomDetail2ᚕᚖgithubᚗcomᚋlaster18ᚋp
 	return ret
 }
 
-func (ec *executionContext) marshalNRoomDetail2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomDetail(ctx context.Context, sel ast.SelectionSet, v *model.RoomDetail) graphql.Marshaler {
+func (ec *executionContext) marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx context.Context, sel ast.SelectionSet, v *model.Room) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._RoomDetail(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNRoomSummary2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomSummaryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomSummary) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNRoomSummary2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomSummary(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNRoomSummary2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomSummary(ctx context.Context, sel ast.SelectionSet, v *model.RoomSummary) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._RoomSummary(ctx, sel, v)
+	return ec._Room(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -2964,16 +2868,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3235,6 +3129,21 @@ func (ec *executionContext) unmarshalOCreateRoomInput2ᚖgithubᚗcomᚋlaster18
 	}
 	res, err := ec.unmarshalInputCreateRoomInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalInt(*v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
