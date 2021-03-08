@@ -16,14 +16,16 @@ func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRo
 }
 
 func (r *queryResolver) Rooms(ctx context.Context) ([]*model.Room, error) {
-	panic(fmt.Errorf("not implemented"))
+	fmt.Println("hogeeeeeeee")
+	room := &model.Room{
+		ID:   "11",
+		Name: "room1",
+	}
+
+	return []*model.Room{room}, nil
 }
 
 func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

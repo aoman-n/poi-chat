@@ -26,15 +26,5 @@ models:
       - github.com/99designs/gqlgen/graphql.Int32
   Room:
     fields:
-      id:
-        resolver: true
       messages:
-        resolver: true
-  Message:
-    fields:
-      id:
-        resolver: true
-  User:
-    fields:
-      id:
         resolver: true
