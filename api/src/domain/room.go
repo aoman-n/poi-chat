@@ -7,6 +7,6 @@ type Room struct {
 	Name string
 }
 
-type IRoomRepository interface {
+type IRoomRepo interface {
 	FindByID(ctx context.Context, id int32) (*Room, error)
 }

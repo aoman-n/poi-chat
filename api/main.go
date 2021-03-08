@@ -24,7 +24,7 @@ import (
 
 func main() {
 	db := infrastructure.NewDb()
-	_ = repository.NewRoomRepository(db)
+	_ = repository.NewRoomRepo(db)
 
 	r := chi.NewRouter()
 	c := generated.Config{Resolvers: &graphql.Resolver{}}
