@@ -92,6 +92,10 @@ func (s *UserSession) Save(r *http.Request, w http.ResponseWriter) error {
 	return s.sess.Save(r, w)
 }
 
+func (s *UserSession) IsNew() bool {
+	return s.sess.IsNew
+}
+
 func (s *UserSession) GetUser() (*User, error) {
 	id, ok := s.sess.Values[idKey].(string)
 	if !ok {
@@ -103,7 +107,7 @@ func (s *UserSession) GetUser() (*User, error) {
 		return nil, fmt.Errorf("not found userName in session")
 	}
 
-	avatarUrl, ok := s.sess.Values[avatarKey].(string)
+	avatarURL, ok := s.sess.Values[avatarKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("not found avatarUrl in session")
 	}
@@ -111,6 +115,6 @@ func (s *UserSession) GetUser() (*User, error) {
 	return &User{
 		ID:        id,
 		Name:      name,
-		AvatarURL: avatarUrl,
+		AvatarURL: avatarURL,
 	}, nil
 }

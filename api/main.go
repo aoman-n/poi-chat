@@ -18,6 +18,7 @@ import (
 	"github.com/laster18/poi/api/src/delivery/graphql"
 	"github.com/laster18/poi/api/src/delivery/rest"
 	"github.com/laster18/poi/api/src/infrastructure"
+	customMiddleware "github.com/laster18/poi/api/src/middleware"
 	"github.com/laster18/poi/api/src/repository"
 	"github.com/rs/cors"
 )
@@ -49,6 +50,7 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.GetHead)
 	r.Use(middleware.Recoverer)
+	r.Use(customMiddleware.AuthMiddleware())
 
 	srv := handler.New(generated.NewExecutableSchema(c))
 
