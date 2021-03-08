@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get -y install default-mysql-client
 
-RUN GO111MODULE=off go get -u github.com/oxequa/realize
+RUN GO111MODULE=off go get -u github.com/oxequa/realize && \
+  go get -u bitbucket.org/liamstask/goose/cmd/goose
 
 ENTRYPOINT ["sh", "./script/entrypoint.sh"]
