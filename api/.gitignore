@@ -33,4 +33,4 @@ tmp/
 # GraphQL Environment Variables
 .env
 
-graph/
+graph
