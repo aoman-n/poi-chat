@@ -34,7 +34,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_db:/var/lib/mysql:delegated
+      - ./db/volume:/var/lib/mysql:delegated
+      - ./db/init:/docker-entrypoint-initdb.d
     environment:
       - MYSQL_DATABASE=poi_dev
       - MYSQL_ROOT_PASSWORD=password
