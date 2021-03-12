@@ -1,4 +1,0 @@
-type Room {
-  id: ID!
-  name: String!
-}

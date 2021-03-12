@@ -1,9 +1,26 @@
+type Room implements Node {
+  id: ID!
+  name: String!
+}
+
+type RoomEdge implements Edge {
+  cursor: String!
+  node: Room!
+}
+
+type RoomConnection implements Connection {
+  pageInfo: PageInfo!
+  edges: [RoomEdge]!
+  nodes: [Room]!
+  roomCount: Int!
+}
+
 input CreateRoomInput {
   name: String!
 }
 
 extend type Query {
-  rooms: [Room!]!
+  rooms(paginationInput: PaginationInput): [Room!]!
   room(id: ID!): Room!
 }
 
