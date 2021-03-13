@@ -7,7 +7,7 @@ CREATE TABLE messages (
   `body` text NOT NULL,
   `user_name` varchar(255) NOT NULL,
   `user_avatar_url` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT messages_fk_room_id
     FOREIGN KEY (`room_id`)
