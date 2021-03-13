@@ -6,9 +6,10 @@ import (
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infrastructure/db"
+	"gorm.io/gorm"
 )
 
-func seedRooms(db *db.Db) {
+func seedRooms(db *gorm.DB) {
 	rooms := []domain.Room{
 		{
 			ID:              1,
