@@ -1,4 +1,4 @@
-package infrastructure
+package db
 
 import (
 	"fmt"
@@ -13,14 +13,48 @@ type Db struct {
 	*gorm.DB
 }
 
+var dbInstance *Db
+
 func NewDb() *Db {
+	if dbInstance != nil {
+		return dbInstance
+	}
+
 	conn, err := gorm.Open(mysql.Open(connString()), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("db connection error: %v", err)
 	}
 	log.Println("success to connect db!")
 
-	return &Db{conn}
+	dbInstance = &Db{conn}
+
+	return dbInstance
+}
+
+func NewTx() *Db {
+	db := NewDb()
+	tx := db.Begin()
+
+	return &Db{tx}
+}
+
+func TransactAndReturnData(txFunc func(*Db) (interface{}, error)) (data interface{}, err error) {
+	tx := &Db{NewDb().Begin()}
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit().Error
+		}
+	}()
+
+	return txFunc(tx)
 }
 
 func connString() string {
