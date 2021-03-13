@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/laster18/poi/api/src/domain"
-	"github.com/laster18/poi/api/src/infrastructure/db"
 	"github.com/laster18/poi/api/src/repository"
+	"gorm.io/gorm"
 )
 
 var (
@@ -26,9 +26,7 @@ var (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-func NewResolver(db *db.Db) *Resolver {
-	fmt.Println("hoge")
-
+func NewResolver(db *gorm.DB) *Resolver {
 	roomRepo := repository.NewRoomRepo(db)
 
 	return &Resolver{

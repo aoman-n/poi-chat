@@ -19,8 +19,13 @@ input CreateRoomInput {
   name: String!
 }
 
+enum RoomOrderField {
+  LATEST
+  DESC_USER_COUNT
+}
+
 extend type Query {
-  rooms(paginationInput: PaginationInput): [Room!]!
+  rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
   room(id: ID!): Room!
 }
 
