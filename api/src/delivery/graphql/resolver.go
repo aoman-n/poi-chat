@@ -1,21 +1,9 @@
 package graphql
 
 import (
-	"fmt"
-
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/repository"
 	"gorm.io/gorm"
-)
-
-var (
-	roomIDPrefix    = "Room:"
-	messageIDPrefix = "Messsage:"
-)
-
-var (
-	roomIDFormat    = fmt.Sprintf("%s%%s", roomIDPrefix)
-	messageIDFormat = fmt.Sprintf("%s%%s", messageIDPrefix)
 )
 
 var (
@@ -28,14 +16,17 @@ var (
 
 func NewResolver(db *gorm.DB) *Resolver {
 	roomRepo := repository.NewRoomRepo(db)
+	messageRepo := repository.NewMessageRepo(db)
 
 	return &Resolver{
-		roomRepo: roomRepo,
+		roomRepo:    roomRepo,
+		messageRepo: messageRepo,
 	}
 }
 
 type Resolver struct {
 	// db        *infrastructure.Db
 	// roomRepoF func(db *infrastructure.Db) *repository.RoomRepo
-	roomRepo domain.IRoomRepo
+	roomRepo    domain.IRoomRepo
+	messageRepo domain.IMessageRepo
 }

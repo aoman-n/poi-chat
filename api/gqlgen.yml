@@ -28,6 +28,8 @@ models:
     fields:
       id:
         resolver: true
+      messages:
+        resolver: true
   Message:
     fields:
       id:

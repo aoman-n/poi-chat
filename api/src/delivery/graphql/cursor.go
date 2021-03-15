@@ -8,7 +8,23 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 )
 
-func getCursors(nodes []domain.INode, prefix CursorPrefix) (startCursor *string, endCursor *string) {
+type IDOrCursorPrefix string
+
+var (
+	roomPrefix    IDOrCursorPrefix = "Room:"
+	messagePrefix IDOrCursorPrefix = "Message:"
+)
+
+var (
+	// ex: "Room:<id>"
+	roomIDFormat    = fmt.Sprintf("%s%%s", roomPrefix)
+	messageIDFormat = fmt.Sprintf("%s%%s", messagePrefix)
+	// ex: "Room:<id>:<unixTimestamp>"
+	roomCursorFormat    = fmt.Sprintf("%s%%s:%%s", roomPrefix)
+	messageCursorFormat = fmt.Sprintf("%s%%s:%%s", messagePrefix)
+)
+
+func getCursors(nodes []domain.INode, prefix IDOrCursorPrefix) (startCursor *string, endCursor *string) {
 	if len(nodes) == 0 {
 		return nil, nil
 	}
@@ -35,39 +51,43 @@ func getMessageCursors(messages []*domain.Message) (startCursor *string, endCurs
 		nodes[i] = msg
 	}
 
-	return getCursors(nodes, roomPrefix)
+	return getCursors(nodes, messagePrefix)
 }
 
-func encodeCursor(prefix CursorPrefix, id, unix int) *string {
+func encodeCursor(prefix IDOrCursorPrefix, id, unix int) *string {
 	cursor := fmt.Sprintf(string(prefix)+"%d:%d", id, unix)
 	return &cursor
 }
 
-func decodeCursor() {
-}
-
-type CursorPrefix string
-
-var (
-	roomPrefix    CursorPrefix = "Room:"
-	messagePrefix CursorPrefix = "Message:"
-)
-
-func getListParts(cursorPrefix CursorPrefix, cursor *string) (lastKnownID int, lastKnownUnix int, err error) {
-	idParts := strings.Split(*cursor, ":")
-	if !strings.HasPrefix(*cursor, "Room:") || len(idParts) != 3 {
+func decodeCursor(cursorPrefix IDOrCursorPrefix, cursor *string) (objID int, objUnix int, err error) {
+	cursorParts := strings.Split(*cursor, ":")
+	if !strings.HasPrefix(*cursor, string(cursorPrefix)) || len(cursorParts) != 3 {
 		return 0, 0, fmt.Errorf(invalidIDMsg, *cursor)
 	}
 
-	id, err := strconv.Atoi(idParts[1])
+	id, err := strconv.Atoi(cursorParts[1])
 	if err != nil {
 		return 0, 0, fmt.Errorf(invalidIDMsg, *cursor)
 	}
 
-	unix, err := strconv.Atoi(idParts[2])
+	unix, err := strconv.Atoi(cursorParts[2])
 	if err != nil {
 		return 0, 0, fmt.Errorf(invalidIDMsg, *cursor)
 	}
 
 	return id, unix, nil
+}
+
+func decodeID(prefix IDOrCursorPrefix, id string) (int, error) {
+	idParts := strings.Split(id, ":")
+	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
+		return 0, fmt.Errorf(invalidIDMsg, id)
+	}
+
+	retID, err := strconv.Atoi(idParts[1])
+	if err != nil {
+		return 0, fmt.Errorf(invalidIDMsg, id)
+	}
+
+	return retID, nil
 }

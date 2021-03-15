@@ -25,7 +25,7 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 	}
 	if after != nil {
 		// afterCursorのformatチェック
-		id, unix, err := getListParts(roomPrefix, after)
+		id, unix, err := decodeCursor(roomPrefix, after)
 		if err != nil {
 			return nil, err
 		}

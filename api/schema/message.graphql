@@ -6,7 +6,19 @@ type Message implements Node {
   createdAt: Time!
 }
 
+type MessageEdge implements Edge {
+  cursor: String!
+  node: Message!
+}
+
+type MessageConnection implements Connection {
+  pageInfo: PageInfo!
+  edges: [MessageEdge]!
+  nodes: [Message]!
+  messageCount: Int!
+}
+
 extend type Room {
-  # 最新のメッセージを取得
-  messages(last: Int): [Message!]!
+  # 最新のメッセージから順に取得
+  messages(last: Int, before: String): MessageConnection!
 }
