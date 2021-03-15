@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/99designs/gqlgen v0.13.0
+	github.com/bxcodec/faker/v3 v3.6.0 // indirect
 	github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/gorilla/sessions v1.2.1

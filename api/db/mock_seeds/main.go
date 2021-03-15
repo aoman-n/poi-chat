@@ -2,14 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/bxcodec/faker/v3"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infrastructure/db"
 	"gorm.io/gorm"
 )
 
-func seedRooms(db *gorm.DB) {
+func seedRoomsAndMessages(db *gorm.DB) {
+	tx := db.Begin()
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		} else {
+			tx.Commit()
+		}
+	}()
+
 	rooms := []domain.Room{
 		{
 			ID:              1,
@@ -101,14 +113,40 @@ func seedRooms(db *gorm.DB) {
 		},
 	}
 
-	db.Create(&rooms)
+	if err := tx.Create(&rooms).Error; err != nil {
+		panic(err)
+	}
 
 	for _, room := range rooms {
-		fmt.Printf("created: %v\n", room)
+		willMadeCount := 20
+		messages := make([]domain.Message, willMadeCount)
+		for i := range make([]int, willMadeCount) {
+			msg := &domain.Message{
+				Body:          fmt.Sprintf("Room - %d message!", room.ID),
+				UserName:      faker.Name(),
+				UserAvatarURL: "https://pbs.twimg.com/profile_images/1130684542732230656/pW77OgPS_400x400.png",
+				RoomID:        room.ID,
+				CreatedAt:     time.Unix(faker.RandomUnixTime(), 0),
+			}
+			messages[i] = *msg
+		}
+
+		if err := tx.Create(&messages).Error; err != nil {
+			log.Print("err:", err)
+			panic(err)
+		}
+
+		fmt.Printf("createdRoom: %v\n", room)
+		fmt.Printf("createdMessages: %v\n", messages)
 	}
+}
+
+func seedMessages() {
+
 }
 
 func main() {
 	db := db.NewDb()
-	seedRooms(db)
+	seedRoomsAndMessages(db)
+
 }
