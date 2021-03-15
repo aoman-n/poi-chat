@@ -17,8 +17,7 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 	return fmt.Sprintf(messageIDFormat, obj.ID), nil
 }
 
-// TODO: connectionの中身をresolverで分割実装する
-func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
+func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {
 	roomID, err := decodeID(roomPrefix, obj.ID)
 	if err != nil {
 		return nil, err
@@ -95,5 +94,3 @@ func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int,
 func (r *Resolver) Message() generated.MessageResolver { return &messageResolver{r} }
 
 type messageResolver struct{ *Resolver }
-
-type messageConnectionResolver struct{ *Resolver }

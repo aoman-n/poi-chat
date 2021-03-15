@@ -81,12 +81,16 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 	}, nil
 }
 
-func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
+func (r *queryResolver) RoomDetail(ctx context.Context, id string) (*model.RoomDetail, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) {
 	return fmt.Sprintf(roomIDFormat, obj.ID), nil
+}
+
+func (r *roomDetailResolver) ID(ctx context.Context, obj *model.RoomDetail) (string, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {
@@ -96,4 +100,8 @@ func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<
 // Room returns generated.RoomResolver implementation.
 func (r *Resolver) Room() generated.RoomResolver { return &roomResolver{r} }
 
+// RoomDetail returns generated.RoomDetailResolver implementation.
+func (r *Resolver) RoomDetail() generated.RoomDetailResolver { return &roomDetailResolver{r} }
+
 type roomResolver struct{ *Resolver }
+type roomDetailResolver struct{ *Resolver }
