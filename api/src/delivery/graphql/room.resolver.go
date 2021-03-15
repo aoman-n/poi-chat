@@ -82,7 +82,20 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 }
 
 func (r *queryResolver) RoomDetail(ctx context.Context, id string) (*model.RoomDetail, error) {
-	panic(fmt.Errorf("not implemented"))
+	roomID, err := decodeID(roomPrefix, id)
+	if err != nil {
+		return nil, err
+	}
+
+	room, err := r.roomRepo.GetByID(ctx, roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.RoomDetail{
+		ID:   strconv.Itoa(room.ID),
+		Name: room.Name,
+	}, nil
 }
 
 func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) {
@@ -90,7 +103,7 @@ func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) 
 }
 
 func (r *roomDetailResolver) ID(ctx context.Context, obj *model.RoomDetail) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return fmt.Sprintf(roomIDFormat, obj.ID), nil
 }
 
 func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/laster18/poi/api/src/domain"
 	"gorm.io/gorm"
@@ -18,7 +20,16 @@ func NewRoomRepo(db *gorm.DB) *RoomRepo {
 }
 
 func (r *RoomRepo) GetByID(ctx context.Context, id int) (*domain.Room, error) {
-	return nil, nil
+	var room domain.Room
+	if err := r.db.First(&room, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, NewNotFoundErr(fmt.Sprintf("not found room, id: %d", id))
+		}
+
+		return nil, err
+	}
+
+	return &room, nil
 }
 
 func (r *RoomRepo) List(ctx context.Context, req *domain.RoomListReq) (*domain.RoomListResp, error) {
@@ -40,6 +51,13 @@ func (r *RoomRepo) List(ctx context.Context, req *domain.RoomListReq) (*domain.R
 
 	var rooms []*domain.Room
 	if err := db.Find(&rooms).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &domain.RoomListResp{
+				List:    []*domain.Room{},
+				HasNext: false,
+			}, nil
+		}
+
 		return nil, err
 	}
 

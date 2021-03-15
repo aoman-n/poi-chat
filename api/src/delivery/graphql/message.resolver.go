@@ -18,7 +18,7 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 }
 
 func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {
-	roomID, err := decodeID(roomPrefix, obj.ID)
+	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 	if err != nil {
 		return nil, err
 	}
-	messageCount, err := r.messageRepo.Count(ctx)
+	messageCount, err := r.messageRepo.Count(ctx, roomID)
 	if err != nil {
 		return nil, err
 	}

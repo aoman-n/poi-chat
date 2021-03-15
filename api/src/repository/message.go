@@ -66,9 +66,11 @@ func (r *MessageRepo) Create(ctx context.Context, message *domain.Message) error
 	return r.db.Create(message).Error
 }
 
-func (r *MessageRepo) Count(ctx context.Context) (int, error) {
+func (r *MessageRepo) Count(ctx context.Context, roomID int) (int, error) {
 	var count int64
-	if err := r.db.Model(&domain.Message{}).Count(&count).Error; err != nil {
+	if err := r.db.Model(&domain.Message{}).
+		Where("room_id = ?", roomID).
+		Count(&count).Error; err != nil {
 		return 0, err
 	}
 
