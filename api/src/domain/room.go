@@ -14,6 +14,16 @@ type Room struct {
 	CreatedAt       time.Time
 }
 
+var _ INode = (*Room)(nil)
+
+func (r *Room) GetID() int {
+	return r.ID
+}
+
+func (r *Room) GetCreatedAtUnix() int {
+	return int(r.CreatedAt.Unix())
+}
+
 type RoomListReq struct {
 	Limit         int
 	LastKnownID   int

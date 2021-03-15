@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
@@ -26,17 +25,9 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 	}
 	if after != nil {
 		// afterCursorのformatチェック
-		idParts := strings.Split(*after, ":")
-		if !strings.HasPrefix(*after, "Room:") || len(idParts) != 3 {
-			return &model.RoomConnection{}, fmt.Errorf(invalidIDMsg, *after)
-		}
-		id, err := strconv.Atoi(idParts[1])
+		id, unix, err := getListParts(roomPrefix, after)
 		if err != nil {
-			return &model.RoomConnection{}, fmt.Errorf(invalidIDMsg, *after)
-		}
-		unix, err := strconv.Atoi(idParts[2])
-		if err != nil {
-			return &model.RoomConnection{}, fmt.Errorf(invalidIDMsg, *after)
+			return nil, err
 		}
 
 		roomListReq.LastKnownID = id
