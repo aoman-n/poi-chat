@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/laster18/poi/api/graph/model"
@@ -19,7 +20,27 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 }
 
 func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	id, _ := strconv.Atoi(obj.ID)
+
+	joinedUsers, err := r.joinedUserRepo.List(ctx, id)
+	if err != nil {
+		log.Println("failed to list joinedUser err:", err)
+		return nil, errUnexpected
+	}
+
+	// serialize
+	users := make([]*model.User, len(joinedUsers))
+	for i, ju := range joinedUsers {
+		users[i] = &model.User{
+			ID:          encodeID(userPrefix, ju.ID),
+			DisplayName: ju.DisplayName,
+			AvatarURL:   ju.AvatarURL,
+			X:           ju.X,
+			Y:           ju.Y,
+		}
+	}
+
+	return users, nil
 }
 
 func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) (<-chan *model.MovedUser, error) {

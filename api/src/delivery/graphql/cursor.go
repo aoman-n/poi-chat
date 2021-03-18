@@ -13,12 +13,14 @@ type Prefix string
 var (
 	roomPrefix    Prefix = "Room:"
 	messagePrefix Prefix = "Message:"
+	userPrefix    Prefix = "User:"
 )
 
 var (
 	// ex: "Room:<id>"
 	roomIDFormat    = fmt.Sprintf("%s%%s", roomPrefix)
 	messageIDFormat = fmt.Sprintf("%s%%s", messagePrefix)
+	userIDFormat    = fmt.Sprintf("%s%%s", userPrefix)
 	// ex: "Room:<id>:<unixTimestamp>"
 	roomCursorFormat    = fmt.Sprintf("%s%%s:%%s", roomPrefix)
 	messageCursorFormat = fmt.Sprintf("%s%%s:%%s", messagePrefix)
