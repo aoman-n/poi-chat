@@ -8,11 +8,11 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 )
 
-type IDOrCursorPrefix string
+type Prefix string
 
 var (
-	roomPrefix    IDOrCursorPrefix = "Room:"
-	messagePrefix IDOrCursorPrefix = "Message:"
+	roomPrefix    Prefix = "Room:"
+	messagePrefix Prefix = "Message:"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 	messageCursorFormat = fmt.Sprintf("%s%%s:%%s", messagePrefix)
 )
 
-func getCursors(nodes []domain.INode, prefix IDOrCursorPrefix) (startCursor *string, endCursor *string) {
+func getCursors(nodes []domain.INode, prefix Prefix) (startCursor *string, endCursor *string) {
 	if len(nodes) == 0 {
 		return nil, nil
 	}
@@ -54,12 +54,12 @@ func getMessageCursors(messages []*domain.Message) (startCursor *string, endCurs
 	return getCursors(nodes, messagePrefix)
 }
 
-func encodeCursor(prefix IDOrCursorPrefix, id, unix int) *string {
+func encodeCursor(prefix Prefix, id, unix int) *string {
 	cursor := fmt.Sprintf(string(prefix)+"%d:%d", id, unix)
 	return &cursor
 }
 
-func decodeCursor(cursorPrefix IDOrCursorPrefix, cursor *string) (objID int, objUnix int, err error) {
+func decodeCursor(cursorPrefix Prefix, cursor *string) (objID int, objUnix int, err error) {
 	cursorParts := strings.Split(*cursor, ":")
 	if !strings.HasPrefix(*cursor, string(cursorPrefix)) || len(cursorParts) != 3 {
 		return 0, 0, fmt.Errorf(invalidIDMsg, *cursor)
@@ -78,7 +78,11 @@ func decodeCursor(cursorPrefix IDOrCursorPrefix, cursor *string) (objID int, obj
 	return id, unix, nil
 }
 
-func decodeID(prefix IDOrCursorPrefix, id string) (int, error) {
+func encodeID(prefix Prefix, id int) string {
+	return fmt.Sprintf(string(prefix)+"%d", id)
+}
+
+func decodeID(prefix Prefix, id string) (int, error) {
 	idParts := strings.Split(id, ":")
 	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
 		return 0, fmt.Errorf(invalidIDMsg, id)

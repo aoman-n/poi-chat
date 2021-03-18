@@ -36,6 +36,12 @@ func (s *Subscripter) DeleteMessageChan(userID string) {
 	s.mutex.Unlock()
 }
 
+func (s *Subscripter) PublishMessage(msg *model.Message) {
+	for _, c := range s.messageChan {
+		c <- msg
+	}
+}
+
 // Subscripter 各roomのSubscripterを管理する
 type Subscripters struct {
 	// Data map[roomId]*Subscripter

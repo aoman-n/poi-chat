@@ -17,11 +17,15 @@ var (
 func NewResolver(db *gorm.DB) *Resolver {
 	roomRepo := repository.NewRoomRepo(db)
 	messageRepo := repository.NewMessageRepo(db)
+	subscripters := NewSubscripters()
+
+	// add mock room
+	subscripters.Add("Room:1")
 
 	return &Resolver{
 		roomRepo:     roomRepo,
 		messageRepo:  messageRepo,
-		subscripters: NewSubscripters(),
+		subscripters: subscripters,
 	}
 }
 
