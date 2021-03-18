@@ -32,4 +32,7 @@ extend type Mutation {
 extend type Subscription {
   subMovedUser(roomId: ID!): MovedUser!
   subExitedUser(roomId: ID!): ExitedUser!
+  # 部屋へ入ったら自分自身の情報を取得
+  # このSubscription内で退出もハンドリングする
+  joinRoom(roomID: ID!): User!
 }

@@ -41,9 +41,3 @@ extend type Query {
 extend type Mutation {
   createRoom(input: CreateRoomInput): Room!
 }
-
-extend type Subscription {
-  # 部屋へ入ったら自分自身の情報を取得
-  # このSubscription内で退出もハンドリングする
-  joined: User!
-}

@@ -114,10 +114,6 @@ func (r *roomDetailResolver) ID(ctx context.Context, obj *model.RoomDetail) (str
 	return fmt.Sprintf(roomIDFormat, obj.ID), nil
 }
 
-func (r *subscriptionResolver) Joined(ctx context.Context) (<-chan *model.User, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 // Room returns generated.RoomResolver implementation.
 func (r *Resolver) Room() generated.RoomResolver { return &roomResolver{r} }
 
