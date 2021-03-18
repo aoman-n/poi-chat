@@ -10,6 +10,24 @@ import (
 	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/delivery"
 	"github.com/laster18/poi/api/src/lib/twitter"
+	"github.com/pkg/errors"
+)
+
+var (
+	// ErrGetUserID cannot get user id error
+	ErrGetUserID = errors.New("cannot get user id from session")
+	// ErrGetCredentials cannot get user credentials form twitter
+	ErrGetCredentials = errors.New("cannot get credentials")
+	// ErrInvalidSession invalid session
+	ErrInvalidSession = errors.New("invalid session")
+	// ErrSaveSession cannot save sesison
+	ErrSaveSession = errors.New("cannot save session")
+	// ErrInvalidCredentials invalid credentials
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	// ErrNotFoundUserInfo not found user info
+	ErrNotFoundUserInfo = errors.New("not found user info")
+	// ErrSaveUserInfo cannot save user info
+	ErrSaveUserInfo = errors.New("cannot save user info")
 )
 
 func authHandler(w http.ResponseWriter, r *http.Request) {
@@ -48,20 +66,20 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := delivery.GetAuthSession(r)
 	if err != nil {
 		log.Printf("failed to get auth session, the cause was %v", err)
-		handleSessionError(w, err)
+		handleInvalidSessionErr(w, err)
 		return
 	}
 
 	token, secret, err := session.GetCredentials()
 	if err != nil {
 		log.Print(err)
-		handleNotMatchToken(w)
+		handleNotMatchToken(w, err)
 		return
 	}
 
 	if token != r.URL.Query().Get("oauth_token") {
 		log.Println("request oauth_token not equal request_token_secret in session", "request_token_secret")
-		handleNotMatchToken(w)
+		handleNotMatchToken(w, err)
 		return
 	}
 
@@ -84,7 +102,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	userSession, err := delivery.GetUserSession(r)
 	if err != nil {
 		log.Printf("failed to get user session, the cause was %v", err)
-		handleSessionError(w, err)
+		handleInvalidSessionErr(w, err)
 		return
 	}
 
@@ -99,22 +117,49 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := session.RemoveCredentials(r, w); err != nil {
+		handleSaveOrRemoveSessionErr(w, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, "Success!!")
 }
 
-func handleSessionError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	fmt.Fprint(w, "server error")
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	userSession, err := delivery.GetUserSession(r)
+	if err != nil {
+		handleInvalidSessionErr(w, err)
+		return
+	}
+
+	if err := userSession.RemoveUser(r, w); err != nil {
+		handleSaveOrRemoveSessionErr(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Success!!")
 }
 
-func handleNotMatchToken(w http.ResponseWriter) {
+func handleInvalidSessionErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprint(w, fmt.Sprintf("%s: %s", ErrInvalidSession.Error(), err.Error()))
+}
+
+func handleSaveOrRemoveSessionErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprint(w, fmt.Sprintf("%s: %s", ErrSaveSession.Error(), err.Error()))
+}
+
+func handleNotMatchToken(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
-	fmt.Fprint(w, "token did not match")
+	fmt.Fprint(w, fmt.Sprintf("%s: %s", ErrInvalidCredentials.Error(), err.Error()))
 }
 
 // NewRoutes will initialize the all resources endpoint
 func NewRoutes(r *chi.Mux) {
 	r.Get("/twitter/oauth", authHandler)
 	r.Get("/twitter/callback", callbackHandler)
+	r.Get("/logout", logoutHandler)
 }

@@ -57,6 +57,11 @@ func (a *AuthSession) GetCredentials() (token string, secret string, err error) 
 	return token, secret, nil
 }
 
+func (a *AuthSession) RemoveCredentials(r *http.Request, w http.ResponseWriter) error {
+	a.sess.Options.MaxAge = -1
+	return a.sess.Save(r, w)
+}
+
 type UserSession struct {
 	sess *sessions.Session
 }
@@ -117,4 +122,9 @@ func (s *UserSession) GetUser() (*User, error) {
 		Name:      name,
 		AvatarURL: avatarURL,
 	}, nil
+}
+
+func (s *UserSession) RemoveUser(r *http.Request, w http.ResponseWriter) error {
+	s.sess.Options.MaxAge = -1
+	return s.sess.Save(r, w)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/middleware"
 )
 
 func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.Room, error) {
@@ -18,6 +19,13 @@ func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRo
 }
 
 func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error) {
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	fmt.Println("getted user is ", currentUser)
+
 	roomListReq := &domain.RoomListReq{}
 
 	if first != nil {
