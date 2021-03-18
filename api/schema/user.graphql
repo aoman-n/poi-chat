@@ -1,4 +1,20 @@
 type User {
   id: ID!
   displayName: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+}
+
+type ExitedUser {
+  id: ID!
+}
+
+extend type RoomDetail {
+  joinedUsers: [User!]!
+}
+
+extend type Subscription {
+  subMovedUser(roomId: ID!): User!
+  subExitedUser(roomId: ID!): ExitedUser!
 }

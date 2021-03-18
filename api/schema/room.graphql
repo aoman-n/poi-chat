@@ -29,6 +29,10 @@ enum RoomOrderField {
   DESC_USER_COUNT
 }
 
+type NoopPayload {
+  clientMutationId: String
+}
+
 extend type Query {
   rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
   roomDetail(id: ID!): RoomDetail!
@@ -39,5 +43,7 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  subMessage(roomId: ID!): Message!
+  # 部屋へ入ったら自分自身の情報を取得
+  # このSubscription内で退出もハンドリングする
+  joined: User!
 }

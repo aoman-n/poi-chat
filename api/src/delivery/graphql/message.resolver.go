@@ -90,6 +90,10 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 	}, nil
 }
 
+func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 // Message returns generated.MessageResolver implementation.
 func (r *Resolver) Message() generated.MessageResolver { return &messageResolver{r} }
 
