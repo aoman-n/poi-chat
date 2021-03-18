@@ -10,11 +10,15 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 )
 
+func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovedUser, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) (<-chan *model.User, error) {
+func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) (<-chan *model.MovedUser, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

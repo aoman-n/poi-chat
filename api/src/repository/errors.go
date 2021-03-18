@@ -1,5 +1,11 @@
 package repository
 
+import "errors"
+
+var (
+	errZeroID = errors.New("id is zero value")
+)
+
 type NotFoundErr struct {
 	Msg string
 }

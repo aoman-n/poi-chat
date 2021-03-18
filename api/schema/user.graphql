@@ -6,15 +6,30 @@ type User {
   y: Int!
 }
 
+type MovedUser {
+  id: ID!
+  x: Int!
+  y: Int!
+}
+
 type ExitedUser {
   id: ID!
+}
+
+input MoveInput {
+  x: Int!
+  y: Int!
 }
 
 extend type RoomDetail {
   joinedUsers: [User!]!
 }
 
+extend type Mutation {
+  move(input: MoveInput!): MovedUser!
+}
+
 extend type Subscription {
-  subMovedUser(roomId: ID!): User!
+  subMovedUser(roomId: ID!): MovedUser!
   subExitedUser(roomId: ID!): ExitedUser!
 }
