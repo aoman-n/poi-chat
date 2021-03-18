@@ -19,14 +19,16 @@ func NewResolver(db *gorm.DB) *Resolver {
 	messageRepo := repository.NewMessageRepo(db)
 
 	return &Resolver{
-		roomRepo:    roomRepo,
-		messageRepo: messageRepo,
+		roomRepo:     roomRepo,
+		messageRepo:  messageRepo,
+		subscripters: NewSubscripters(),
 	}
 }
 
 type Resolver struct {
 	// db        *infrastructure.Db
 	// roomRepoF func(db *infrastructure.Db) *repository.RoomRepo
-	roomRepo    domain.IRoomRepo
-	messageRepo domain.IMessageRepo
+	roomRepo     domain.IRoomRepo
+	messageRepo  domain.IMessageRepo
+	subscripters *Subscripters
 }

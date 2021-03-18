@@ -11,6 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/middleware"
 )
 
 func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, error) {
@@ -91,7 +92,25 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 }
 
 func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	subscripter, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errNotFoundRoom
+	}
+
+	ch := make(chan *model.Message, 1)
+	subscripter.AddMessageChan(currentUser.ID, ch)
+
+	go func() {
+		<-ctx.Done()
+		subscripter.DeleteMessageChan(currentUser.ID)
+	}()
+
+	return ch, nil
 }
 
 // Message returns generated.MessageResolver implementation.
