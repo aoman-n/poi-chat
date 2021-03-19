@@ -9,3 +9,7 @@ var (
 	errRoomNotFound    = errors.New("Not found room")
 	errUnexpected      = errors.New("Internal server error")
 )
+
+var (
+	invalidIDMsg = "invalid id format: %s"
+)
