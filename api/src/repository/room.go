@@ -86,3 +86,28 @@ func (r *RoomRepo) Count(ctx context.Context) (int, error) {
 func (r *RoomRepo) Create(ctx context.Context, room *domain.Room) error {
 	return r.db.Create(room).Error
 }
+
+func (r *RoomRepo) Join(ctx context.Context, u *domain.JoinedUser) error {
+	return r.db.Create(u).Error
+}
+
+func (r *RoomRepo) GetUsers(ctx context.Context, roomID int) ([]*domain.JoinedUser, error) {
+	var users []*domain.JoinedUser
+	if err := r.db.Where("room_id = ?", roomID).Find(&users).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []*domain.JoinedUser{}, nil
+		}
+
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (r *RoomRepo) Exit(ctx context.Context, u *domain.JoinedUser) error {
+	if u.ID == 0 {
+		return errZeroID
+	}
+
+	return r.db.Delete(u).Error
+}

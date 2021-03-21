@@ -22,7 +22,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
 	id, _ := strconv.Atoi(obj.ID)
 
-	joinedUsers, err := r.joinedUserRepo.List(ctx, id)
+	joinedUsers, err := r.roomRepo.GetUsers(ctx, id)
 	if err != nil {
 		log.Println("failed to list joinedUser err:", err)
 		return nil, errUnexpected
@@ -74,14 +74,14 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 		Y: 100,
 	}
 
-	if err := r.joinedUserRepo.Create(ctx, joinedUser); err != nil {
+	if err := r.roomRepo.Join(ctx, joinedUser); err != nil {
 		log.Println("failed to create joinedUser, err:", err)
 		return nil, errUnexpected
 	}
 
 	go func() {
 		<-ctx.Done()
-		if err := r.joinedUserRepo.Delete(ctx, joinedUser); err != nil {
+		if err := r.roomRepo.Exit(ctx, joinedUser); err != nil {
 			// TODO: retry process
 			log.Println("failed to delete joinedUser err:", err)
 		}

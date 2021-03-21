@@ -40,4 +40,7 @@ type IRoomRepo interface {
 	List(ctx context.Context, req *RoomListReq) (*RoomListResp, error)
 	Count(ctx context.Context) (int, error)
 	Create(ctx context.Context, room *Room) error
+	GetUsers(ctx context.Context, roomID int) ([]*JoinedUser, error)
+	Join(ctx context.Context, joinedUser *JoinedUser) error
+	Exit(ctx context.Context, joinedUser *JoinedUser) error
 }
