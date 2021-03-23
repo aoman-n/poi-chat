@@ -74,6 +74,19 @@ func (r *RoomRepo) List(ctx context.Context, req *domain.RoomListReq) (*domain.R
 	}, nil
 }
 
+func (r *RoomRepo) ListAll(ctx context.Context) ([]*domain.Room, error) {
+	var rooms []*domain.Room
+	if err := r.db.Find(&rooms).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return []*domain.Room{}, nil
+		}
+
+		return nil, err
+	}
+
+	return rooms, nil
+}
+
 func (r *RoomRepo) Count(ctx context.Context) (int, error) {
 	var count int64
 	if err := r.db.Model(&domain.Room{}).Count(&count).Error; err != nil {

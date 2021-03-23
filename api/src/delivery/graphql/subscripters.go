@@ -10,7 +10,7 @@ import (
 type Subscripter struct {
 	// chan: map[userId]chan xxx
 	messageChan    map[string]chan *model.Message
-	movedUserChan  map[string]chan *model.User
+	movedUserChan  map[string]chan *model.MovedUser
 	exitedRoomChan map[string]chan *model.ExitedUser
 	mutex          sync.Mutex
 }
@@ -18,7 +18,7 @@ type Subscripter struct {
 func newSubscripter() *Subscripter {
 	return &Subscripter{
 		messageChan:    make(map[string]chan *model.Message),
-		movedUserChan:  make(map[string]chan *model.User),
+		movedUserChan:  make(map[string]chan *model.MovedUser),
 		exitedRoomChan: make(map[string]chan *model.ExitedUser),
 		mutex:          sync.Mutex{},
 	}
@@ -36,8 +36,16 @@ func (s *Subscripter) DeleteMessageChan(userID string) {
 	s.mutex.Unlock()
 }
 
+// PublishMessage ルーム内のすべてユーザーにメッセージを送信する
 func (s *Subscripter) PublishMessage(msg *model.Message) {
 	for _, c := range s.messageChan {
+		c <- msg
+	}
+}
+
+// PublishMove ルーム内のすべてユーザーに位置情報を送信する
+func (s *Subscripter) PublishMove(msg *model.MovedUser) {
+	for _, c := range s.movedUserChan {
 		c <- msg
 	}
 }
