@@ -124,3 +124,24 @@ func (r *RoomRepo) Exit(ctx context.Context, u *domain.JoinedUser) error {
 
 	return r.db.Delete(u).Error
 }
+
+func (r *RoomRepo) UpdateUser(ctx context.Context, u *domain.JoinedUser) error {
+	if u.ID == 0 {
+		return errZeroID
+	}
+
+	return r.db.Save(u).Error
+}
+
+func (r *RoomRepo) GetUserByID(ctx context.Context, id int) (*domain.JoinedUser, error) {
+	var u domain.JoinedUser
+	if err := r.db.First(&u, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, NewNotFoundErr(fmt.Sprintf("not found joined user, id: %d", id))
+		}
+
+		return nil, err
+	}
+
+	return &u, nil
+}

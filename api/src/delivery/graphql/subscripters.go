@@ -36,6 +36,18 @@ func (s *Subscripter) DeleteMessageChan(userID string) {
 	s.mutex.Unlock()
 }
 
+func (s *Subscripter) AddMovedUserChan(userID string, ch chan *model.MovedUser) {
+	s.mutex.Lock()
+	s.movedUserChan[userID] = ch
+	s.mutex.Unlock()
+}
+
+func (s *Subscripter) DeleteMovedUserChan(userID string) {
+	s.mutex.Lock()
+	delete(s.movedUserChan, userID)
+	s.mutex.Unlock()
+}
+
 // PublishMessage ルーム内のすべてユーザーにメッセージを送信する
 func (s *Subscripter) PublishMessage(msg *model.Message) {
 	for _, c := range s.messageChan {

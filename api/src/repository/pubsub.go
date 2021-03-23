@@ -89,3 +89,14 @@ func (r *PubsubRepo) PSub(ctx context.Context, roomID int, subChs *SubscribeChs)
 		}
 	}
 }
+
+func (r *PubsubRepo) PubMovedUser(ctx context.Context, u *model.MovedUser, roomID int) error {
+	channelName := fmt.Sprintf(subChFormat, roomID, typeMove)
+
+	payload, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+
+	return r.client.Publish(ctx, channelName, payload).Err()
+}

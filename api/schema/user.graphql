@@ -17,6 +17,8 @@ type ExitedUser {
 }
 
 input MoveInput {
+  # TODO: roomIdはcookieに持たせるようにする
+  roomId: ID!
   x: Int!
   y: Int!
 }

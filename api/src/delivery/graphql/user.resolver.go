@@ -16,7 +16,51 @@ import (
 )
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovedUser, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	if err != nil {
+		return nil, err
+	}
+
+	movedUser := &model.MovedUser{
+		ID: currentUser.ID,
+		X:  input.X,
+		Y:  input.Y,
+	}
+
+	if err := r.pubsubRepo.PubMovedUser(ctx, movedUser, domainRoomID); err != nil {
+		return nil, err
+	}
+
+	// userの位置を更新は最悪失敗しても良いので非同期で行う
+	go func() {
+		ctx2 := context.Background()
+		domainUserID, err := decodeID(userPrefix, currentUser.ID)
+		if err != nil {
+			log.Println("failed to decode user id, err:", err)
+			return
+		}
+
+		u, err := r.roomRepo.GetUserByID(ctx2, domainUserID)
+		if err != nil {
+			log.Println("failed to get user, err:", err)
+			return
+		}
+
+		u.X = input.X
+		u.Y = input.Y
+
+		if err := r.roomRepo.UpdateUser(ctx, u); err != nil {
+			log.Println("failed to update user position, err:", err)
+			return
+		}
+	}()
+
+	return movedUser, nil
 }
 
 func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
@@ -44,7 +88,26 @@ func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDet
 }
 
 func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) (<-chan *model.MovedUser, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	subscripter, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errRoomNotFound
+	}
+
+	ch := make(chan *model.MovedUser, 1)
+	subscripter.AddMovedUserChan(currentUser.ID, ch)
+
+	go func() {
+		<-ctx.Done()
+		fmt.Println("stop subscribe moved user")
+		subscripter.DeleteMovedUserChan(currentUser.ID)
+	}()
+
+	return ch, nil
 }
 
 func (r *subscriptionResolver) SubExitedUser(ctx context.Context, roomID string) (<-chan *model.ExitedUser, error) {
