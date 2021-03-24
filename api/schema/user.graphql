@@ -6,6 +6,14 @@ type User {
   y: Int!
 }
 
+type JoinedUser {
+  id: ID!
+  displayName: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+}
+
 type MovedUser {
   id: ID!
   x: Int!
@@ -16,6 +24,8 @@ type ExitedUser {
   id: ID!
 }
 
+union UserEvent = MovedUser | ExitedUser | JoinedUser
+
 input MoveInput {
   # TODO: roomIdはcookieに持たせるようにする
   roomId: ID!
@@ -24,6 +34,7 @@ input MoveInput {
 }
 
 extend type RoomDetail {
+  # TODO: usersという名前にする
   joinedUsers: [User!]!
 }
 
@@ -32,8 +43,7 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  subMovedUser(roomId: ID!): MovedUser!
-  subExitedUser(roomId: ID!): ExitedUser!
+  subUserEvent(roomId: ID!): UserEvent!
   # 部屋へ入ったら自分自身の情報を取得
   # このSubscription内で退出もハンドリングする
   joinRoom(roomID: ID!): User!

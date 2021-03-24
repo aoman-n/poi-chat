@@ -9,18 +9,16 @@ import (
 // Subscripter 各roomのSubscriptionデータの送受信を管理する
 type Subscripter struct {
 	// chan: map[userId]chan xxx
-	messageChan    map[string]chan *model.Message
-	movedUserChan  map[string]chan *model.MovedUser
-	exitedRoomChan map[string]chan *model.ExitedUser
-	mutex          sync.Mutex
+	messageChan   map[string]chan *model.Message
+	userEventChan map[string]chan model.UserEvent
+	mutex         sync.Mutex
 }
 
 func newSubscripter() *Subscripter {
 	return &Subscripter{
-		messageChan:    make(map[string]chan *model.Message),
-		movedUserChan:  make(map[string]chan *model.MovedUser),
-		exitedRoomChan: make(map[string]chan *model.ExitedUser),
-		mutex:          sync.Mutex{},
+		messageChan:   make(map[string]chan *model.Message),
+		userEventChan: make(map[string]chan model.UserEvent),
+		mutex:         sync.Mutex{},
 	}
 }
 
@@ -36,28 +34,28 @@ func (s *Subscripter) DeleteMessageChan(userID string) {
 	s.mutex.Unlock()
 }
 
-func (s *Subscripter) AddMovedUserChan(userID string, ch chan *model.MovedUser) {
+func (s *Subscripter) AddUserEventChan(userID string, ch chan model.UserEvent) {
 	s.mutex.Lock()
-	s.movedUserChan[userID] = ch
+	s.userEventChan[userID] = ch
 	s.mutex.Unlock()
 }
 
-func (s *Subscripter) DeleteMovedUserChan(userID string) {
+func (s *Subscripter) DeleteUserEventChan(userID string) {
 	s.mutex.Lock()
-	delete(s.movedUserChan, userID)
+	delete(s.userEventChan, userID)
 	s.mutex.Unlock()
 }
 
-// PublishMessage ルーム内のすべてユーザーにメッセージを送信する
+// PublishMessage ルーム内すべてのユーザーにメッセージを送信する
 func (s *Subscripter) PublishMessage(msg *model.Message) {
 	for _, c := range s.messageChan {
 		c <- msg
 	}
 }
 
-// PublishMove ルーム内のすべてユーザーに位置情報を送信する
-func (s *Subscripter) PublishMove(msg *model.MovedUser) {
-	for _, c := range s.movedUserChan {
+// PublishUserEvent ルーム内のすべてのユーザーにユーザーイベントを送信する
+func (s *Subscripter) PublishUserEvent(msg model.UserEvent) {
+	for _, c := range s.userEventChan {
 		c <- msg
 	}
 }

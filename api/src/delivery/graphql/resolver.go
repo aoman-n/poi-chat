@@ -65,7 +65,7 @@ func (r *Resolver) SetupRoom(roomID int) {
 			}
 		case msg := <-chs.MoveCh:
 			if s, ok := r.subscripters.Get(roomIDStr); ok {
-				s.PublishMove(msg)
+				s.PublishUserEvent(msg)
 			}
 		case <-ctx.Done():
 			return

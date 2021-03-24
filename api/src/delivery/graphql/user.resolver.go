@@ -5,7 +5,6 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -87,7 +86,7 @@ func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDet
 	return users, nil
 }
 
-func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) (<-chan *model.MovedUser, error) {
+func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) (<-chan model.UserEvent, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
@@ -98,20 +97,16 @@ func (r *subscriptionResolver) SubMovedUser(ctx context.Context, roomID string) 
 		return nil, errRoomNotFound
 	}
 
-	ch := make(chan *model.MovedUser, 1)
-	subscripter.AddMovedUserChan(currentUser.ID, ch)
+	ch := make(chan model.UserEvent, 1)
+	subscripter.AddUserEventChan(currentUser.ID, ch)
 
 	go func() {
 		<-ctx.Done()
-		fmt.Println("stop subscribe moved user")
-		subscripter.DeleteMovedUserChan(currentUser.ID)
+		log.Println("stop subscribe user")
+		subscripter.DeleteUserEventChan(currentUser.ID)
 	}()
 
 	return ch, nil
-}
-
-func (r *subscriptionResolver) SubExitedUser(ctx context.Context, roomID string) (<-chan *model.ExitedUser, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-chan *model.User, error) {
