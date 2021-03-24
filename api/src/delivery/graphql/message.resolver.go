@@ -26,7 +26,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 		return nil, errUnauthenticated
 	}
 
-	subscripter, ok := r.subscripters.Get(input.RoomID)
+	_, ok := r.subscripters.Get(input.RoomID)
 	if !ok {
 		return nil, errRoomNotFound
 	}
@@ -37,6 +37,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	}
 
 	msg := &domain.Message{
+		UserUID:       currentUser.ID,
 		Body:          input.Body,
 		UserName:      currentUser.Name,
 		UserAvatarURL: currentUser.AvatarURL,
@@ -51,13 +52,17 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 
 	responseMsg := &model.Message{
 		ID:            encodeID(roomPrefix, msg.ID),
+		UserID:        currentUser.ID,
 		UserName:      msg.UserName,
 		UserAvatarURL: msg.UserAvatarURL,
 		Body:          msg.Body,
 		CreatedAt:     msg.CreatedAt,
 	}
 
-	subscripter.PublishMessage(responseMsg)
+	if err := r.pubsubRepo.PubMessage(ctx, responseMsg, dmainRoomID); err != nil {
+		log.Println("failed to publish message err:", err)
+		return nil, errUnexpected
+	}
 
 	return responseMsg, nil
 }

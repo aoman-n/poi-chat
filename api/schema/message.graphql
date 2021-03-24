@@ -1,6 +1,6 @@
 type Message implements Node {
   id: ID!
-  # Todo: userIdを追加する
+  userId: ID!
   userName: String!
   userAvatarUrl: String!
   body: String!

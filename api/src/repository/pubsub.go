@@ -72,6 +72,9 @@ func (r *PubsubRepo) PSub(ctx context.Context, roomID int, subChs *SubscribeChs)
 				continue
 			}
 
+			fmt.Println(strings.Repeat("*", 100))
+			fmt.Println(msg)
+
 			subChs.MessageCh <- &msg
 		case typeMove:
 			var movedUser model.MovedUser
@@ -106,6 +109,17 @@ func (r *PubsubRepo) PSub(ctx context.Context, roomID int, subChs *SubscribeChs)
 			)
 		}
 	}
+}
+
+func (r *PubsubRepo) PubMessage(ctx context.Context, m *model.Message, roomID int) error {
+	channelName := fmt.Sprintf(subChFormat, roomID, typeMessagse)
+
+	payload, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	return r.client.Publish(ctx, channelName, payload).Err()
 }
 
 func (r *PubsubRepo) PubJoinedUser(ctx context.Context, u *model.JoinedUser, roomID int) error {
