@@ -34,8 +34,7 @@ input MoveInput {
 }
 
 extend type RoomDetail {
-  # TODO: usersという名前にする
-  joinedUsers: [User!]!
+  users: [User!]!
 }
 
 extend type Mutation {

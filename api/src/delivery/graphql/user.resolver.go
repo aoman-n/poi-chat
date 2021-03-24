@@ -64,30 +64,6 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return movedUser, nil
 }
 
-func (r *roomDetailResolver) JoinedUsers(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
-	id, _ := strconv.Atoi(obj.ID)
-
-	joinedUsers, err := r.roomRepo.GetUsers(ctx, id)
-	if err != nil {
-		log.Println("failed to list joinedUser err:", err)
-		return nil, errUnexpected
-	}
-
-	// serialize
-	users := make([]*model.User, len(joinedUsers))
-	for i, ju := range joinedUsers {
-		users[i] = &model.User{
-			ID:          encodeID(userPrefix, ju.ID),
-			DisplayName: ju.DisplayName,
-			AvatarURL:   ju.AvatarURL,
-			X:           ju.X,
-			Y:           ju.Y,
-		}
-	}
-
-	return users, nil
-}
-
 func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) (<-chan model.UserEvent, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
@@ -191,4 +167,28 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 	}()
 
 	return ch, nil
+}
+
+func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
+	id, _ := strconv.Atoi(obj.ID)
+
+	joinedUsers, err := r.roomRepo.GetUsers(ctx, id)
+	if err != nil {
+		log.Println("failed to list joinedUser err:", err)
+		return nil, errUnexpected
+	}
+
+	// serialize
+	users := make([]*model.User, len(joinedUsers))
+	for i, ju := range joinedUsers {
+		users[i] = &model.User{
+			ID:          encodeID(userPrefix, ju.ID),
+			DisplayName: ju.DisplayName,
+			AvatarURL:   ju.AvatarURL,
+			X:           ju.X,
+			Y:           ju.Y,
+		}
+	}
+
+	return users, nil
 }
