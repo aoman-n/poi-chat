@@ -63,7 +63,7 @@ func (r *Resolver) SetupRoom(roomID int) {
 			if s, ok := r.subscripters.Get(roomIDStr); ok {
 				s.PublishMessage(msg)
 			}
-		case msg := <-chs.MoveCh:
+		case msg := <-chs.UserEventCh:
 			if s, ok := r.subscripters.Get(roomIDStr); ok {
 				s.PublishUserEvent(msg)
 			}

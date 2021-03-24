@@ -5,8 +5,10 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/laster18/poi/api/graph/model"
@@ -35,7 +37,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 		return nil, err
 	}
 
-	// userの位置を更新は最悪失敗しても良いので非同期で行う
+	// userの位置の更新は最悪失敗しても良いので非同期で行う
 	go func() {
 		ctx2 := context.Background()
 		domainUserID, err := decodeID(userPrefix, currentUser.ID)
@@ -120,9 +122,12 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 		return nil, err
 	}
 
-	// TODO: check the room exists
+	_, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errRoomNotFound
+	}
 
-	joinedUser := &domain.JoinedUser{
+	domainJoinedUser := &domain.JoinedUser{
 		RoomID:      domainRoomID,
 		AvatarURL:   currentUser.AvatarURL,
 		DisplayName: currentUser.Name,
@@ -132,17 +137,43 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 		Y: 100,
 	}
 
-	if err := r.roomRepo.Join(ctx, joinedUser); err != nil {
+	if err := r.roomRepo.Join(ctx, domainJoinedUser); err != nil {
 		log.Println("failed to create joinedUser, err:", err)
 		return nil, errUnexpected
 	}
 
+	joinedUser := &model.JoinedUser{
+		ID:          encodeID(userPrefix, domainJoinedUser.ID),
+		DisplayName: domainJoinedUser.DisplayName,
+		AvatarURL:   domainJoinedUser.AvatarURL,
+		X:           domainJoinedUser.X,
+		Y:           domainJoinedUser.Y,
+	}
+
+	if err := r.pubsubRepo.PubJoinedUser(ctx, joinedUser, domainRoomID); err != nil {
+		log.Println("failed to publish joined user err:", err)
+		return nil, err
+	}
+
 	go func() {
 		<-ctx.Done()
-		if err := r.roomRepo.Exit(ctx, joinedUser); err != nil {
+		childCtx := context.Background()
+		if err := r.roomRepo.Exit(childCtx, domainJoinedUser); err != nil {
 			// TODO: retry process
 			log.Println("failed to delete joinedUser err:", err)
 		}
+
+		exitedUser := &model.ExitedUser{
+			ID: joinedUser.ID,
+		}
+
+		fmt.Println(strings.Repeat("*", 100))
+		fmt.Println(exitedUser)
+
+		if err := r.pubsubRepo.PubExitedUser(childCtx, exitedUser, domainRoomID); err != nil {
+			log.Println("failed to publish exited user err:", err)
+		}
+
 	}()
 
 	ch := make(chan *model.User)
@@ -151,11 +182,11 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 		time.Sleep(1 * time.Second)
 
 		ch <- &model.User{
-			ID:          encodeID(roomPrefix, joinedUser.ID),
-			DisplayName: joinedUser.DisplayName,
-			AvatarURL:   joinedUser.AvatarURL,
-			X:           joinedUser.X,
-			Y:           joinedUser.Y,
+			ID:          encodeID(roomPrefix, domainJoinedUser.ID),
+			DisplayName: domainJoinedUser.DisplayName,
+			AvatarURL:   domainJoinedUser.AvatarURL,
+			X:           domainJoinedUser.X,
+			Y:           domainJoinedUser.Y,
 		}
 	}()
 
