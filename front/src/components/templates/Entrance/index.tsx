@@ -26,7 +26,7 @@ const Entrance: React.FC<EntranceProps> = ({ noop }) => {
         </h1>
       </header>
       <main className="w-96 mx-auto bg-white">
-        <div className="text-center py-6 text-lg text-gray-800 border-b border-gray-200">
+        <div className="text-center py-8 text-lg text-gray-800 border-b border-gray-200">
           ログインして始める
         </div>
         <div className="px-8">
