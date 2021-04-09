@@ -1,8 +1,17 @@
 import React from 'react'
+import styles from './index.module.css'
 
 const Header: React.FC = () => {
   return (
-    <div className="h-full mx-4 flex items-center">
+    <div
+      className={[
+        'h-full',
+        'mx-4',
+        'flex',
+        'items-center',
+        styles.container,
+      ].join(' ')}
+    >
       <h1 className="h-full m-0 flex items-center font-extrabold font-sans text-2xl text-gray-800">
         <span className="pr-1">poi chat</span>
         <svg
@@ -19,9 +28,6 @@ const Header: React.FC = () => {
         </svg>
       </h1>
     </div>
-
-    // </div>
-    // </div>
   )
 }
 

@@ -18,7 +18,7 @@ const MainTemplate: React.FC<MainTemplateProps> = ({
       <header className="bg-white h-16 border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto h-full">{HeaderComponent}</div>
       </header>
-      <main className="flex space-x-8 max-w-screen-lg mx-auto mt-24">
+      <main className="flex space-x-10 max-w-screen-lg mx-auto mt-24">
         <div className="flex-grow" style={{ minWidth: '600px' }}>
           {MainComponent}
         </div>

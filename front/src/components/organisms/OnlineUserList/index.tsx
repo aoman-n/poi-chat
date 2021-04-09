@@ -13,12 +13,12 @@ export type OnlineUserListProps = {
 const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
   return (
     <div>
-      <h3 className="mb-4 text-lg">ログイン中のユーザー</h3>
+      <h3 className="mb-4 text-lg text-center">ログイン中のユーザー</h3>
       <ul className="px-0 flex flex-col space-y-3">
         {users.map((user) => (
           <li
             key={user.id}
-            className="flex items-center mb-0 space-x-3 text-gray-700"
+            className="flex items-center mb-0 space-x-3 text-gray-700 justify-center"
           >
             <div className="w-12 border border-gray-200 rounded-full overflow-hidden">
               <img src={user.avatarUrl} alt={user.name + ' avatar'} />
