@@ -1,4 +1,6 @@
 import { UserInfo } from '../painter/user'
+import { OnlineUser } from '@/components/organisms/OnlineUserList'
+import { Room } from '@/components/organisms/RoomList'
 
 export const mockUsers: UserInfo[] = [
   {
@@ -21,5 +23,55 @@ export const mockUsers: UserInfo[] = [
       'https://avatars.githubusercontent.com/u/16658556?s=400&u=d90077a02b620f83ac0876cfe0b15bd696c415ec&v=4',
     currentX: 200,
     currentY: 200,
+  },
+]
+
+export const mockOnlineUsers: OnlineUser[] = [
+  {
+    id: '1',
+    name: 'サンプルユーザー1',
+    avatarUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+  },
+  {
+    id: '2',
+    name: 'サンプルユーザー2',
+    avatarUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+  },
+  {
+    id: '3',
+    name: 'サンプルユーザー3',
+    avatarUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+  },
+  {
+    id: '3',
+    name: 'サンプルユーザー4',
+    avatarUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+  },
+]
+
+export const mockRooms: Room[] = [
+  {
+    id: '1',
+    name: 'サンプルチャットルーム1',
+    userCount: 8,
+  },
+  {
+    id: '2',
+    name: 'サンプルチャットルーム2',
+    userCount: 10,
+  },
+  {
+    id: '3',
+    name: 'サンプルチャットルーム3',
+    userCount: 3,
+  },
+  {
+    id: '4',
+    name: 'サンプルチャットルーム4',
+    userCount: 60,
   },
 ]

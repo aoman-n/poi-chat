@@ -1,13 +1,13 @@
 import React from 'react'
 
-export type User = {
+export type OnlineUser = {
   id: string
   name: string
   avatarUrl: string
 }
 
 export type OnlineUserListProps = {
-  users: User[]
+  users: OnlineUser[]
 }
 
 const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
