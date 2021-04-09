@@ -1,4 +1,5 @@
 import React from 'react'
+import styles from './index.module.css'
 
 export type ButtonProps = {
   text: string
@@ -7,7 +8,10 @@ export type ButtonProps = {
 
 const Button: React.FC<ButtonProps> = ({ text, onClick }) => {
   return (
-    <button className="w-1/2 bg-blue-300" onClick={onClick}>
+    <button
+      className={['w-1/2', 'bg-blue-300', 'py-8', 'mt-6'].join(' ')}
+      onClick={onClick}
+    >
       {text}
     </button>
   )
