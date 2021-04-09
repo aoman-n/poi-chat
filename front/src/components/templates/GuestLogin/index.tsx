@@ -2,14 +2,13 @@ import React, { useState, useRef, useCallback } from 'react'
 import CropIcon from '@/components/organisms/CropIcon'
 import cn from 'classnames'
 
-const { createObjectURL } = window.URL || window.webkitURL
-
 const useInputImage = (defaultImageUrl = '') => {
   const [imageUrl, setImageUrl] = useState(defaultImageUrl)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const handleChangeFile = useCallback(() => {
     if (fileRef.current && fileRef.current.files) {
+      const { createObjectURL } = window.URL || window.webkitURL
       const imageUrl = createObjectURL(fileRef.current.files[0])
       setImageUrl(imageUrl)
     }
@@ -60,9 +59,10 @@ const GuestLogin: React.FC<GuestLoginProps> = ({ noop }) => {
           </h1>
         </div>
       </header>
-      <main className="flex-grow flex justify-center items-center space-x-8">
+      {/* <main className="flex-grow flex justify-center items-center space-x-8"> */}
+      <main className="flex pt-24 mx-auto space-x-8">
         {/* left content */}
-        <div className="bg-white px-8 w-96">
+        <div className="bg-white px-8" style={{ width: '420px' }}>
           <p className="text-lg text-center text-gray-800 my-10">
             ゲストログイン
           </p>
@@ -83,21 +83,23 @@ const GuestLogin: React.FC<GuestLoginProps> = ({ noop }) => {
                 <label htmlFor="username" className="block text-black mb-3">
                   アイコン画像
                 </label>
-                <label className="block rounded-sm px-4 py-3 bg-green-500 shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue text-white w-full text-center hover:opacity-90">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                    />
-                  </svg>
+                <label className="flex justify-center space-x-1 rounded-sm px-4 py-3 bg-green-500 shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue text-white w-full text-center hover:opacity-90">
+                  <span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      />
+                    </svg>
+                  </span>
                   <span className="text-base leading-normal">
                     アイコン画像を選択
                   </span>
