@@ -46,7 +46,7 @@ export const mockOnlineUsers: OnlineUser[] = [
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
-    id: '3',
+    id: '4',
     name: 'サンプルユーザー4',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
