@@ -40,7 +40,9 @@ const GuestLogin: React.FC<GuestLoginProps> = ({ HeaderComponent }) => {
 
   return (
     <div className="h-screen bg-gray-100 flex flex-col">
-      {HeaderComponent}
+      <header className="bg-white h-16 border-b border-gray-200">
+        <div className="max-w-screen-xl mx-auto h-full">{HeaderComponent}</div>
+      </header>
       {/* <main className="flex-grow flex justify-center items-center space-x-8"> */}
       <main className="flex pt-24 mx-auto space-x-8">
         {/* left content */}
