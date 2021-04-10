@@ -11,6 +11,24 @@ module.exports = {
   ],
   "webpackFinal": async (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, '../src')
+
+    config.module.rules.push({
+      test: /\.scss$/,
+      use: [
+        'style-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            importLoaders: 1, // 1 => postcss-loader
+            modules: {
+              localIdentName: '[local]___[hash:base64:2]',
+            },
+          },
+        },
+        'sass-loader',
+      ],
+    })
+
     return config
   }
 }
