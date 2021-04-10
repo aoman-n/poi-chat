@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 
 import { UserManager, User } from '@/painter/user'
 import Playground from './presentation'
@@ -9,9 +9,17 @@ const PlaygroundContainer: React.FC = () => {
   const [userManager, setUserManager] = useState<UserManager | null>(null)
 
   useEffect(() => {
-    console.log('useEffect!')
     setUserManager(new UserManager(mockUsers.map((u) => new User(u))))
   }, [])
+
+  const handleMovePos = useCallback(
+    (x: number, y: number) => {
+      if (!userManager) return
+
+      userManager.changePos('2', x, y)
+    },
+    [userManager],
+  )
 
   if (!userManager) {
     return null
@@ -23,7 +31,10 @@ const PlaygroundContainer: React.FC = () => {
       handleSubmitMessage={(e: React.FormEvent<HTMLFormElement>) =>
         e.preventDefault()
       }
-      userManager={userManager}
+      rooomScreenProps={{
+        userManager: userManager,
+        handleMovePos: handleMovePos,
+      }}
     />
   )
 }

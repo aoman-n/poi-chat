@@ -1,7 +1,6 @@
 import React from 'react'
 import useScrollBottom from '@/hooks/useScrollBottom'
-import { UserManager } from '@/painter/user'
-import RoomScreen from '@/components/organisms/RoomScreen'
+import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
 
 export type Message = {
   id: string
@@ -15,20 +14,20 @@ export type Message = {
 export type PlaygroundProps = {
   messages: Message[]
   handleSubmitMessage: (e: React.FormEvent<HTMLFormElement>) => void
-  userManager: UserManager
+  rooomScreenProps: RoomScreenProps
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
   messages,
   handleSubmitMessage,
-  userManager,
+  rooomScreenProps,
 }) => {
   const { scrollAreaRef, endItemRef } = useScrollBottom(messages)
 
   return (
     <div>
       {/* RoomScreenは一旦決め打ちサイズで */}
-      <RoomScreen userManager={userManager} />
+      <RoomScreen {...rooomScreenProps} />
       <div className={['mt-6'].join(' ')}>
         <h4 className={['mb-1', 'text-gray-900'].join(' ')}>コメント欄</h4>
         <ul
@@ -64,6 +63,7 @@ const Playground: React.FC<PlaygroundProps> = ({
           type="text"
           className="px-3 py-2 bg-white focus:outline-none text-sm flex-grow"
           placeholder="コメントを入力"
+          autoComplete="off"
         />
         <button className="px-4 bg-green-600 text-white font-medium opacity-80 hover:opacity-100 duration-100 focus:outline-none">
           送信
