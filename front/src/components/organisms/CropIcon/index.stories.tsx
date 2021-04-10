@@ -5,6 +5,9 @@ import CropIcon, { CropIconProps } from '.'
 export default {
   title: 'organisms/CropIcon',
   component: CropIcon,
+  argTypes: {
+    handleUpdateImage: { action: 'updateImage!' },
+  },
 } as Meta
 
 const Template: Story<CropIconProps> = (args) => <CropIcon {...args} />

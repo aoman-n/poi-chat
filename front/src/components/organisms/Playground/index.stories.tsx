@@ -1,6 +1,7 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
-import { mockMessages } from '@/mocks'
+import { ROOM_SIZE } from '@/constants'
+import { mockMessages, mockUserManager } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
 
 export default {
@@ -9,7 +10,7 @@ export default {
 } as Meta
 
 const Template: Story<PlaygroundProps> = (args) => (
-  <div className="w-2/3">
+  <div style={{ width: `${ROOM_SIZE.WIDTH}px` }}>
     <Playground {...args} />
   </div>
 )
@@ -19,4 +20,5 @@ Default.args = {
   messages: mockMessages,
   handleSubmitMessage: (e: React.FormEvent<HTMLFormElement>) =>
     e.preventDefault(),
+  userManager: mockUserManager,
 }
