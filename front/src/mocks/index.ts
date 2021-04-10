@@ -1,7 +1,7 @@
-import { UserInfo } from '../painter/user'
+import { UserInfo } from '@/painter/user'
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
-import { Message } from '@/components/organisms/Playground'
+import { Message } from '@/components/organisms/Playground/presentation'
 
 export const mockUsers: UserInfo[] = [
   {
@@ -15,15 +15,15 @@ export const mockUsers: UserInfo[] = [
     id: '2',
     avatarUrl:
       'https://pbs.twimg.com/profile_images/1130684542732230656/pW77OgPS_400x400.png',
-    currentX: 100,
-    currentY: 100,
+    currentX: 30,
+    currentY: 30,
   },
   {
     id: '3',
     avatarUrl:
       'https://avatars.githubusercontent.com/u/16658556?s=400&u=d90077a02b620f83ac0876cfe0b15bd696c415ec&v=4',
-    currentX: 200,
-    currentY: 200,
+    currentX: 50,
+    currentY: 50,
   },
 ]
 

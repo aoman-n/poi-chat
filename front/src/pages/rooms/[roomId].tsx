@@ -1,3 +1,4 @@
+import React from 'react'
 import { NextPage, GetServerSideProps } from 'next'
 import Head from 'next/head'
 
@@ -7,8 +8,7 @@ import OnlineUserList from '@/components/organisms/OnlineUserList'
 import Profile from '@/components/organisms/Profile'
 import Playground from '@/components/organisms/Playground'
 
-import { mockOnlineUsers, mockMessages } from '@/mocks'
-import React from 'react'
+import { mockOnlineUsers } from '@/mocks'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   console.log({ roomId })
@@ -21,14 +21,7 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
       </Head>
       <MainTemplate
         HeaderComponent={<Header />}
-        MainComponent={
-          <Playground
-            messages={mockMessages}
-            handleSubmitMessage={(e: React.FormEvent<HTMLFormElement>) =>
-              e.preventDefault()
-            }
-          />
-        }
+        MainComponent={<Playground />}
         MyProfileComponent={
           <Profile
             profile={{

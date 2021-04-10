@@ -13,8 +13,8 @@ type UserOpts = {
 }
 
 export class User {
-  private _sizeW = 60
-  private _sizeH = 60
+  private _sizeW = 50
+  private _sizeH = 50
   private _id: string
   private _currentX: number
   private _currentY: number

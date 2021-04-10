@@ -1,7 +1,7 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
 import { mockMessages } from '@/mocks'
-import Playground, { PlaygroundProps } from '.'
+import Playground, { PlaygroundProps } from './presentation'
 
 export default {
   title: 'organisms/Playground',

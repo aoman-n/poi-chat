@@ -1,20 +1,27 @@
+import { ROOM_SIZE, DEFAULT_ROOM_BG_COLOR } from '@/constants'
+
 type RoomScreenOpts = {
-  bgImage: string
+  bgImage?: string
+  bgColor?: string
 }
 
 class RoomScreen {
-  static WIDTH = 800
-  static HEIGHT = 600
   private _bgImageEl: HTMLImageElement
   private _isBgLoaded: boolean
+  private _bgColor: string
 
-  constructor(opts: RoomScreenOpts) {
-    this._isBgLoaded = false
+  constructor(opts?: RoomScreenOpts) {
     this._bgImageEl = new Image()
-    this._bgImageEl.src = opts.bgImage
-    this._bgImageEl.onload = () => {
-      this._isBgLoaded = true
+    this._isBgLoaded = false
+
+    if (opts && opts.bgImage) {
+      this._bgImageEl.src = opts.bgImage
+      this._bgImageEl.onload = () => {
+        this._isBgLoaded = true
+      }
     }
+
+    this._bgColor = (opts && opts.bgColor) || DEFAULT_ROOM_BG_COLOR
   }
 
   update() {
@@ -22,15 +29,18 @@ class RoomScreen {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    if (!this._isBgLoaded) return
-
-    ctx.drawImage(
-      this._bgImageEl,
-      0,
-      0,
-      RoomScreen.WIDTH,
-      (this._bgImageEl.height * RoomScreen.WIDTH) / this._bgImageEl.width,
-    )
+    if (this._isBgLoaded) {
+      ctx.drawImage(
+        this._bgImageEl,
+        0,
+        0,
+        ROOM_SIZE.WIDTH,
+        (this._bgImageEl.height * ROOM_SIZE.WIDTH) / this._bgImageEl.width,
+      )
+    } else {
+      ctx.fillStyle = this._bgColor
+      ctx.fillRect(0, 0, ROOM_SIZE.WIDTH, ROOM_SIZE.HEIGHT)
+    }
   }
 }
 

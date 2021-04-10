@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react'
 import RoomScreen from '@/painter/roomScreen'
-import { UserManager, User } from '@/painter/user'
-import { mockUsers } from '@/mocks'
-
-const SAMPLE_BG_IMAGE = 'https://pbs.twimg.com/media/EVUqmD3U4AABXgv.jpg'
+import { UserManager } from '@/painter/user'
+import { ROOM_SIZE } from '@/constants'
 
 const mainLoop = (ctx: CanvasRenderingContext2D, userManager: UserManager) => {
-  const roomScreen = new RoomScreen({ bgImage: SAMPLE_BG_IMAGE })
+  const roomScreen = new RoomScreen()
 
   setInterval(() => {
     roomScreen.draw(ctx)
@@ -15,21 +13,22 @@ const mainLoop = (ctx: CanvasRenderingContext2D, userManager: UserManager) => {
   }, 1000 / 30)
 }
 
-const Room: React.FC = () => {
+export type RoomScreenComponentProps = {
+  userManager: UserManager
+}
+
+const RoomScreenComponent: React.FC<RoomScreenComponentProps> = ({
+  userManager,
+}) => {
   useEffect(() => {
-    // TODO: usersを取得
-    const userManager = new UserManager(mockUsers.map((u) => new User(u)))
-    // TODO: userの位置情報をSubscribe
     const canvas = document.getElementById('canvas') as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     mainLoop(ctx, userManager)
-  }, [])
+  }, [userManager])
 
   return (
-    <div>
-      <canvas id="canvas" width={RoomScreen.WIDTH} height={RoomScreen.HEIGHT} />
-    </div>
+    <canvas id="canvas" width={ROOM_SIZE.WIDTH} height={ROOM_SIZE.HEIGHT} />
   )
 }
 
-export default Room
+export default RoomScreenComponent
