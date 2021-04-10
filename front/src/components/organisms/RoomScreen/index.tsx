@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
-import RoomScreen from '../painter/roomScreen'
-import { UserManager, User } from '../painter/user'
-import { mockUsers } from '../mocks'
+import RoomScreen from '@/painter/roomScreen'
+import { UserManager, User } from '@/painter/user'
+import { mockUsers } from '@/mocks'
 
 const SAMPLE_BG_IMAGE = 'https://pbs.twimg.com/media/EVUqmD3U4AABXgv.jpg'
 
