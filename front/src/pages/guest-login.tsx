@@ -9,7 +9,7 @@ const Login = () => {
         <title>ログイン</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <GuestLogin HeaderComponent={<Header />} />
+      <GuestLogin HeaderComponent={<Header isLoggedIn={false} />} />
     </>
   )
 }

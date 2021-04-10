@@ -20,7 +20,7 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <MainTemplate
-        HeaderComponent={<Header />}
+        HeaderComponent={<Header isLoggedIn={true} />}
         MainComponent={<Playground />}
         MyProfileComponent={
           <Profile

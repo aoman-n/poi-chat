@@ -22,7 +22,7 @@ const RoomsPage: React.FC = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <MainTemplate
-        HeaderComponent={<Header />}
+        HeaderComponent={<Header isLoggedIn={true} />}
         MainComponent={<RoomList rooms={mockRooms} />}
         MyProfileComponent={
           <Profile

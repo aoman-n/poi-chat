@@ -1,12 +1,17 @@
 import React from 'react'
+import Link from 'next/link'
 import styles from './index.module.scss'
 
-const Header: React.FC = () => {
+export type HeaderProps = {
+  isLoggedIn: boolean
+}
+
+const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
   return (
     <div
       className={[
         'h-full',
-        'mx-4',
+        'px-6',
         'flex',
         'items-center',
         styles.container,
@@ -27,6 +32,15 @@ const Header: React.FC = () => {
           />
         </svg>
       </h1>
+      <div className="ml-auto">
+        {isLoggedIn && (
+          <Link href="/logout">
+            <a className="font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
+              ログアウト
+            </a>
+          </Link>
+        )}
+      </div>
     </div>
   )
 }

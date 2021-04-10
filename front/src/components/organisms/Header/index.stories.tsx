@@ -1,13 +1,19 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
-import Header from '.'
+import Header, { HeaderProps } from '.'
 
 export default {
   title: 'organisms/Header',
   component: Header,
 } as Meta
 
-const Template: Story = (args) => <Header {...args} />
+const Template: Story<HeaderProps> = (args) => (
+  <div className="h-16 bg-white">
+    <Header {...args} />
+  </div>
+)
 
 export const Default = Template.bind({})
-Default.args = {}
+Default.args = {
+  isLoggedIn: true,
+}
