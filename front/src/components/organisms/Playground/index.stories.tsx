@@ -1,8 +1,14 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
 import { ROOM_SIZE } from '@/constants'
-import { mockMessages, mockUserManager } from '@/mocks'
+import { mockMessages, mockUsers } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
+
+import { UserManager, User } from '@/painter/user'
+
+export const mockUserManager = new UserManager(
+  mockUsers.map((u) => new User(u)),
+)
 
 export default {
   title: 'organisms/Playground',

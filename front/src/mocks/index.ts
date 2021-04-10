@@ -2,7 +2,6 @@ import { UserInfo } from '@/painter/user'
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
 import { Message } from '@/components/organisms/Playground/presentation'
-import { UserManager, User } from '@/painter/user'
 
 export const mockUsers: UserInfo[] = [
   {
@@ -27,10 +26,6 @@ export const mockUsers: UserInfo[] = [
     currentY: 50,
   },
 ]
-
-export const mockUserManager = new UserManager(
-  mockUsers.map((u) => new User(u)),
-)
 
 export const mockOnlineUsers: OnlineUser[] = [
   {
