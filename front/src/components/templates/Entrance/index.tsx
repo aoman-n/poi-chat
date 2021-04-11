@@ -1,11 +1,10 @@
 import React from 'react'
-import cn from 'classnames'
 
 export type EntranceProps = {
-  noop?: string
+  MainComponent: React.ReactNode
 }
 
-const Entrance: React.FC<EntranceProps> = ({ noop }) => {
+const Entrance: React.FC<EntranceProps> = ({ MainComponent }) => {
   return (
     <div className="h-screen bg-gray-100">
       <header className="pt-24 pb-6 text-center">
@@ -25,64 +24,7 @@ const Entrance: React.FC<EntranceProps> = ({ noop }) => {
           </svg>
         </h1>
       </header>
-      <main className="w-96 mx-auto bg-white">
-        <div className="text-center py-8 text-lg text-gray-800 border-b border-gray-200">
-          ログインして始める
-        </div>
-        <div className="px-8">
-          <div>
-            <div className="text-center py-6">
-              <button
-                style={{ backgroundColor: 'rgb(29, 161, 242)' }}
-                className={cn(
-                  'py-3',
-                  'w-full',
-                  'text-white',
-                  'rounded-sm',
-                  'font-semibold',
-                  'tracking-wide',
-                  'duration-200',
-                  'hover:opacity-90',
-                  'focus:outline-none',
-                )}
-              >
-                Twitter Login
-              </button>
-            </div>
-
-            <div className="flex md:justify-between justify-center items-center">
-              <div
-                style={{ height: '1px' }}
-                className="bg-gray-300 md:block hidden w-5/12"
-              ></div>
-              <span className="mx-1 text-sm font-light text-gray-400">or</span>
-              <div
-                style={{ height: '1px' }}
-                className="bg-gray-300 md:block hidden w-5/12"
-              ></div>
-            </div>
-
-            <div className="text-center py-6">
-              <button
-                className={cn(
-                  'py-3',
-                  'w-full',
-                  'text-white',
-                  'rounded-sm',
-                  'font-semibold',
-                  'tracking-wide',
-                  'bg-gray-800',
-                  'duration-200',
-                  'hover:opacity-90',
-                  'focus:outline-none',
-                )}
-              >
-                Guest Login
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
+      <main className="w-96 mx-auto bg-white">{MainComponent}</main>
     </div>
   )
 }

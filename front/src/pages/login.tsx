@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Entrance from '@/components/templates/Entrance'
+import LoginForm from '@/components/organisms/LoginForm'
 
 const Login = () => {
   return (
@@ -8,7 +9,7 @@ const Login = () => {
         <title>ログイン</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Entrance />
+      <Entrance MainComponent={<LoginForm />} />
     </>
   )
 }
