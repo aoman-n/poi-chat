@@ -27,12 +27,13 @@ type Redis struct {
 }
 
 type Config struct {
-	Port       string `default:"8080"`
-	GoEnv      string `split_words:"true"`
-	SessionKey string `split_words:"true"`
-	Db         DB
-	Redis      Redis
-	Twitter    Twitter
+	Port         string `default:"8080"`
+	GoEnv        string `split_words:"true"`
+	SessionKey   string `split_words:"true"`
+	FrontBaseURL string `split_words:"true"`
+	Db           DB
+	Redis        Redis
+	Twitter      Twitter
 }
 
 var Conf Config

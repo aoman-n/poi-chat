@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/delivery"
 )
 
@@ -19,6 +20,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Success!!")
+	w.Header().Set("location", fmt.Sprintf("%s/login", config.Conf.FrontBaseURL))
+	w.WriteHeader(http.StatusMovedPermanently)
 }

@@ -3,7 +3,7 @@ settings:
     force: false
     interval: 0s
 schema:
-- name: minarai-operator-service
+- name: api
   path: .
   commands:
     install:

@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -101,6 +100,6 @@ func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Success!!")
+	w.Header().Set("location", config.Conf.FrontBaseURL)
+	w.WriteHeader(http.StatusMovedPermanently)
 }
