@@ -47,8 +47,8 @@ export class User {
 
     ctx.drawImage(
       this._avatarEl,
-      this._currentX,
-      this._currentY,
+      this._currentX - this._sizeW / 2,
+      this._currentY - this._sizeH / 2,
       this._sizeW,
       this._sizeH,
     )
