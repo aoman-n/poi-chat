@@ -15,9 +15,7 @@ const Template: Story<ProfileProps> = (args) => (
 
 export const Default = Template.bind({})
 Default.args = {
-  profile: {
-    name: 'sample name',
-    avatarUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-  },
+  name: 'sample name',
+  avatarUrl:
+    'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
 }

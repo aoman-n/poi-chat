@@ -4,7 +4,7 @@ import { AppProps } from 'next/app'
 
 export type PageProps = {
   title: string
-  layout: 'Main' | 'Entrance'
+  layout: 'Main' | 'Entrance' | 'GuestLogin'
 }
 
 /* eslint @typescript-eslint/ban-types: 0 */

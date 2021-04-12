@@ -1,10 +1,10 @@
 import React from 'react'
 
 export type EntranceProps = {
-  MainComponent: React.ReactNode
+  children: React.ReactNode
 }
 
-const Entrance: React.FC<EntranceProps> = ({ MainComponent }) => {
+const Entrance: React.FC<EntranceProps> = ({ children }) => {
   return (
     <div className="h-screen bg-gray-100">
       <header className="pt-24 pb-6 text-center">
@@ -24,7 +24,7 @@ const Entrance: React.FC<EntranceProps> = ({ MainComponent }) => {
           </svg>
         </h1>
       </header>
-      <main className="w-96 mx-auto bg-white">{MainComponent}</main>
+      <main className="w-96 mx-auto bg-white">{children}</main>
     </div>
   )
 }

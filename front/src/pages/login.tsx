@@ -1,13 +1,8 @@
 import { AppGetStaticProps } from '@/types'
-import Entrance from '@/components/templates/Entrance'
 import LoginForm from '@/components/organisms/LoginForm'
 
 const Login = () => {
-  return (
-    <>
-      <Entrance MainComponent={<LoginForm />} />
-    </>
-  )
+  return <LoginForm />
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {

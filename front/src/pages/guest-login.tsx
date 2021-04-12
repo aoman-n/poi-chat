@@ -14,7 +14,7 @@ export const getStaticProps: AppGetStaticProps = async () => {
   return {
     props: {
       title: 'ゲストログイン',
-      layout: 'Entrance',
+      layout: 'GuestLogin',
     },
   }
 }
