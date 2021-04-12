@@ -1,17 +1,22 @@
-import Head from 'next/head'
+import { AppGetStaticProps } from '@/types'
 import GuestLogin from '@/components/templates/GuestLogin'
 import Header from '@/components/organisms/Header'
 
 const Login = () => {
   return (
     <>
-      <Head>
-        <title>ログイン</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <GuestLogin HeaderComponent={<Header isLoggedIn={false} />} />
     </>
   )
+}
+
+export const getStaticProps: AppGetStaticProps = async () => {
+  return {
+    props: {
+      title: 'ゲストログイン',
+      layout: 'Entrance',
+    },
+  }
 }
 
 export default Login

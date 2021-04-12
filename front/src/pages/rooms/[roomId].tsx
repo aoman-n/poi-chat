@@ -1,7 +1,7 @@
 import React from 'react'
-import { NextPage, GetServerSideProps } from 'next'
-import Head from 'next/head'
+import { NextPage } from 'next'
 
+import { AppGetServerSideProps } from '@/types'
 import MainTemplate from '@/components/templates/Main'
 import Header from '@/components/organisms/Header'
 import OnlineUserList from '@/components/organisms/OnlineUserList'
@@ -14,32 +14,32 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   console.log({ roomId })
 
   return (
-    <>
-      <Head>
-        <title>ルーム一覧</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <MainTemplate
-        HeaderComponent={<Header isLoggedIn={true} />}
-        MainComponent={<Playground />}
-        MyProfileComponent={
-          <Profile
-            profile={{
-              name: 'sample name',
-              avatarUrl:
-                'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-            }}
-          />
-        }
-        OnlineUserListComponent={<OnlineUserList users={mockOnlineUsers} />}
-      />
-    </>
+    <MainTemplate
+      HeaderComponent={<Header isLoggedIn={true} />}
+      MainComponent={<Playground />}
+      MyProfileComponent={
+        <Profile
+          profile={{
+            name: 'sample name',
+            avatarUrl:
+              'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+          }}
+        />
+      }
+      OnlineUserListComponent={<OnlineUserList users={mockOnlineUsers} />}
+    />
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
+export const getServerSideProps: AppGetServerSideProps<{
+  roomId: string | string[] | undefined
+}> = async (ctx) => {
   return {
-    props: { roomId: ctx.params?.roomId },
+    props: {
+      roomId: ctx.params?.roomId,
+      title: 'ルーム',
+      layout: 'Main',
+    },
   }
 }
 
