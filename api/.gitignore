@@ -34,3 +34,8 @@ tmp/
 .env
 
 graph
+
+static/*
+!static/.gitkeep
+
+stash.md

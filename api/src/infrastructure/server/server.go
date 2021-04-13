@@ -98,6 +98,10 @@ func Init() {
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
 
+	// serve image files
+	fs := http.FileServer(http.Dir("static"))
+	router.Handle("/static/*", http.StripPrefix("/static/", fs))
+
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", config.Conf.Port)
 	log.Fatal(http.ListenAndServe(":"+config.Conf.Port, router))
 }

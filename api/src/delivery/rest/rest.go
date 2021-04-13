@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/laster18/poi/api/src/config"
 	"github.com/pkg/errors"
 )
 
@@ -13,12 +14,14 @@ var (
 	errInvalidSession     = errors.New("invalid session")
 	errSaveSession        = errors.New("cannot save session")
 	errInvalidCredentials = errors.New("invalid credentials")
+	errImageSave          = errors.New("failed to save image")
 )
 
 // NewRoutes will initialize the all resources endpoint
 func NewRoutes(r *chi.Mux) {
 	r.Get("/twitter/oauth", twitterOauthHandler)
 	r.Get("/twitter/callback", twitterCallbackHandler)
+	r.Post("/guest-login", guestLoginHandler)
 	r.Get("/logout", logoutHandler)
 }
 
@@ -32,7 +35,17 @@ func handleSaveOrRemoveSessionErr(w http.ResponseWriter, err error) {
 	fmt.Fprint(w, fmt.Sprintf("%s: %s", errSaveSession.Error(), err.Error()))
 }
 
-func handleNotMatchToken(w http.ResponseWriter, err error) {
+func handleNotMatchTokenErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	fmt.Fprint(w, fmt.Sprintf("%s: %s", errInvalidCredentials.Error(), err.Error()))
+}
+
+func handleImageSaveErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprint(w, fmt.Sprintf("%s: %s", errImageSave.Error(), err.Error()))
+}
+
+func handleRedirectRoot(w http.ResponseWriter) {
+	w.Header().Set("location", config.Conf.FrontBaseURL)
+	w.WriteHeader(http.StatusMovedPermanently)
 }

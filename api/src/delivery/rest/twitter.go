@@ -51,13 +51,13 @@ func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	token, secret, err := session.GetCredentials()
 	if err != nil {
 		log.Print(err)
-		handleNotMatchToken(w, err)
+		handleNotMatchTokenErr(w, err)
 		return
 	}
 
 	if token != r.URL.Query().Get("oauth_token") {
 		log.Println("request oauth_token not equal request_token_secret in session", "request_token_secret")
-		handleNotMatchToken(w, err)
+		handleNotMatchTokenErr(w, err)
 		return
 	}
 
