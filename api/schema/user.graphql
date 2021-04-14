@@ -1,3 +1,9 @@
+type Me {
+  id: ID!
+  displayName: String!
+  avatarUrl: String!
+}
+
 type User {
   id: ID!
   displayName: String!
@@ -35,6 +41,10 @@ input MoveInput {
 
 extend type RoomDetail {
   users: [User!]!
+}
+
+extend type Query {
+  me: Me!
 }
 
 extend type Mutation {

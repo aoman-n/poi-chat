@@ -1,16 +1,17 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/delivery"
 	"github.com/olahol/go-imageupload"
-	"github.com/pkg/errors"
 )
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,17 +34,17 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 // name: string
 // image: file
 func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("recevied guestLogin!!!")
+
 	username := r.FormValue("name")
 
 	if username == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "required name parameter")
+		handleValidationErr(w, errors.New("required name parameter"))
 		return
 	}
 
-	if len(username) > 12 {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "name is max 12 characters")
+	if utf8.RuneCountInString(username) > 12 {
+		handleValidationErr(w, errors.New("name is max 12 characters"))
 		return
 	}
 
@@ -56,6 +57,11 @@ func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	uploadedAvatarURL, err := saveImageToLocal(r, "image")
 	if err != nil {
+		if err == errNoFile {
+			handleValidationErr(w, errors.New("required image"))
+			return
+		}
+
 		log.Println("failed to save image to local, err:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "internal server error")
@@ -79,26 +85,31 @@ func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleRedirectRoot(w)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"ok"}`))
 }
+
+var (
+	errNoFile = errors.New("no file error")
+)
 
 func saveImageToLocal(r *http.Request, paramname string) (string, error) {
 	img, err := imageupload.Process(r, "image")
 
 	if err != nil {
-		return "", err
+		return "", errNoFile
 	}
 
 	thumb, err := imageupload.ThumbnailPNG(img, 300, 300)
 
 	if err != nil {
-		return "", errors.Wrap(err, "failed to resize iamge")
+		return "", fmt.Errorf("failed to resize iamge: %w", err)
 	}
 
 	uploadLocalPath := "static/" + uuid.NewString() + ".png"
 
 	if err := ioutil.WriteFile(uploadLocalPath, thumb.Data, 0600); err != nil {
-		return "", errors.Wrap(err, "failed to write image")
+		return "", fmt.Errorf("failed to write image: %w", err)
 	}
 
 	return "http://localhost:" + config.Conf.Port + "/" + uploadLocalPath, nil

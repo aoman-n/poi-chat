@@ -64,6 +64,21 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return movedUser, nil
 }
 
+func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	me := &model.Me{
+		ID:          currentUser.ID,
+		DisplayName: currentUser.Name,
+		AvatarURL:   currentUser.AvatarURL,
+	}
+
+	return me, nil
+}
+
 func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) (<-chan model.UserEvent, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {

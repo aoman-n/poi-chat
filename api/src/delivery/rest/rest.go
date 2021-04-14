@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -25,6 +26,28 @@ func NewRoutes(r *chi.Mux) {
 	r.Get("/logout", logoutHandler)
 }
 
+type ResponseErr struct {
+	Message string `json:"message"`
+}
+
+func getResponseErrJSON(msg string) (string, error) {
+	resErr := ResponseErr{
+		Message: msg,
+	}
+
+	bs, err := json.Marshal(resErr)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bs), nil
+}
+
+func handleInternalServerStrErr(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	fmt.Fprint(w, "internal server error")
+}
+
 func handleInvalidSessionErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, fmt.Sprintf("%s: %s", errInvalidSession.Error(), err.Error()))
@@ -43,6 +66,16 @@ func handleNotMatchTokenErr(w http.ResponseWriter, err error) {
 func handleImageSaveErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, fmt.Sprintf("%s: %s", errImageSave.Error(), err.Error()))
+}
+
+func handleValidationErr(w http.ResponseWriter, err error) {
+	resJSON, err := getResponseErrJSON(err.Error())
+	if err != nil {
+		handleInternalServerStrErr(w)
+	}
+
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprint(w, resJSON)
 }
 
 func handleRedirectRoot(w http.ResponseWriter) {
