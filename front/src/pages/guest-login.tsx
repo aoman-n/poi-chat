@@ -1,13 +1,8 @@
 import { AppGetStaticProps } from '@/types'
-import GuestLogin from '@/components/templates/GuestLogin'
-import Header from '@/components/organisms/Header'
+import GuestLoginForm from '@/components/organisms/GuestLoginForm'
 
 const Login = () => {
-  return (
-    <>
-      <GuestLogin HeaderComponent={<Header isLoggedIn={false} />} />
-    </>
-  )
+  return <GuestLoginForm />
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {

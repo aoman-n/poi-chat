@@ -3,7 +3,7 @@ import { Story, Meta } from '@storybook/react'
 import LoginForm, { LoginFormProps } from '.'
 
 export default {
-  title: 'templates/Entrance',
+  title: 'organisms/LoginForm',
   component: LoginForm,
 } as Meta
 
