@@ -94,6 +94,7 @@ func (s *UserSession) SetUser(u *User) {
 }
 
 func (s *UserSession) Save(r *http.Request, w http.ResponseWriter) error {
+	// TODO: add cookie options
 	return s.sess.Save(r, w)
 }
 
