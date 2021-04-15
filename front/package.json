@@ -19,6 +19,7 @@
     "classnames": "2.3.1",
     "croppie": "2.6.5",
     "graphql": "15.5.0",
+    "graphql-anywhere": "4.2.7",
     "next": "10.0.7",
     "react": "17.0.1",
     "react-dom": "17.0.1",
