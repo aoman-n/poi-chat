@@ -1,0 +1,23 @@
+schema:
+  - http://localhost:8080/query
+documents:
+  - src/**/*.graphql
+generates:
+  src/graphql/index.tsx:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      reactApolloVersion: 3
+      withHOC: false
+      withComponent: false
+      withHooks: true
+      scalars:
+        Time: string
+    hooks:
+      afterOneFileWrite:
+        - npx eslint --fix
+  # ./graphql.schema.json:
+  #   plugins:
+  #     - "introspection"

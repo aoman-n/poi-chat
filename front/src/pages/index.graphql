@@ -1,0 +1,22 @@
+query Index {
+  rooms {
+    pageInfo {
+      startCursor
+      endCursor
+      hasNextPage
+      hasPreviousPage
+    }
+    edges {
+      cursor
+      node {
+        id
+        name
+      }
+    }
+    nodes {
+      id
+      name
+    }
+    roomCount
+  }
+}
