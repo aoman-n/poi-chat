@@ -1,5 +1,5 @@
 import React from 'react'
-import useScrollBottom from '@/hooks/useScrollBottom'
+import { useScrollBottom } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
 
 export type Message = {

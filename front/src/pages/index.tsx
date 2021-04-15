@@ -6,11 +6,7 @@ import RoomList from '@/components/organisms/RoomList'
 
 import { mockRooms } from '@/mocks'
 
-const RoomsPageContainer: NextPage = () => {
-  return <RoomsPage />
-}
-
-const RoomsPage: React.FC = () => {
+const IndexRoomsPage: NextPage = () => {
   return <RoomList rooms={mockRooms} />
 }
 
@@ -23,4 +19,4 @@ export const getStaticProps: AppGetStaticProps = async () => {
   }
 }
 
-export default RoomsPageContainer
+export default IndexRoomsPage

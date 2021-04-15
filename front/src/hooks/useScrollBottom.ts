@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const useScrollBottom = (list: unknown[]) => {
+export const useScrollBottom = (list: unknown[]) => {
   const mounted = useRef<boolean>(false)
   const scrollAreaRef = useRef<HTMLUListElement>(null)
   const endItemRef = useRef<HTMLLIElement>(null)
@@ -51,5 +51,3 @@ const useScrollBottom = (list: unknown[]) => {
 
   return { scrollAreaRef, endItemRef }
 }
-
-export default useScrollBottom

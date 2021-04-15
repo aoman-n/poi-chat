@@ -7,12 +7,14 @@ function getLink() {
   if (!process.browser) {
     const httpLink = new HttpLink({
       uri: 'http://api:8080/query',
+      credentials: 'include',
     })
 
     terminatingLink = httpLink
   } else {
     const httpLink = new HttpLink({
       uri: 'http://localhost:8080/query',
+      credentials: 'include',
     })
 
     const wsLink = new WebSocketLink({
@@ -43,4 +45,5 @@ function getLink() {
 export const apolloClient = new ApolloClient({
   link: getLink(),
   cache: new InMemoryCache(),
+  credentials: 'inclued',
 })

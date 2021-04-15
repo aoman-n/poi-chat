@@ -1,0 +1,7 @@
+query Auth {
+  me {
+    id
+    displayName
+    avatarUrl
+  }
+}
