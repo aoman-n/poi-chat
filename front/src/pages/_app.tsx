@@ -1,6 +1,8 @@
 import React from 'react'
 import { AppPageProps } from 'next'
 import Head from 'next/head'
+import { ApolloProvider } from '@apollo/client'
+import { apolloClient } from '@/lib/apolloClient'
 import Main from '@/components/templates/Main'
 import Entrance from '@/components/templates/Entrance'
 import GuestLogin from '@/components/templates/GuestLogin'
@@ -32,9 +34,11 @@ function MyApp({ Component, pageProps }: AppPageProps) {
         <title>{pageProps.title} || poi-chat</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <ApolloProvider client={apolloClient}>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </ApolloProvider>
     </>
   )
 }
