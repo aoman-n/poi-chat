@@ -75,7 +75,7 @@ func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userSession.SetUser(&delivery.User{
-		ID:        uuid.NewString(),
+		ID:        "User:" + uuid.NewString(),
 		Name:      username,
 		AvatarURL: uploadedAvatarURL,
 	})

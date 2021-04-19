@@ -34,7 +34,7 @@ models:
         resolver: true
       messages:
         resolver: true
-      joinedUsers:
+      users:
         resolver: true
   Message:
     fields:

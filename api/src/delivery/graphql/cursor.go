@@ -84,6 +84,10 @@ func encodeID(prefix Prefix, id int) string {
 	return fmt.Sprintf(string(prefix)+"%d", id)
 }
 
+func encodeIDStr(prefix Prefix, idStr string) string {
+	return fmt.Sprintf(string(prefix)+"%s", idStr)
+}
+
 func decodeID(prefix Prefix, id string) (int, error) {
 	idParts := strings.Split(id, ":")
 	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {

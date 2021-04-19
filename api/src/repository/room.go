@@ -135,7 +135,7 @@ func (r *RoomRepo) UpdateUser(ctx context.Context, u *domain.JoinedUser) error {
 
 func (r *RoomRepo) GetUserByID(ctx context.Context, id int) (*domain.JoinedUser, error) {
 	var u domain.JoinedUser
-	if err := r.db.First(&u, id).Error; err != nil {
+	if err := r.db.Where("user_id = ?", id).First(&u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, NewNotFoundErr(fmt.Sprintf("not found joined user, id: %d", id))
 		}
