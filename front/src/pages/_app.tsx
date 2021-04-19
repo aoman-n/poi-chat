@@ -24,14 +24,10 @@ const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (data) {
-      console.log('data!!')
-      console.log(data)
       setCurrentUser(data.me)
     }
 
     if (error) {
-      console.log('error!!')
-      console.log(error)
       setCurrentUser(null)
     }
   }, [data, error, setCurrentUser])
@@ -61,7 +57,7 @@ function MyApp({ Component, pageProps }: AppPageProps) {
   return (
     <>
       <Head>
-        <title>{pageProps.title} || poi-chat</title>
+        <title>{pageProps.title} | poi-chat</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ApolloProvider client={apolloClient}>

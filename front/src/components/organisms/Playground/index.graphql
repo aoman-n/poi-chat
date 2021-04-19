@@ -1,0 +1,54 @@
+fragment MessageFields on Message {
+  id
+  userId
+  userName
+  userAvatarUrl
+  body
+  createdAt
+}
+
+fragment RoomDetail on Query {
+  roomDetail(id: $roomId) {
+    id
+    name
+    users {
+      id
+      displayName
+      avatarUrl
+      x
+      y
+    }
+    messages(last: 20) {
+      nodes {
+        ... MessageFields
+      }
+    }
+  }
+}
+
+subscription UserEvent($roomId: ID!) {
+  subUserEvent(roomId: $roomId) {
+    __typename
+    ... on MovedUser {
+      id
+      x
+      y
+    }
+    ... on ExitedUser {
+      id
+    }
+    ... on JoinedUser {
+      id
+      displayName
+      avatarUrl
+      x
+      y
+    }
+  }
+}
+
+subscription Message($roomId: ID!) {
+  subMessage(roomId: $roomId) {
+    ... MessageFields
+  }
+}

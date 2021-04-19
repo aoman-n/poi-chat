@@ -85,4 +85,12 @@ export class UserManager {
 
     user.changePos(targetX, targetY)
   }
+
+  addUser(user: User) {
+    this._users.push(user)
+  }
+
+  deleteUser(id: string) {
+    this._users = this._users.filter((u) => !u.equal(id))
+  }
 }
