@@ -1,14 +1,16 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { UserManager, User } from '@/painter/user'
-import Playground from './presentation'
+import Playground, { Message } from './presentation'
 import {
   RoomDetailFragment,
   useUserEventSubscription,
   useJoinRoomSubscription,
   useMoveMutation,
+  useMessageSubscription,
+  MessageFieldsFragment,
+  useSendMessageMutation,
 } from '@/graphql'
 import { useCurrentUser } from '@/contexts/auth'
-import { mockMessages } from '@/mocks'
 
 type PlaygroundContainerProps = {
   roomId: string
@@ -21,8 +23,49 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   roomDetail,
   userManager,
 }) => {
+  const [sendMessage] = useSendMessageMutation()
+  const fetchedMessages = roomDetail.messages.nodes
+  const [messages, setMessages] = useState<Message[]>(
+    fetchedMessages
+      .map((m) => {
+        return {
+          id: m?.id || '',
+          userId: m?.userId || '',
+          userName: m?.userName || '',
+          userAvatarUrl: m?.userAvatarUrl || '',
+          body: m?.body || '',
+          createdAt: m?.createdAt || '',
+        }
+      })
+      .reverse(),
+  )
   const [moveMutation] = useMoveMutation()
   const { currentUser } = useCurrentUser()
+
+  const handleAddMessage = useCallback(
+    (message: MessageFieldsFragment) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: message.id,
+          userId: message.userId,
+          userName: message.userName,
+          userAvatarUrl: message.userAvatarUrl,
+          body: message.body,
+          createdAt: message.createdAt,
+        },
+      ])
+    },
+    [setMessages],
+  )
+
+  useMessageSubscription({
+    variables: { roomId },
+    onSubscriptionData: ({ subscriptionData }) => {
+      if (!subscriptionData.data) return
+      handleAddMessage(subscriptionData.data.subMessage)
+    },
+  })
 
   useJoinRoomSubscription({ variables: { roomId } })
   useUserEventSubscription({
@@ -71,16 +114,28 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
     [userManager, currentUser, moveMutation, roomId],
   )
 
+  const handleSubmitMessage = useCallback(
+    (values: { body: string }) => {
+      if (!values.body) return
+
+      sendMessage({
+        variables: {
+          roomId,
+          body: values.body,
+        },
+      })
+    },
+    [roomId, sendMessage],
+  )
+
   if (!userManager) {
     return null
   }
 
   return (
     <Playground
-      messages={mockMessages}
-      handleSubmitMessage={(e: React.FormEvent<HTMLFormElement>) =>
-        e.preventDefault()
-      }
+      messages={messages}
+      handleSubmitMessage={handleSubmitMessage}
       rooomScreenProps={{
         userManager: userManager,
         handleMovePos: handleMovePos,

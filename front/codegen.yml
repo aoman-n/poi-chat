@@ -15,6 +15,7 @@ generates:
       withHooks: true
       scalars:
         Time: string
+        ID: string
     hooks:
       afterOneFileWrite:
         - npx eslint --fix

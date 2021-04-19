@@ -274,6 +274,18 @@ export type MessageSubscription = { __typename?: 'Subscription' } & {
   subMessage: { __typename?: 'Message' } & MessageFieldsFragment
 }
 
+export type SendMessageMutationVariables = Exact<{
+  roomId: Scalars['ID']
+  body: Scalars['String']
+}>
+
+export type SendMessageMutation = { __typename?: 'Mutation' } & {
+  sendMessage: { __typename?: 'Message' } & Pick<
+    Message,
+    'id' | 'userId' | 'userName' | 'userAvatarUrl' | 'body' | 'createdAt'
+  >
+}
+
 export type AuthQueryVariables = Exact<{ [key: string]: never }>
 
 export type AuthQuery = { __typename?: 'Query' } & {
@@ -456,6 +468,61 @@ export type MessageSubscriptionHookResult = ReturnType<
   typeof useMessageSubscription
 >
 export type MessageSubscriptionResult = Apollo.SubscriptionResult<MessageSubscription>
+export const SendMessageDocument = gql`
+  mutation SendMessage($roomId: ID!, $body: String!) {
+    sendMessage(input: { roomID: $roomId, body: $body }) {
+      id
+      userId
+      userName
+      userAvatarUrl
+      body
+      createdAt
+    }
+  }
+`
+export type SendMessageMutationFn = Apollo.MutationFunction<
+  SendMessageMutation,
+  SendMessageMutationVariables
+>
+
+/**
+ * __useSendMessageMutation__
+ *
+ * To run a mutation, you first call `useSendMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendMessageMutation, { data, loading, error }] = useSendMessageMutation({
+ *   variables: {
+ *      roomId: // value for 'roomId'
+ *      body: // value for 'body'
+ *   },
+ * });
+ */
+export function useSendMessageMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    SendMessageMutation,
+    SendMessageMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(
+    SendMessageDocument,
+    options,
+  )
+}
+export type SendMessageMutationHookResult = ReturnType<
+  typeof useSendMessageMutation
+>
+export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>
+export type SendMessageMutationOptions = Apollo.BaseMutationOptions<
+  SendMessageMutation,
+  SendMessageMutationVariables
+>
 export const AuthDocument = gql`
   query Auth {
     me {
