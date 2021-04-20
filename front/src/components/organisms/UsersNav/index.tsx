@@ -1,17 +1,24 @@
 import React from 'react'
-import { mockOnlineUsers } from '@/mocks'
+import { useAuthContext } from '@/contexts/auth'
 import UsersNav from './presentation'
 
 const UsersNavContainer: React.FC = () => {
+  const { currentUser, isAuthChecking, onlineUsers } = useAuthContext()
+
   const props = {
-    profile: {
-      name: 'sample name',
-      avatarUrl:
-        'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-    },
+    profile: currentUser
+      ? {
+          name: currentUser.displayName,
+          avatarUrl: currentUser.avatarUrl,
+        }
+      : null,
     onlineUserList: {
-      users: mockOnlineUsers,
+      users: onlineUsers,
     },
+  }
+
+  if (isAuthChecking) {
+    return <div>スケルトン表示</div>
   }
 
   return <UsersNav {...props} />

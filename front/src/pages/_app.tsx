@@ -19,18 +19,19 @@ const Noop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { setCurrentUser } = useAuthContext()
+  const { setCurrentUser, setOnlineUsers } = useAuthContext()
   const { data, error } = useAuthQuery()
 
   useEffect(() => {
     if (data) {
       setCurrentUser(data.me)
+      setOnlineUsers(data.onlineUsers)
     }
 
     if (error) {
       setCurrentUser(null)
     }
-  }, [data, error, setCurrentUser])
+  }, [data, error, setCurrentUser, setOnlineUsers])
 
   // TODO: エラーコンポーネントを表示する？
   // if (error) return <div>error</div>

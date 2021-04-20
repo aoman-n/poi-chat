@@ -5,16 +5,18 @@ import OnlineUserList, {
 } from '@/components/organisms/OnlineUserList'
 
 export type UsersNavProps = {
-  profile: ProfileProps
+  profile: ProfileProps | null
   onlineUserList: OnlineUserListProps
 }
 
 const UsersNav: React.FC<UsersNavProps> = ({ profile, onlineUserList }) => {
   return (
     <>
-      <div className="border border-gray-400 mb-8">
-        <Profile {...profile} />
-      </div>
+      {profile && (
+        <div className="border border-gray-400 mb-8">
+          <Profile {...profile} />
+        </div>
+      )}
       <div className="overflow-y-auto">
         <OnlineUserList {...onlineUserList} />
       </div>

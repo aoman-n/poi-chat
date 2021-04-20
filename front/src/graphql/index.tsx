@@ -120,6 +120,18 @@ export type NoopPayload = {
   clientMutationId?: Maybe<Scalars['String']>
 }
 
+export type OfflineUserStatus = {
+  __typename?: 'OfflineUserStatus'
+  id: Scalars['ID']
+}
+
+export type OnlineUserStatus = {
+  __typename?: 'OnlineUserStatus'
+  id: Scalars['ID']
+  displayName: Scalars['String']
+  avatarUrl: Scalars['String']
+}
+
 export type PageInfo = {
   __typename?: 'PageInfo'
   startCursor?: Maybe<Scalars['String']>
@@ -141,6 +153,7 @@ export type Query = {
   rooms: RoomConnection
   roomDetail: RoomDetail
   me: Me
+  onlineUsers: Array<OnlineUserStatus>
 }
 
 export type QueryNodeArgs = {
@@ -203,20 +216,21 @@ export type SendMessageInput = {
 export type Subscription = {
   __typename?: 'Subscription'
   subMessage: Message
-  subUserEvent: UserEvent
   joinRoom: User
+  subUserEvent: UserEvent
+  changedUserStatus: UserStatus
 }
 
 export type SubscriptionSubMessageArgs = {
   roomId: Scalars['ID']
 }
 
-export type SubscriptionSubUserEventArgs = {
-  roomId: Scalars['ID']
-}
-
 export type SubscriptionJoinRoomArgs = {
   roomID: Scalars['ID']
+}
+
+export type SubscriptionSubUserEventArgs = {
+  roomId: Scalars['ID']
 }
 
 export type User = {
@@ -229,6 +243,8 @@ export type User = {
 }
 
 export type UserEvent = MovedUser | ExitedUser | JoinedUser
+
+export type UserStatus = OnlineUserStatus | OfflineUserStatus
 
 export type MessageFieldsFragment = { __typename?: 'Message' } & Pick<
   Message,
@@ -290,6 +306,12 @@ export type AuthQueryVariables = Exact<{ [key: string]: never }>
 
 export type AuthQuery = { __typename?: 'Query' } & {
   me: { __typename?: 'Me' } & Pick<Me, 'id' | 'displayName' | 'avatarUrl'>
+  onlineUsers: Array<
+    { __typename?: 'OnlineUserStatus' } & Pick<
+      OnlineUserStatus,
+      'id' | 'displayName' | 'avatarUrl'
+    >
+  >
 }
 
 export type IndexQueryVariables = Exact<{ [key: string]: never }>
@@ -526,6 +548,11 @@ export type SendMessageMutationOptions = Apollo.BaseMutationOptions<
 export const AuthDocument = gql`
   query Auth {
     me {
+      id
+      displayName
+      avatarUrl
+    }
+    onlineUsers {
       id
       displayName
       avatarUrl

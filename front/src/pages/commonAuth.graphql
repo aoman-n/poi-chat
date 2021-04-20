@@ -4,4 +4,9 @@ query Auth {
     displayName
     avatarUrl
   }
+  onlineUsers {
+    id
+    displayName
+    avatarUrl
+  }
 }

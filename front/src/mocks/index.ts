@@ -30,25 +30,25 @@ export const mockUsers: UserInfo[] = [
 export const mockOnlineUsers: OnlineUser[] = [
   {
     id: '1',
-    name: 'サンプルユーザー1',
+    displayName: 'サンプルユーザー1',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '2',
-    name: 'サンプルユーザー2',
+    displayName: 'サンプルユーザー2',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '3',
-    name: 'サンプルユーザー3',
+    displayName: 'サンプルユーザー3',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '4',
-    name: 'サンプルユーザー4',
+    displayName: 'サンプルユーザー4',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },

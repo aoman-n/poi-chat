@@ -78,6 +78,38 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	return me, nil
 }
 
+func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUserStatus, error) {
+	mockOnlineUsers := []*model.OnlineUserStatus{
+		{
+			ID:          "100",
+			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
+			DisplayName: "ユーザー1",
+		},
+		{
+			ID:          "200",
+			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
+			DisplayName: "ユーザー2",
+		},
+		{
+			ID:          "300",
+			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
+			DisplayName: "ユーザー3",
+		},
+		{
+			ID:          "400",
+			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
+			DisplayName: "ユーザー4",
+		},
+		{
+			ID:          "500",
+			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
+			DisplayName: "ユーザー5",
+		},
+	}
+
+	return mockOnlineUsers, nil
+}
+
 func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
 	id, _ := strconv.Atoi(obj.ID)
 
@@ -100,29 +132,6 @@ func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) (
 	}
 
 	return users, nil
-}
-
-func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) (<-chan model.UserEvent, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	if err != nil {
-		return nil, errUnauthenticated
-	}
-
-	subscripter, ok := r.subscripters.Get(roomID)
-	if !ok {
-		return nil, errRoomNotFound
-	}
-
-	ch := make(chan model.UserEvent, 1)
-	subscripter.AddUserEventChan(currentUser.ID, ch)
-
-	go func() {
-		<-ctx.Done()
-		log.Println("stop subscribe user")
-		subscripter.DeleteUserEventChan(currentUser.ID)
-	}()
-
-	return ch, nil
 }
 
 func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-chan *model.User, error) {
@@ -198,4 +207,31 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 	ch := make(chan *model.User)
 
 	return ch, nil
+}
+
+func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) (<-chan model.UserEvent, error) {
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	subscripter, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errRoomNotFound
+	}
+
+	ch := make(chan model.UserEvent, 1)
+	subscripter.AddUserEventChan(currentUser.ID, ch)
+
+	go func() {
+		<-ctx.Done()
+		log.Println("stop subscribe user")
+		subscripter.DeleteUserEventChan(currentUser.ID)
+	}()
+
+	return ch, nil
+}
+
+func (r *subscriptionResolver) ChangedUserStatus(ctx context.Context) (<-chan model.UserStatus, error) {
+	panic(fmt.Errorf("not implemented"))
 }

@@ -12,6 +12,18 @@ type User {
   y: Int!
 }
 
+type OnlineUserStatus {
+  id: ID!
+  displayName: String!
+  avatarUrl: String!
+}
+
+type OfflineUserStatus {
+  id: ID!
+}
+
+union UserStatus = OnlineUserStatus | OfflineUserStatus
+
 type JoinedUser {
   id: ID!
   displayName: String!
@@ -45,6 +57,7 @@ extend type RoomDetail {
 
 extend type Query {
   me: Me!
+  onlineUsers: [OnlineUserStatus!]!
 }
 
 extend type Mutation {
@@ -52,8 +65,12 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  subUserEvent(roomId: ID!): UserEvent!
+  # joinRoom
   # 部屋へ入ったら自分自身の情報を取得
   # このSubscription内で退出もハンドリングする
   joinRoom(roomID: ID!): User!
+  # subUserEvent ルーム内のユーザー操作を配信
+  subUserEvent(roomId: ID!): UserEvent!
+  # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
+  changedUserStatus: UserStatus!
 }
