@@ -179,8 +179,8 @@ export type Room = Node & {
 export type RoomConnection = Connection & {
   __typename?: 'RoomConnection'
   pageInfo: PageInfo
-  edges: Array<Maybe<RoomEdge>>
-  nodes: Array<Maybe<Room>>
+  edges: Array<RoomEdge>
+  nodes: Array<Room>
   roomCount: Scalars['Int']
 }
 
@@ -302,6 +302,24 @@ export type SendMessageMutation = { __typename?: 'Mutation' } & {
   >
 }
 
+export type RoomsFragment = { __typename?: 'Query' } & {
+  rooms: { __typename?: 'RoomConnection' } & Pick<
+    RoomConnection,
+    'roomCount'
+  > & {
+      pageInfo: { __typename?: 'PageInfo' } & Pick<
+        PageInfo,
+        'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
+      >
+      edges: Array<
+        { __typename?: 'RoomEdge' } & Pick<RoomEdge, 'cursor'> & {
+            node: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'>
+          }
+      >
+      nodes: Array<{ __typename?: 'Room' } & Pick<Room, 'id' | 'name'>>
+    }
+}
+
 export type AuthQueryVariables = Exact<{ [key: string]: never }>
 
 export type AuthQuery = { __typename?: 'Query' } & {
@@ -314,27 +332,9 @@ export type AuthQuery = { __typename?: 'Query' } & {
   >
 }
 
-export type IndexQueryVariables = Exact<{ [key: string]: never }>
+export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
 
-export type IndexQuery = { __typename?: 'Query' } & {
-  rooms: { __typename?: 'RoomConnection' } & Pick<
-    RoomConnection,
-    'roomCount'
-  > & {
-      pageInfo: { __typename?: 'PageInfo' } & Pick<
-        PageInfo,
-        'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
-      >
-      edges: Array<
-        Maybe<
-          { __typename?: 'RoomEdge' } & Pick<RoomEdge, 'cursor'> & {
-              node: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'>
-            }
-        >
-      >
-      nodes: Array<Maybe<{ __typename?: 'Room' } & Pick<Room, 'id' | 'name'>>>
-    }
-}
+export type IndexPageQuery = { __typename?: 'Query' } & RoomsFragment
 
 export type RoomsQueryVariables = Exact<{
   roomId: Scalars['ID']
@@ -393,6 +393,30 @@ export const RoomDetailFragmentDoc = gql`
     }
   }
   ${MessageFieldsFragmentDoc}
+`
+export const RoomsFragmentDoc = gql`
+  fragment Rooms on Query {
+    rooms {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      edges {
+        cursor
+        node {
+          id
+          name
+        }
+      }
+      nodes {
+        id
+        name
+      }
+      roomCount
+    }
+  }
 `
 export const UserEventDocument = gql`
   subscription UserEvent($roomId: ID!) {
@@ -593,69 +617,59 @@ export function useAuthLazyQuery(
 export type AuthQueryHookResult = ReturnType<typeof useAuthQuery>
 export type AuthLazyQueryHookResult = ReturnType<typeof useAuthLazyQuery>
 export type AuthQueryResult = Apollo.QueryResult<AuthQuery, AuthQueryVariables>
-export const IndexDocument = gql`
-  query Index {
-    rooms {
-      pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
-      }
-      edges {
-        cursor
-        node {
-          id
-          name
-        }
-      }
-      nodes {
-        id
-        name
-      }
-      roomCount
-    }
+export const IndexPageDocument = gql`
+  query IndexPage {
+    ...Rooms
   }
+  ${RoomsFragmentDoc}
 `
 
 /**
- * __useIndexQuery__
+ * __useIndexPageQuery__
  *
- * To run a query within a React component, call `useIndexQuery` and pass it any options that fit your needs.
- * When your component renders, `useIndexQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useIndexPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useIndexPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useIndexQuery({
+ * const { data, loading, error } = useIndexPageQuery({
  *   variables: {
  *   },
  * });
  */
-export function useIndexQuery(
-  baseOptions?: Apollo.QueryHookOptions<IndexQuery, IndexQueryVariables>,
+export function useIndexPageQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    IndexPageQuery,
+    IndexPageQueryVariables
+  >,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<IndexQuery, IndexQueryVariables>(
-    IndexDocument,
+  return Apollo.useQuery<IndexPageQuery, IndexPageQueryVariables>(
+    IndexPageDocument,
     options,
   )
 }
-export function useIndexLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<IndexQuery, IndexQueryVariables>,
+export function useIndexPageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    IndexPageQuery,
+    IndexPageQueryVariables
+  >,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<IndexQuery, IndexQueryVariables>(
-    IndexDocument,
+  return Apollo.useLazyQuery<IndexPageQuery, IndexPageQueryVariables>(
+    IndexPageDocument,
     options,
   )
 }
-export type IndexQueryHookResult = ReturnType<typeof useIndexQuery>
-export type IndexLazyQueryHookResult = ReturnType<typeof useIndexLazyQuery>
-export type IndexQueryResult = Apollo.QueryResult<
-  IndexQuery,
-  IndexQueryVariables
+export type IndexPageQueryHookResult = ReturnType<typeof useIndexPageQuery>
+export type IndexPageLazyQueryHookResult = ReturnType<
+  typeof useIndexPageLazyQuery
+>
+export type IndexPageQueryResult = Apollo.QueryResult<
+  IndexPageQuery,
+  IndexPageQueryVariables
 >
 export const RoomsDocument = gql`
   query Rooms($roomId: ID!) {

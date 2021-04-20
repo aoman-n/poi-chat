@@ -1,14 +1,12 @@
 import React from 'react'
 import Link from 'next/link'
+import { RoomsFragment } from '@/graphql'
+import { getRoomIdParam } from '@/utils/ids'
 
-export type Room = {
-  id: string
-  name: string
-  userCount: number
-}
+export type Room = RoomsFragment['rooms']['nodes'][0]
 
 export type RoomListProps = {
-  rooms: Room[]
+  rooms: RoomsFragment['rooms']['nodes']
 }
 
 const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
@@ -22,7 +20,7 @@ const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
       </p>
       <div>
         {rooms.map((room) => (
-          <Link key={room.id} href={`/rooms/${room.id}`}>
+          <Link key={room.id} href={`/rooms/${getRoomIdParam(room.id)}`}>
             <a>
               <div className="h-full flex items-center border-gray-200 border-b px-2 py-4 hover:bg-gray-100 duration-150 cursor-pointer">
                 <img
@@ -51,7 +49,8 @@ const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
                           d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                         />
                       </svg>
-                      <span>{room.userCount}</span>
+                      {/* <span>{room?.userCount}</span> */}
+                      <span>30</span>
                     </div>
                   </div>
                 </div>

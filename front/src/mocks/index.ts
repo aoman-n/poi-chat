@@ -56,24 +56,24 @@ export const mockOnlineUsers: OnlineUser[] = [
 
 export const mockRooms: Room[] = [
   {
-    id: '1',
+    id: 'Room:1',
     name: 'サンプルチャットルーム1',
-    userCount: 8,
+    // userCount: 8,
   },
   {
-    id: '2',
+    id: 'Room:2',
     name: 'サンプルチャットルーム2',
-    userCount: 10,
+    // userCount: 10,
   },
   {
-    id: '3',
+    id: 'Room:3',
     name: 'サンプルチャットルーム3',
-    userCount: 3,
+    // userCount: 3,
   },
   {
-    id: '4',
+    id: 'Room:4',
     name: 'サンプルチャットルーム4',
-    userCount: 60,
+    // userCount: 60,
   },
 ]
 

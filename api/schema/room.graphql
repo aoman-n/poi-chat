@@ -10,8 +10,8 @@ type RoomEdge implements Edge {
 
 type RoomConnection implements Connection {
   pageInfo: PageInfo!
-  edges: [RoomEdge]!
-  nodes: [Room]!
+  edges: [RoomEdge!]!
+  nodes: [Room!]!
   roomCount: Int!
 }
 
