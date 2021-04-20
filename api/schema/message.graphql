@@ -14,8 +14,8 @@ type MessageEdge implements Edge {
 
 type MessageConnection implements Connection {
   pageInfo: PageInfo!
-  edges: [MessageEdge]!
-  nodes: [Message]!
+  edges: [MessageEdge!]!
+  nodes: [Message!]!
   messageCount: Int!
 }
 

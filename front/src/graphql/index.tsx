@@ -68,8 +68,8 @@ export type Message = Node & {
 export type MessageConnection = Connection & {
   __typename?: 'MessageConnection'
   pageInfo: PageInfo
-  edges: Array<Maybe<MessageEdge>>
-  nodes: Array<Maybe<Message>>
+  edges: Array<MessageEdge>
+  nodes: Array<Message>
   messageCount: Scalars['Int']
 }
 
@@ -263,7 +263,7 @@ export type RoomDetailFragment = { __typename?: 'Query' } & {
         >
       >
       messages: { __typename?: 'MessageConnection' } & {
-        nodes: Array<Maybe<{ __typename?: 'Message' } & MessageFieldsFragment>>
+        nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
       }
     }
 }

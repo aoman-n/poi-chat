@@ -29,12 +29,12 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
     fetchedMessages
       .map((m) => {
         return {
-          id: m?.id || '',
-          userId: m?.userId || '',
-          userName: m?.userName || '',
-          userAvatarUrl: m?.userAvatarUrl || '',
-          body: m?.body || '',
-          createdAt: m?.createdAt || '',
+          id: m.id,
+          userId: m.userId,
+          userName: m.userName,
+          userAvatarUrl: m.userAvatarUrl,
+          body: m.body,
+          createdAt: m.createdAt,
         }
       })
       .reverse(),
