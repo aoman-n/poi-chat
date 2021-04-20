@@ -12,7 +12,7 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
     <div>
       <header className="bg-white h-16 border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto h-full">
-          <Header isLoggedIn={true} />
+          <Header />
         </div>
       </header>
       <main className="flex space-x-10 max-w-screen-lg mx-auto mt-24">

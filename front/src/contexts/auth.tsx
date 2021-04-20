@@ -28,10 +28,12 @@ export const AuthContext = createContext<AuthContextValue>(defaultContextValue)
 export const useAuthContext = () => {
   const { currentUser, ...props } = useContext(AuthContext)
   const isAuthChecking = currentUser === undefined
+  const isLoggedIn = !!currentUser
 
   return {
     currentUser,
     isAuthChecking,
+    isLoggedIn,
     ...props,
   }
 }
