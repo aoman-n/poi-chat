@@ -9,16 +9,18 @@ import (
 // Subscripter 各roomのSubscriptionデータの送受信を管理する
 type Subscripter struct {
 	// chan: map[userId]chan xxx
-	messageChan   map[string]chan *model.Message
-	userEventChan map[string]chan model.UserEvent
-	mutex         sync.Mutex
+	messageChan    map[string]chan *model.Message
+	userEventChan  map[string]chan model.UserEvent
+	userStatusChan map[string]chan model.UserStatus
+	mutex          sync.Mutex
 }
 
 func newSubscripter() *Subscripter {
 	return &Subscripter{
-		messageChan:   make(map[string]chan *model.Message),
-		userEventChan: make(map[string]chan model.UserEvent),
-		mutex:         sync.Mutex{},
+		messageChan:    make(map[string]chan *model.Message),
+		userEventChan:  make(map[string]chan model.UserEvent),
+		userStatusChan: make(map[string]chan model.UserStatus),
+		mutex:          sync.Mutex{},
 	}
 }
 
@@ -43,6 +45,18 @@ func (s *Subscripter) AddUserEventChan(userID string, ch chan model.UserEvent) {
 func (s *Subscripter) DeleteUserEventChan(userID string) {
 	s.mutex.Lock()
 	delete(s.userEventChan, userID)
+	s.mutex.Unlock()
+}
+
+func (s *Subscripter) AddUserStatusChan(userID string, ch chan model.UserStatus) {
+	s.mutex.Lock()
+	s.userStatusChan[userID] = ch
+	s.mutex.Unlock()
+}
+
+func (s *Subscripter) DeleteUserStatusChan(userID string) {
+	s.mutex.Lock()
+	delete(s.userStatusChan, userID)
 	s.mutex.Unlock()
 }
 

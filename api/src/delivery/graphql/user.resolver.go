@@ -5,6 +5,7 @@ package graphql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -79,35 +80,33 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUserStatus, error) {
-	mockOnlineUsers := []*model.OnlineUserStatus{
-		{
-			ID:          "100",
-			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
-			DisplayName: "ユーザー1",
-		},
-		{
-			ID:          "200",
-			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
-			DisplayName: "ユーザー2",
-		},
-		{
-			ID:          "300",
-			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
-			DisplayName: "ユーザー3",
-		},
-		{
-			ID:          "400",
-			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
-			DisplayName: "ユーザー4",
-		},
-		{
-			ID:          "500",
-			AvatarURL:   "https://avatars.githubusercontent.com/u/34766880?v=4",
-			DisplayName: "ユーザー5",
-		},
+
+	ret := r.redisClient.Keys(ctx, fmt.Sprintf(userChFormat, "*"))
+	userKeys, err := ret.Result()
+	if err != nil {
+		return nil, errUnexpected
 	}
 
-	return mockOnlineUsers, nil
+	fmt.Printf("userKeys: %+v\n\n", userKeys)
+
+	ret2 := r.redisClient.MGet(ctx, userKeys...)
+
+	retOnlineUsers := ret2.Val()
+
+	fmt.Printf("retOnlineUsers: %+v\n\n", retOnlineUsers)
+
+	onlineUsers := []*model.OnlineUserStatus{}
+	for _, user := range retOnlineUsers {
+		userStr := user.(string)
+		var u model.OnlineUserStatus
+		if err := json.Unmarshal([]byte(userStr), &u); err != nil {
+			log.Println("failed to unmarshal payload from redis data, data is", userStr)
+			continue
+		}
+		onlineUsers = append(onlineUsers, &u)
+	}
+
+	return onlineUsers, nil
 }
 
 func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
@@ -232,6 +231,62 @@ func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) 
 	return ch, nil
 }
 
-func (r *subscriptionResolver) ChangedUserStatus(ctx context.Context) (<-chan model.UserStatus, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *subscriptionResolver) ChangedUserStatus(ctx context.Context, roomID string) (<-chan model.UserStatus, error) {
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	subscripter, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errRoomNotFound
+	}
+
+	ch := make(chan model.UserStatus, 1)
+	subscripter.AddUserStatusChan(currentUser.ID, ch)
+
+	go func() {
+		<-ctx.Done()
+		subscripter.DeleteUserStatusChan(currentUser.ID)
+	}()
+
+	return ch, nil
+}
+
+func (r *subscriptionResolver) KeepOnline(ctx context.Context) (<-chan *bool, error) {
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	onlineUser := model.OnlineUserStatus{
+		ID:          currentUser.ID,
+		DisplayName: currentUser.Name,
+		AvatarURL:   currentUser.AvatarURL,
+	}
+
+	onlineUserJSON, err := json.Marshal(onlineUser)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	key := fmt.Sprintf(userChFormat, currentUser.ID)
+
+	if err := r.redisClient.Set(
+		ctx,
+		fmt.Sprintf(userChFormat, currentUser.ID),
+		string(onlineUserJSON),
+		0,
+	).Err(); err != nil {
+		log.Println("failed to set onlineUser, err:", err)
+		return nil, errUnexpected
+	}
+
+	go func() {
+		<-ctx.Done()
+		r.redisClient.Del(ctx, key)
+	}()
+
+	ch := make(chan *bool, 1)
+	return ch, nil
 }

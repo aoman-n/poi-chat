@@ -45,6 +45,8 @@ func Init() {
 		fmt.Printf("[done setup] room: %+v \n", r)
 	}
 
+	go resolver.StartSubscribeUserStatus()
+
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000"},
 		AllowedMethods: []string{

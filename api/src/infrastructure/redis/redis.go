@@ -23,6 +23,9 @@ func New(conf config.Redis) *redis.Client {
 		log.Fatal("failed to connect redis", err)
 	}
 
+	// enable keyspace notification
+	client.Do(context, "CONFIG", "SET", "notify-keyspace-events", "KEA")
+
 	log.Print("success to connect redis")
 
 	return client

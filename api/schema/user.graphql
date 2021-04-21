@@ -72,5 +72,7 @@ extend type Subscription {
   # subUserEvent ルーム内のユーザー操作を配信
   subUserEvent(roomId: ID!): UserEvent!
   # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
-  changedUserStatus: UserStatus!
+  changedUserStatus(roomId: ID!): UserStatus!
+  # ユーザーをオンライン状態にする
+  keepOnline: Boolean
 }

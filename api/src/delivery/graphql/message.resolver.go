@@ -68,6 +68,11 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 }
 
 func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {
+	_, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
 	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		return nil, err
