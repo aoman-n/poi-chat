@@ -10,3 +10,22 @@ query Auth {
     avatarUrl
   }
 }
+
+subscription KeeoOnline {
+  keepOnline
+}
+
+subscription changedUserStatus {
+  changedUserStatus {
+    __typename
+    ... on OnlineUserStatus {
+      id
+      displayName
+      avatarUrl
+    }
+    ... on OfflineUserStatus {
+      id
+    }
+  }
+}
+

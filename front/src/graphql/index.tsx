@@ -219,6 +219,7 @@ export type Subscription = {
   joinRoom: User
   subUserEvent: UserEvent
   changedUserStatus: UserStatus
+  keepOnline?: Maybe<Scalars['Boolean']>
 }
 
 export type SubscriptionSubMessageArgs = {
@@ -330,6 +331,26 @@ export type AuthQuery = { __typename?: 'Query' } & {
       'id' | 'displayName' | 'avatarUrl'
     >
   >
+}
+
+export type KeeoOnlineSubscriptionVariables = Exact<{ [key: string]: never }>
+
+export type KeeoOnlineSubscription = { __typename?: 'Subscription' } & Pick<
+  Subscription,
+  'keepOnline'
+>
+
+export type ChangedUserStatusSubscriptionVariables = Exact<{
+  [key: string]: never
+}>
+
+export type ChangedUserStatusSubscription = { __typename?: 'Subscription' } & {
+  changedUserStatus:
+    | ({ __typename: 'OnlineUserStatus' } & Pick<
+        OnlineUserStatus,
+        'id' | 'displayName' | 'avatarUrl'
+      >)
+    | ({ __typename: 'OfflineUserStatus' } & Pick<OfflineUserStatus, 'id'>)
 }
 
 export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
@@ -617,6 +638,90 @@ export function useAuthLazyQuery(
 export type AuthQueryHookResult = ReturnType<typeof useAuthQuery>
 export type AuthLazyQueryHookResult = ReturnType<typeof useAuthLazyQuery>
 export type AuthQueryResult = Apollo.QueryResult<AuthQuery, AuthQueryVariables>
+export const KeeoOnlineDocument = gql`
+  subscription KeeoOnline {
+    keepOnline
+  }
+`
+
+/**
+ * __useKeeoOnlineSubscription__
+ *
+ * To run a query within a React component, call `useKeeoOnlineSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useKeeoOnlineSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useKeeoOnlineSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useKeeoOnlineSubscription(
+  baseOptions?: Apollo.SubscriptionHookOptions<
+    KeeoOnlineSubscription,
+    KeeoOnlineSubscriptionVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useSubscription<
+    KeeoOnlineSubscription,
+    KeeoOnlineSubscriptionVariables
+  >(KeeoOnlineDocument, options)
+}
+export type KeeoOnlineSubscriptionHookResult = ReturnType<
+  typeof useKeeoOnlineSubscription
+>
+export type KeeoOnlineSubscriptionResult = Apollo.SubscriptionResult<KeeoOnlineSubscription>
+export const ChangedUserStatusDocument = gql`
+  subscription changedUserStatus {
+    changedUserStatus {
+      __typename
+      ... on OnlineUserStatus {
+        id
+        displayName
+        avatarUrl
+      }
+      ... on OfflineUserStatus {
+        id
+      }
+    }
+  }
+`
+
+/**
+ * __useChangedUserStatusSubscription__
+ *
+ * To run a query within a React component, call `useChangedUserStatusSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useChangedUserStatusSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChangedUserStatusSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useChangedUserStatusSubscription(
+  baseOptions?: Apollo.SubscriptionHookOptions<
+    ChangedUserStatusSubscription,
+    ChangedUserStatusSubscriptionVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useSubscription<
+    ChangedUserStatusSubscription,
+    ChangedUserStatusSubscriptionVariables
+  >(ChangedUserStatusDocument, options)
+}
+export type ChangedUserStatusSubscriptionHookResult = ReturnType<
+  typeof useChangedUserStatusSubscription
+>
+export type ChangedUserStatusSubscriptionResult = Apollo.SubscriptionResult<ChangedUserStatusSubscription>
 export const IndexPageDocument = gql`
   query IndexPage {
     ...Rooms

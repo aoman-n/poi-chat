@@ -2,10 +2,13 @@ package graphql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
+	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/repository"
 	"gorm.io/gorm"
@@ -22,25 +25,25 @@ func NewResolver(db *gorm.DB, redis *redis.Client) *Resolver {
 	messageRepo := repository.NewMessageRepo(db)
 	pubsubRepo := repository.NewPubsubRepo(redis)
 	subscripters := NewSubscripters()
-
-	// add mock room
-	// subscripters.Add("Room:1")
+	subscripterForAll := NewSubscripterForAll()
 
 	return &Resolver{
-		roomRepo:     roomRepo,
-		messageRepo:  messageRepo,
-		pubsubRepo:   pubsubRepo,
-		subscripters: subscripters,
-		redisClient:  redis,
+		roomRepo:          roomRepo,
+		messageRepo:       messageRepo,
+		pubsubRepo:        pubsubRepo,
+		subscripters:      subscripters,
+		subscripterForAll: subscripterForAll,
+		redisClient:       redis,
 	}
 }
 
 type Resolver struct {
-	roomRepo     domain.IRoomRepo
-	messageRepo  domain.IMessageRepo
-	pubsubRepo   *repository.PubsubRepo
-	subscripters *Subscripters
-	redisClient  *redis.Client
+	roomRepo          domain.IRoomRepo
+	messageRepo       domain.IMessageRepo
+	pubsubRepo        *repository.PubsubRepo
+	subscripters      *Subscripters
+	subscripterForAll *SubscripterForAll
+	redisClient       *redis.Client
 }
 
 // onlineUser:*
@@ -58,6 +61,10 @@ var (
 	delEvent     = "del"
 )
 
+var (
+	userIDRegex = regexp.MustCompile("onlineUser:(.*)")
+)
+
 func (r *Resolver) StartSubscribeUserStatus() {
 	log.Println("start subscribe user status!!")
 
@@ -69,27 +76,44 @@ func (r *Resolver) StartSubscribeUserStatus() {
 		msg, err := pubsub.ReceiveMessage(ctx)
 		if err != nil {
 			log.Println("failed to receive message from subsciribe redis, err:", err)
+			return
 		}
 
 		eventType := msg.Payload
 
 		switch eventType {
 		case setEvent:
-			ch := msg.Channel
-			pos := strings.Index(ch, ":")
-			key := ch[pos+1:]
+			pos := strings.Index(msg.Channel, ":")
+			key := msg.Channel[pos+1:]
 			user := r.redisClient.Get(ctx, key)
 			payload := user.Val()
 
-			fmt.Printf(
-				"getted, eventName: %s, key: %s, payload: %s\n",
-				eventType, key, payload,
-			)
+			fmt.Printf("setted payload: %+v\n\n", payload)
+
+			var onlineUserStatus model.OnlineUserStatus
+			if err := json.Unmarshal([]byte(payload), &onlineUserStatus); err != nil {
+				log.Println("failed to unmarshal subscribe setted data")
+				return
+			}
+
+			fmt.Printf("setted onlineUser: %+v\n\n", onlineUserStatus)
+
 			// ユーザーにオンラインユーザー情報を通知する
+			r.subscripterForAll.PublishUserStatus(onlineUserStatus)
+			break
 		case expiredEvent:
-			// ユーザーにオフラインになったユーザー情報を通知する
+			fallthrough
 		case delEvent:
+			matched := userIDRegex.FindStringSubmatch(msg.Channel)
+			userID := matched[1]
+			offlineUserStatus := model.OfflineUserStatus{
+				ID: userID,
+			}
+
+			fmt.Printf("deleted offlineUser: %+v\n\n", offlineUserStatus)
+
 			// ユーザーにオフラインになったユーザー情報を通知する
+			r.subscripterForAll.PublishUserStatus(offlineUserStatus)
 		default:
 			log.Printf(`"%s" is unknown keyspace event type`, eventType)
 		}

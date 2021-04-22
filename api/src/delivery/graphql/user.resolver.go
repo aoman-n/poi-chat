@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
@@ -80,20 +79,14 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUserStatus, error) {
-
 	ret := r.redisClient.Keys(ctx, fmt.Sprintf(userChFormat, "*"))
 	userKeys, err := ret.Result()
 	if err != nil {
 		return nil, errUnexpected
 	}
 
-	fmt.Printf("userKeys: %+v\n\n", userKeys)
-
 	ret2 := r.redisClient.MGet(ctx, userKeys...)
-
 	retOnlineUsers := ret2.Val()
-
-	fmt.Printf("retOnlineUsers: %+v\n\n", retOnlineUsers)
 
 	onlineUsers := []*model.OnlineUserStatus{}
 	for _, user := range retOnlineUsers {
@@ -194,9 +187,6 @@ func (r *subscriptionResolver) JoinRoom(ctx context.Context, roomID string) (<-c
 			ID: joinedUser.ID,
 		}
 
-		fmt.Println(strings.Repeat("*", 100))
-		fmt.Println(exitedUser)
-
 		if err := r.pubsubRepo.PubExitedUser(childCtx, exitedUser, domainRoomID); err != nil {
 			log.Println("failed to publish exited user err:", err)
 		}
@@ -231,23 +221,18 @@ func (r *subscriptionResolver) SubUserEvent(ctx context.Context, roomID string) 
 	return ch, nil
 }
 
-func (r *subscriptionResolver) ChangedUserStatus(ctx context.Context, roomID string) (<-chan model.UserStatus, error) {
+func (r *subscriptionResolver) ChangedUserStatus(ctx context.Context) (<-chan model.UserStatus, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
 
-	subscripter, ok := r.subscripters.Get(roomID)
-	if !ok {
-		return nil, errRoomNotFound
-	}
-
 	ch := make(chan model.UserStatus, 1)
-	subscripter.AddUserStatusChan(currentUser.ID, ch)
+	r.subscripterForAll.AddUserStatusChan(currentUser.ID, ch)
 
 	go func() {
 		<-ctx.Done()
-		subscripter.DeleteUserStatusChan(currentUser.ID)
+		r.subscripterForAll.DeleteUserStatusChan(currentUser.ID)
 	}()
 
 	return ch, nil
@@ -284,7 +269,10 @@ func (r *subscriptionResolver) KeepOnline(ctx context.Context) (<-chan *bool, er
 
 	go func() {
 		<-ctx.Done()
-		r.redisClient.Del(ctx, key)
+		log.Printf("disconnected, delete key `%s` \n", key)
+		if err := r.redisClient.Del(context.Background(), key).Err(); err != nil {
+			log.Println("failed to delete onlineUser, err:", err)
+		}
 	}()
 
 	ch := make(chan *bool, 1)

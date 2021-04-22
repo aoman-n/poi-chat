@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { NextPage } from 'next'
 import { filter } from 'graphql-anywhere'
 
+import { useRequireLogin } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
 import Playground from '@/components/organisms/Playground'
 import {
@@ -12,6 +13,7 @@ import {
 import { UserManager, User } from '@/painter/user'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
+  useRequireLogin()
   const isCreatedUserManager = useRef<boolean>(false)
   const [userManager, setUserManager] = useState<UserManager | null>(null)
   const { data } = useRoomsQuery({ variables: { roomId } })
