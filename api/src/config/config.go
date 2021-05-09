@@ -3,7 +3,6 @@ package config
 import (
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -39,13 +38,12 @@ type Config struct {
 var Conf Config
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load .env file, err:", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("failed to load .env file, err:", err)
+	// }
 
-	err = envconfig.Process("", &Conf)
-	if err != nil {
+	if err := envconfig.Process("", &Conf); err != nil {
 		log.Fatal("failed to read env variables,  err:", err)
 	}
 }
