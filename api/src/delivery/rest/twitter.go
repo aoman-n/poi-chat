@@ -7,7 +7,7 @@ import (
 	"github.com/garyburd/go-oauth/oauth"
 	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/delivery"
-	"github.com/laster18/poi/api/src/lib/twitter"
+	"github.com/laster18/poi/api/src/util/twitter"
 )
 
 func twitterOauthHandler(w http.ResponseWriter, r *http.Request) {

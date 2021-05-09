@@ -7,7 +7,7 @@ import (
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/laster18/poi/api/src/domain"
-	"github.com/laster18/poi/api/src/infrastructure/db"
+	"github.com/laster18/poi/api/src/infra/db"
 	"gorm.io/gorm"
 )
 
