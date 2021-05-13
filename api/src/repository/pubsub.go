@@ -1,156 +1,145 @@
 package repository
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"strings"
+// var (
+// 	// "room:{roomID}:{dataType}"
+// 	subChFormat = "room:%s:%s"
+// )
 
-	"github.com/go-redis/redis/v8"
-	"github.com/laster18/poi/api/graph/model"
-)
+// var (
+// 	typeMessagse = "message"
+// 	typeMove     = "move"
+// 	typeJoin     = "join"
+// 	typeExit     = "exit"
+// )
 
-var (
-	// "room:{roomID}:{dataType}"
-	subChFormat = "room:%s:%s"
-)
+// type PubsubRepo struct {
+// 	client *redis.Client
+// }
 
-var (
-	typeMessagse = "message"
-	typeMove     = "move"
-	typeJoin     = "join"
-	typeExit     = "exit"
-)
+// func NewPubsubRepo(client *redis.Client) *PubsubRepo {
+// 	return &PubsubRepo{client}
+// }
 
-type PubsubRepo struct {
-	client *redis.Client
-}
+// type SubscribeChs struct {
+// 	MessageCh   chan *model.Message
+// 	UserEventCh chan model.UserEvent
+// }
 
-func NewPubsubRepo(client *redis.Client) *PubsubRepo {
-	return &PubsubRepo{client}
-}
+// func NewSubscribeChs() *SubscribeChs {
+// 	return &SubscribeChs{
+// 		MessageCh:   make(chan *model.Message),
+// 		UserEventCh: make(chan model.UserEvent),
+// 	}
+// }
 
-type SubscribeChs struct {
-	MessageCh   chan *model.Message
-	UserEventCh chan model.UserEvent
-}
+// func (r *PubsubRepo) PSub(ctx context.Context, roomID int, subChs *SubscribeChs) error {
+// 	pubsub := r.client.PSubscribe(ctx, fmt.Sprintf(subChFormat, roomID, "*"))
 
-func NewSubscribeChs() *SubscribeChs {
-	return &SubscribeChs{
-		MessageCh:   make(chan *model.Message),
-		UserEventCh: make(chan model.UserEvent),
-	}
-}
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			log.Printf("stop subscribe, roomId: %d", roomID)
+// 			break
+// 		default:
+// 		}
 
-func (r *PubsubRepo) PSub(ctx context.Context, roomID int, subChs *SubscribeChs) error {
-	pubsub := r.client.PSubscribe(ctx, fmt.Sprintf(subChFormat, roomID, "*"))
+// 		msg, err := pubsub.ReceiveMessage(ctx)
+// 		if err != nil {
+// 			log.Println("failed to receive message from subsciribe redis, err:", err)
+// 			continue
+// 		}
 
-	for {
-		select {
-		case <-ctx.Done():
-			log.Printf("stop subscribe, roomId: %d", roomID)
-			break
-		default:
-		}
+// 		chName := msg.Channel
+// 		dataType := strings.Split(chName, ":")[2]
+// 		payload := msg.Payload
 
-		msg, err := pubsub.ReceiveMessage(ctx)
-		if err != nil {
-			log.Println("failed to receive message from subsciribe redis, err:", err)
-			continue
-		}
+// 		switch dataType {
+// 		case typeMessagse:
+// 			var msg model.Message
+// 			if err := json.Unmarshal([]byte(payload), &msg); err != nil {
+// 				log.Println(`failed to convert data "message" from redis`)
+// 				continue
+// 			}
 
-		chName := msg.Channel
-		dataType := strings.Split(chName, ":")[2]
-		payload := msg.Payload
+// 			fmt.Println(strings.Repeat("*", 100))
+// 			fmt.Println(msg)
 
-		switch dataType {
-		case typeMessagse:
-			var msg model.Message
-			if err := json.Unmarshal([]byte(payload), &msg); err != nil {
-				log.Println(`failed to convert data "message" from redis`)
-				continue
-			}
+// 			subChs.MessageCh <- &msg
+// 		case typeMove:
+// 			var movedUser model.MovedUser
+// 			if err := json.Unmarshal([]byte(payload), &movedUser); err != nil {
+// 				log.Println(`failed to convert data "movedUser" from redis`)
+// 				continue
+// 			}
 
-			fmt.Println(strings.Repeat("*", 100))
-			fmt.Println(msg)
+// 			subChs.UserEventCh <- &movedUser
+// 		case typeJoin:
+// 			var joinedUser model.JoinedUser
+// 			if err := json.Unmarshal([]byte(payload), &joinedUser); err != nil {
+// 				log.Println(`failed to convert data "joinedUser" from redis`)
+// 				continue
+// 			}
 
-			subChs.MessageCh <- &msg
-		case typeMove:
-			var movedUser model.MovedUser
-			if err := json.Unmarshal([]byte(payload), &movedUser); err != nil {
-				log.Println(`failed to convert data "movedUser" from redis`)
-				continue
-			}
+// 			subChs.UserEventCh <- &joinedUser
+// 		case typeExit:
+// 			var exitedUser model.ExitedUser
+// 			if err := json.Unmarshal([]byte(payload), &exitedUser); err != nil {
+// 				log.Println(`failed to convert data "exitedUser" from redis`)
+// 				continue
+// 			}
 
-			subChs.UserEventCh <- &movedUser
-		case typeJoin:
-			var joinedUser model.JoinedUser
-			if err := json.Unmarshal([]byte(payload), &joinedUser); err != nil {
-				log.Println(`failed to convert data "joinedUser" from redis`)
-				continue
-			}
+// 			subChs.UserEventCh <- &exitedUser
+// 		// Todo: typeDeleteのときにreturnする
+// 		default:
+// 			log.Printf(
+// 				"receive unknown data type message from subscribe redis, channel: %s, data: %s",
+// 				chName,
+// 				payload,
+// 			)
+// 		}
+// 	}
+// }
 
-			subChs.UserEventCh <- &joinedUser
-		case typeExit:
-			var exitedUser model.ExitedUser
-			if err := json.Unmarshal([]byte(payload), &exitedUser); err != nil {
-				log.Println(`failed to convert data "exitedUser" from redis`)
-				continue
-			}
+// func (r *PubsubRepo) PubMessage(ctx context.Context, m *model.Message, roomID int) error {
+// 	channelName := fmt.Sprintf(subChFormat, roomID, typeMessagse)
 
-			subChs.UserEventCh <- &exitedUser
-		// Todo: typeDeleteのときにreturnする
-		default:
-			log.Printf(
-				"receive unknown data type message from subscribe redis, channel: %s, data: %s",
-				chName,
-				payload,
-			)
-		}
-	}
-}
+// 	payload, err := json.Marshal(m)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func (r *PubsubRepo) PubMessage(ctx context.Context, m *model.Message, roomID int) error {
-	channelName := fmt.Sprintf(subChFormat, roomID, typeMessagse)
+// 	return r.client.Publish(ctx, channelName, payload).Err()
+// }
 
-	payload, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
+// func (r *PubsubRepo) PubJoinedUser(ctx context.Context, u *model.JoinedUser, roomID int) error {
+// 	channelName := fmt.Sprintf(subChFormat, roomID, typeJoin)
 
-	return r.client.Publish(ctx, channelName, payload).Err()
-}
+// 	payload, err := json.Marshal(u)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func (r *PubsubRepo) PubJoinedUser(ctx context.Context, u *model.JoinedUser, roomID int) error {
-	channelName := fmt.Sprintf(subChFormat, roomID, typeJoin)
+// 	return r.client.Publish(ctx, channelName, payload).Err()
+// }
 
-	payload, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
+// func (r *PubsubRepo) PubExitedUser(ctx context.Context, u *model.ExitedUser, roomID int) error {
+// 	channelName := fmt.Sprintf(subChFormat, roomID, typeExit)
 
-	return r.client.Publish(ctx, channelName, payload).Err()
-}
+// 	payload, err := json.Marshal(u)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func (r *PubsubRepo) PubExitedUser(ctx context.Context, u *model.ExitedUser, roomID int) error {
-	channelName := fmt.Sprintf(subChFormat, roomID, typeExit)
+// 	return r.client.Publish(ctx, channelName, payload).Err()
+// }
 
-	payload, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
+// func (r *PubsubRepo) PubMovedUser(ctx context.Context, u *model.MovedUser, roomID int) error {
+// 	channelName := fmt.Sprintf(subChFormat, roomID, typeMove)
 
-	return r.client.Publish(ctx, channelName, payload).Err()
-}
+// 	payload, err := json.Marshal(u)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func (r *PubsubRepo) PubMovedUser(ctx context.Context, u *model.MovedUser, roomID int) error {
-	channelName := fmt.Sprintf(subChFormat, roomID, typeMove)
-
-	payload, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
-
-	return r.client.Publish(ctx, channelName, payload).Err()
-}
+// 	return r.client.Publish(ctx, channelName, payload).Err()
+// }

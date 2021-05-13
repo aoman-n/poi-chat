@@ -16,27 +16,27 @@ import (
 func NewResolver(db *gorm.DB, redis *redis.Client, roomUserSubscriber *subscriber.RoomUserSubscriber) *Resolver {
 	roomRepo := repository.NewRoomRepo(db)
 	messageRepo := repository.NewMessageRepo(db)
-	pubsubRepo := repository.NewPubsubRepo(redis)
-	subscripters := NewSubscripters()
-	subscripterForAll := NewSubscripterForAll()
+	// pubsubRepo := repository.NewPubsubRepo(redis)
+	// subscripters := NewSubscripters()
+	// subscripterForAll := NewSubscripterForAll()
 
 	return &Resolver{
-		roomRepo:           roomRepo,
-		messageRepo:        messageRepo,
-		pubsubRepo:         pubsubRepo,
-		subscripters:       subscripters,
-		subscripterForAll:  subscripterForAll,
+		roomRepo:    roomRepo,
+		messageRepo: messageRepo,
+		// pubsubRepo:  pubsubRepo,
+		// subscripters:       subscripters,
+		// subscripterForAll:  subscripterForAll,
 		redisClient:        redis,
 		roomUserSubscriber: roomUserSubscriber,
 	}
 }
 
 type Resolver struct {
-	roomRepo           domain.IRoomRepo
-	messageRepo        domain.IMessageRepo
-	pubsubRepo         *repository.PubsubRepo
-	subscripters       *Subscripters
-	subscripterForAll  *SubscripterForAll
+	roomRepo    domain.IRoomRepo
+	messageRepo domain.IMessageRepo
+	// pubsubRepo  *repository.PubsubRepo
+	// subscripters       *Subscripters
+	// subscripterForAll  *SubscripterForAll
 	redisClient        *redis.Client
 	roomUserSubscriber *subscriber.RoomUserSubscriber
 }
