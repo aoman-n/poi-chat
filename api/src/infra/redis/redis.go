@@ -8,6 +8,10 @@ import (
 	"github.com/laster18/poi/api/src/config"
 )
 
+type Client = redis.Client
+
+var Nil = redis.Nil
+
 func New(conf config.Redis) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     conf.URL,

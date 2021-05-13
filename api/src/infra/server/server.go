@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -23,29 +22,21 @@ import (
 	"github.com/laster18/poi/api/src/infra/redis"
 	customMiddleware "github.com/laster18/poi/api/src/middleware"
 	"github.com/laster18/poi/api/src/repository"
+	"github.com/laster18/poi/api/src/subscriber"
 	"github.com/rs/cors"
 )
 
 func Init() {
+	ctx := context.Background()
 	db := db.NewDb()
 	redisClient := redis.New(config.Conf.Redis)
-	roomRepo := repository.NewRoomRepo(db)
+	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
+
+	_ = repository.NewRoomRepo(db)
 
 	router := chi.NewRouter()
-	resolver := graphql.NewResolver(db, redisClient)
+	resolver := graphql.NewResolver(db, redisClient, roomUserSubscriber)
 	conf := generated.Config{Resolvers: resolver}
-
-	rooms, err := roomRepo.ListAll(context.Background())
-	if err != nil {
-		log.Println(err)
-	}
-
-	for _, r := range rooms {
-		go resolver.SetupRoom(r.ID)
-		fmt.Printf("[done setup] room: %+v \n", r)
-	}
-
-	go resolver.StartSubscribeUserStatus()
 
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:3000"},
