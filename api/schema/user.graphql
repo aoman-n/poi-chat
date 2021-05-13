@@ -8,67 +8,31 @@ extend type Query {
 }
 
 extend type Mutation {
-  move(input: MoveInput!): MovedUser!
+  move(input: MoveInput!): MovePayload!
 }
 
 extend type Subscription {
+  ########### before
   # joinRoom
   # 部屋へ入ったら自分自身の情報を取得
   # このSubscription内で退出もハンドリングする
-  joinRoom(roomID: ID!): User!
+  # joinRoom(roomID: ID!): User!
+
   # subUserEvent ルーム内のユーザー操作を配信
-  subUserEvent(roomId: ID!): UserEvent!
+  # subUserEvent(roomId: ID!): UserEvent!
+
   # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
-  changedUserStatus: UserStatus!
+  # changedUserStatus: UserStatus!
+
   # ユーザーをオンライン状態にする
-  keepOnline: Boolean
+  # keepOnline: Boolean
+
+  ########### after
+  # ここに接続することで、グローバルのオンライン状態を同時に管理する
+  actedGlobalUserEvent: GlobalUserEvent!
+  # ここに接続することで、roomに入室している状態も管理する
+  actedRoomUserEvent(roomId: ID!): RoomUserEvent!
 }
-
-type Me {
-  id: ID!
-  displayName: String!
-  avatarUrl: String!
-}
-
-type User {
-  id: ID!
-  displayName: String!
-  avatarUrl: String!
-  x: Int!
-  y: Int!
-}
-
-type OnlineUserStatus {
-  id: ID!
-  displayName: String!
-  avatarUrl: String!
-}
-
-type OfflineUserStatus {
-  id: ID!
-}
-
-union UserStatus = OnlineUserStatus | OfflineUserStatus
-
-type JoinedUser {
-  id: ID!
-  displayName: String!
-  avatarUrl: String!
-  x: Int!
-  y: Int!
-}
-
-type MovedUser {
-  id: ID!
-  x: Int!
-  y: Int!
-}
-
-type ExitedUser {
-  id: ID!
-}
-
-union UserEvent = MovedUser | ExitedUser | JoinedUser
 
 input MoveInput {
   # TODO: roomIdはcookieに持たせるようにする
@@ -76,3 +40,90 @@ input MoveInput {
   x: Int!
   y: Int!
 }
+
+type MovePayload {
+  userId: ID!
+  x: Int!
+  y: Int!
+}
+
+type Me {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+}
+
+type User {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+}
+
+type OnlineUserStatus {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+}
+
+# -------------------------------
+# GlobalUserEvent
+union GlobalUserEvent = Onlined | Offlined
+type Onlined {
+  userId: ID!
+  name: String!
+  avatarUrl: String!
+}
+type Offlined {
+  userId: ID!
+}
+
+# -------------------------------
+# RoomUserEvent
+union RoomUserEvent = Joined | Exited | Moved | SendedMassage
+type Joined {
+  userId: ID!
+  name: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+}
+type Exited {
+  userId: ID!
+}
+type Moved {
+  userId: ID!
+  x: Int!
+  y: Int!
+}
+type SendedMassage {
+  userId: ID!
+  message: String!
+}
+
+# type OfflineUserStatus {
+#   id: ID!
+# }
+
+# union UserStatus = OnlineUserStatus | OfflineUserStatus
+
+# type JoinedUser {
+#   id: ID!
+#   name: String!
+#   avatarUrl: String!
+#   x: Int!
+#   y: Int!
+# }
+
+# type MovedUser {
+#   id: ID!
+#   x: Int!
+#   y: Int!
+# }
+
+# type ExitedUser {
+#   id: ID!
+# }
+
+# union UserEvent = MovedUser | ExitedUser | JoinedUser
