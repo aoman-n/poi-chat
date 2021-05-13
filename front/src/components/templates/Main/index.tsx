@@ -18,9 +18,9 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
       <main className="flex space-x-10 max-w-screen-lg mx-auto mt-24">
         {/* Canvasのレスポンシブは考慮する点が多いので一旦決め打ちのサイズで */}
         <div style={{ width: `${ROOM_SIZE.WIDTH}px` }}>{children}</div>
-        <div className="w-80 min-w-80">
+        <aside className="w-80 min-w-80">
           <UsersNav />
-        </div>
+        </aside>
       </main>
     </div>
   )
