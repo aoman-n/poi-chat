@@ -1,3 +1,29 @@
+extend type RoomDetail {
+  users: [User!]!
+}
+
+extend type Query {
+  me: Me!
+  onlineUsers: [OnlineUserStatus!]!
+}
+
+extend type Mutation {
+  move(input: MoveInput!): MovedUser!
+}
+
+extend type Subscription {
+  # joinRoom
+  # 部屋へ入ったら自分自身の情報を取得
+  # このSubscription内で退出もハンドリングする
+  joinRoom(roomID: ID!): User!
+  # subUserEvent ルーム内のユーザー操作を配信
+  subUserEvent(roomId: ID!): UserEvent!
+  # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
+  changedUserStatus: UserStatus!
+  # ユーザーをオンライン状態にする
+  keepOnline: Boolean
+}
+
 type Me {
   id: ID!
   displayName: String!
@@ -49,30 +75,4 @@ input MoveInput {
   roomId: ID!
   x: Int!
   y: Int!
-}
-
-extend type RoomDetail {
-  users: [User!]!
-}
-
-extend type Query {
-  me: Me!
-  onlineUsers: [OnlineUserStatus!]!
-}
-
-extend type Mutation {
-  move(input: MoveInput!): MovedUser!
-}
-
-extend type Subscription {
-  # joinRoom
-  # 部屋へ入ったら自分自身の情報を取得
-  # このSubscription内で退出もハンドリングする
-  joinRoom(roomID: ID!): User!
-  # subUserEvent ルーム内のユーザー操作を配信
-  subUserEvent(roomId: ID!): UserEvent!
-  # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
-  changedUserStatus: UserStatus!
-  # ユーザーをオンライン状態にする
-  keepOnline: Boolean
 }

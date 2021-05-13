@@ -1,3 +1,16 @@
+extend type RoomDetail {
+  # 最新のメッセージから順に取得
+  messages(last: Int, before: String): MessageConnection!
+}
+
+extend type Mutation {
+  sendMessage(input: SendMessageInput): Message!
+}
+
+extend type Subscription {
+  subMessage(roomId: ID!): Message!
+}
+
 type Message implements Node {
   id: ID!
   userId: ID!
@@ -22,17 +35,4 @@ type MessageConnection implements Connection {
 input SendMessageInput {
   roomID: ID!
   body: String!
-}
-
-extend type RoomDetail {
-  # 最新のメッセージから順に取得
-  messages(last: Int, before: String): MessageConnection!
-}
-
-extend type Mutation {
-  sendMessage(input: SendMessageInput): Message!
-}
-
-extend type Subscription {
-  subMessage(roomId: ID!): Message!
 }
