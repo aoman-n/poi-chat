@@ -15,9 +15,11 @@ type RoomConnection implements Connection {
   roomCount: Int!
 }
 
+# TODO: 名前をRoomDetail->Roomにする
 type RoomDetail implements Node {
   id: ID!
   name: String!
+  # TODO: ここにmessagesを追加
 }
 
 input CreateRoomInput {
@@ -27,10 +29,6 @@ input CreateRoomInput {
 enum RoomOrderField {
   LATEST
   DESC_USER_COUNT
-}
-
-type NoopPayload {
-  clientMutationId: String
 }
 
 extend type Query {
