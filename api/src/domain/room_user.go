@@ -1,5 +1,7 @@
 package domain
 
+import "context"
+
 // for Redis
 type RoomUser struct {
 	ID          int    `json:"id"`
@@ -15,17 +17,14 @@ type RoomUser struct {
 type RoomUserEvent int
 
 const (
-	// Eventを保持していない場合にはNoneEventを入れる
 	JoinEvent RoomUserEvent = iota + 1
 	MoveEvent
 	MessageEvent
 )
 
-// type RoomUserMoveEvent struct {
-// 	RoomUserID int
-// 	X          int
-// 	Y          int
-// }
-// type RoomUserJoinEvent struct{}
-// type RoomUserExitEvent struct{}
-// type RoomUserMessageEvent struct{}
+type RoomUserRepo interface {
+	Create(ctx context.Context, u *RoomUser) error
+	Update(ctx context.Context, u *RoomUser) error
+	Delete(ctx context.Context, u *RoomUser) error
+	Get(ctx context.Context, uID int) (*RoomUser, error)
+}

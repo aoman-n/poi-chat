@@ -16,14 +16,14 @@ type RoomUserSubscriber struct {
 	client *redis.Client
 	Mutex  sync.Mutex
 	// channels map[roomId]map[userId]chan ...
-	chs map[int]map[string]chan *model.RoomUserEvent
+	chs map[int]map[string]chan model.RoomUserEvent
 }
 
 func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
 		Mutex:  sync.Mutex{},
-		chs:    make(map[int]map[string]chan *model.RoomUserEvent),
+		chs:    make(map[int]map[string]chan model.RoomUserEvent),
 	}
 	go subscriber.start(ctx)
 	return subscriber
@@ -108,8 +108,27 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	}
 
 	for _, ch := range chs {
-		ch <- &data
+		ch <- data
 	}
+}
+
+func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userID string) <-chan model.RoomUserEvent {
+	createdCh := make(chan model.RoomUserEvent)
+
+	s.Mutex.Lock()
+	userChannels, ok := s.chs[roomID]
+	if !ok {
+		userChannels = make(map[string]chan model.RoomUserEvent)
+		s.chs[roomID] = userChannels
+	}
+	userChannels[userID] = createdCh
+	s.Mutex.Unlock()
+
+	go func() {
+		<-ctx.Done()
+	}()
+
+	return createdCh
 }
 
 func makeRoomUserID(roomUserID int) string {

@@ -5,6 +5,7 @@ package graphql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -133,5 +134,15 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 }
 
 func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
+
+	domainRoomID, err := decodeID(roomPrefix, roomID)
+	if err != nil {
+		return nil, errors.New("roomId is invalid format")
+	}
+
+	return r.roomUserSubscriber.Subscribe(ctx, domainRoomID, currentUser.ID), nil
 }
