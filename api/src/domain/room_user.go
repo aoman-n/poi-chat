@@ -2,8 +2,6 @@ package domain
 
 import (
 	"context"
-
-	"github.com/laster18/poi/api/src/delivery"
 )
 
 // for Redis
@@ -18,9 +16,9 @@ type RoomUser struct {
 	LastEvent   RoomUserEvent
 }
 
-func NewDefaultRoomUser(roomID int, u *delivery.User) *RoomUser {
+func NewDefaultRoomUser(roomID int, u *GlobalUser) *RoomUser {
 	return &RoomUser{
-		UID:         u.ID,
+		UID:         u.UID,
 		RoomID:      roomID,
 		Name:        u.Name,
 		AvatarURL:   u.AvatarURL,

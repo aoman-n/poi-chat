@@ -5,7 +5,6 @@ import "context"
 // for Redis
 type GlobalUser struct {
 	UID       string `json:"id"`
-	RoomID    int    `json:"roomId"`
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatarUrl"`
 }

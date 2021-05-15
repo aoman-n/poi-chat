@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/laster18/poi/api/src/delivery"
+	"github.com/laster18/poi/api/src/domain"
 )
 
 type key string
@@ -37,9 +39,13 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			fmt.Printf("authed user: %+v\n", user)
+			userUID, _ := decodeIDStr(UserPrefix, user.ID)
 
-			ctx := context.WithValue(r.Context(), CurrentUserKey, user)
+			ctx := context.WithValue(r.Context(), CurrentUserKey, &domain.GlobalUser{
+				UID:       userUID,
+				Name:      user.Name,
+				AvatarURL: user.AvatarURL,
+			})
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -51,16 +57,38 @@ func handleSessionError(w http.ResponseWriter) {
 	fmt.Fprint(w, "server error")
 }
 
-func GetCurrentUserFromCtx(ctx context.Context) (*delivery.User, error) {
+func GetCurrentUserFromCtx(ctx context.Context) (*domain.GlobalUser, error) {
 	errNoUserInContext := errors.New("no user in context")
 	if ctx.Value(CurrentUserKey) == nil {
 		return nil, errNoUserInContext
 	}
 
-	user, ok := ctx.Value(CurrentUserKey).(*delivery.User)
-	if !ok || user.ID == "" {
+	user, ok := ctx.Value(CurrentUserKey).(*domain.GlobalUser)
+	if !ok || user.UID == "" {
 		return nil, errNoUserInContext
 	}
 
 	return user, nil
 }
+
+// --------------------------
+// TODO: 下記は消す
+
+func decodeIDStr(prefix Prefix, id string) (string, error) {
+	idParts := strings.Split(id, ":")
+	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
+		return "", fmt.Errorf("invalid id %q", id)
+	}
+
+	return idParts[1], nil
+}
+
+type Prefix string
+
+// TODO: ':'は定数に入れないようにする
+var (
+	roomPrefix     Prefix = "Room:"
+	messagePrefix  Prefix = "Message:"
+	UserPrefix     Prefix = "User:"
+	roomUserPrefix Prefix = "RoomUser:"
+)

@@ -32,7 +32,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	}
 
 	msg := &domain.Message{
-		UserUID:       currentUser.ID,
+		UserUID:       currentUser.UID,
 		Body:          input.Body,
 		UserName:      currentUser.Name,
 		UserAvatarURL: currentUser.AvatarURL,
@@ -47,7 +47,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 
 	responseMsg := toMessage(msg)
 
-	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.ID)
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
 		log.Println("failed to get roomUser, err:", err)
 		return nil, err
@@ -151,12 +151,12 @@ func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<
 	}
 
 	ch := make(chan *model.Message, 1)
-	subscripter.AddMessageChan(currentUser.ID, ch)
+	subscripter.AddMessageChan(currentUser.UID, ch)
 
 	go func() {
 		<-ctx.Done()
 		fmt.Println("stop subscribe message")
-		subscripter.DeleteMessageChan(currentUser.ID)
+		subscripter.DeleteMessageChan(currentUser.UID)
 	}()
 
 	return ch, nil

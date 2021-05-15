@@ -6,7 +6,6 @@ package graphql
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -26,7 +25,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 		return nil, err
 	}
 
-	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.ID)
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
 		log.Println("failed to get roomUser err:", err)
 	}
@@ -49,7 +48,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	}
 
 	me := &model.Me{
-		ID:        currentUser.ID,
+		ID:        encodeIDStr(userPrefix, currentUser.UID),
 		Name:      currentUser.Name,
 		AvatarURL: currentUser.AvatarURL,
 	}
@@ -108,7 +107,18 @@ func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) (
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
-	panic(fmt.Errorf("not implemented"))
+	// currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	// if err != nil {
+	// 	return nil, errUnauthenticated
+	// }
+
+	// newGlobalUser := domain.GlobalUser{
+	// 	UID:       "",
+	// 	Name:      "",
+	// 	AvatarURL: "",
+	// }
+
+	return nil, nil
 }
 
 func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
@@ -130,11 +140,11 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 	}
 
 	ch := make(chan model.RoomUserEvent)
-	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.ID)
+	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	go func() {
 		<-ctx.Done()
-		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.ID)
+		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.UID)
 		if err := r.roomUserRepo.Delete(context.Background(), newRoomUser); err != nil {
 			log.Println("failed to delete roomUser, err:", err)
 		}
