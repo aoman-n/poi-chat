@@ -12,22 +12,6 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  ########### before
-  # joinRoom
-  # 部屋へ入ったら自分自身の情報を取得
-  # このSubscription内で退出もハンドリングする
-  # joinRoom(roomID: ID!): User!
-
-  # subUserEvent ルーム内のユーザー操作を配信
-  # subUserEvent(roomId: ID!): UserEvent!
-
-  # changedUserStatus アプリケーションへのオンライン/オフラインのユーザー状態を配信
-  # changedUserStatus: UserStatus!
-
-  # ユーザーをオンライン状態にする
-  # keepOnline: Boolean
-
-  ########### after
   # ここに接続することで、グローバルのオンライン状態を同時に管理する
   actedGlobalUserEvent: GlobalUserEvent!
   # ここに接続することで、roomに入室している状態も管理する
@@ -101,29 +85,3 @@ type SendedMassage {
   userId: ID!
   message: String!
 }
-
-# type OfflineUserStatus {
-#   id: ID!
-# }
-
-# union UserStatus = OnlineUserStatus | OfflineUserStatus
-
-# type JoinedUser {
-#   id: ID!
-#   name: String!
-#   avatarUrl: String!
-#   x: Int!
-#   y: Int!
-# }
-
-# type MovedUser {
-#   id: ID!
-#   x: Int!
-#   y: Int!
-# }
-
-# type ExitedUser {
-#   id: ID!
-# }
-
-# union UserEvent = MovedUser | ExitedUser | JoinedUser
