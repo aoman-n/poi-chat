@@ -89,7 +89,7 @@ func GetUserSession(r *http.Request) (*UserSession, error) {
 }
 
 func (s *UserSession) SetUser(u *User) {
-	s.sess.Values[idKey] = u.ID
+	s.sess.Values[idKey] = "User:" + u.ID
 	s.sess.Values[nameKey] = u.Name
 	s.sess.Values[avatarKey] = u.AvatarURL
 }

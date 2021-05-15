@@ -107,18 +107,32 @@ func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) (
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
-	// currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	// if err != nil {
-	// 	return nil, errUnauthenticated
-	// }
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
 
-	// newGlobalUser := domain.GlobalUser{
-	// 	UID:       "",
-	// 	Name:      "",
-	// 	AvatarURL: "",
-	// }
+	newGlobalUser := &domain.GlobalUser{
+		UID:       currentUser.UID,
+		Name:      currentUser.Name,
+		AvatarURL: currentUser.AvatarURL,
+	}
+	if err := r.globalUserRepo.Insert(ctx, newGlobalUser); err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	ch := make(chan model.GlobalUserEvent)
+	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
+
+	go func() {
+		<-ctx.Done()
+		r.globalUserSubscriber.RemoveCh(currentUser.UID)
+		if err := r.globalUserRepo.Delete(context.Background(), newGlobalUser); err != nil {
+			log.Println("failed to delete globalUser, err:", err)
+		}
+	}()
+
+	return ch, nil
 }
 
 func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {

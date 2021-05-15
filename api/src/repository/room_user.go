@@ -5,16 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/subscriber"
 	"gorm.io/gorm"
-)
-
-const (
-	ExpireTimeSecond = 3600 * time.Second
 )
 
 type RoomUserRepo struct {
@@ -42,7 +37,7 @@ func (r *RoomUserRepo) Insert(ctx context.Context, ru *domain.RoomUser) error {
 		ctx,
 		roomUserKey,
 		ruJSON,
-		ExpireTimeSecond,
+		expireTimeSecond,
 	).Err(); err != nil {
 		return err
 	}
