@@ -23,23 +23,20 @@ var roomUserChannelChannelReg = regexp.MustCompile(RoomUserChannel + `:([\d]+):(
 
 // roomUser:1:User:335902496
 
-func destructRoomUserKey(key string) (roomID, userID int, err error) {
+func destructRoomUserKey(key string) (roomID int, userUID string, err error) {
 	matches := roomUserChannelChannelReg.FindStringSubmatch(key)
 
 	roomIDStr := matches[1]
 	userIDStr := matches[2]
 	if roomIDStr == "" || userIDStr == "" {
-		return 0, 0, errors.New("roomUserKey is invalid format")
+		return 0, "", errors.New("roomUserKey is invalid format")
 	}
 
 	roomID, err = strconv.Atoi(roomIDStr)
 	if err != nil {
 		return
 	}
-	userID, err = strconv.Atoi(userIDStr)
-	if err != nil {
-		return
-	}
+	userUID = userIDStr
 	return
 }
 

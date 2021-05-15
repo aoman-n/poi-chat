@@ -43,7 +43,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 		log.Printf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
 		ch := removeKeyspacePrefix(msg.Channel)
-		roomID, userID, err := destructRoomUserKey(ch)
+		roomID, userUID, err := destructRoomUserKey(ch)
 		if err != nil {
 			log.Println("getted invalid channel key from redis")
 			continue
@@ -63,7 +63,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 				continue
 			}
 
-			d, err := s.makeDataFromSet(&roomUser, roomID, userID)
+			d, err := s.makeDataFromSet(&roomUser, roomID, userUID)
 			if err != nil {
 				log.Println(err)
 			}
@@ -72,7 +72,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 			fallthrough
 		case redis.EventExpired:
 			data := &model.Exited{
-				UserID: makeRoomUserID(userID),
+				UserID: makeRoomUserID(userUID),
 			}
 			s.deliver(roomID, data)
 		default:
@@ -114,11 +114,15 @@ func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userID s
 	return createdCh
 }
 
-func (s *RoomUserSubscriber) makeDataFromSet(ru *domain.RoomUser, roomID, userID int) (model.RoomUserEvent, error) {
+func (s *RoomUserSubscriber) makeDataFromSet(
+	ru *domain.RoomUser,
+	roomID int,
+	userUID string,
+) (model.RoomUserEvent, error) {
 	switch ru.LastEvent {
 	case domain.JoinEvent:
 		return &model.Joined{
-			UserID:    makeRoomUserID(userID),
+			UserID:    makeRoomUserID(userUID),
 			Name:      ru.Name,
 			AvatarURL: ru.AvatarURL,
 			X:         ru.X,
@@ -126,13 +130,13 @@ func (s *RoomUserSubscriber) makeDataFromSet(ru *domain.RoomUser, roomID, userID
 		}, nil
 	case domain.MoveEvent:
 		return &model.Moved{
-			UserID: makeRoomUserID(userID),
+			UserID: makeRoomUserID(userUID),
 			X:      ru.X,
 			Y:      ru.Y,
 		}, nil
 	case domain.MessageEvent:
 		return &model.SendedMassage{
-			UserID:  makeRoomUserID(userID),
+			UserID:  makeRoomUserID(userUID),
 			Message: ru.LastMessage,
 		}, nil
 	default:
@@ -140,6 +144,6 @@ func (s *RoomUserSubscriber) makeDataFromSet(ru *domain.RoomUser, roomID, userID
 	}
 }
 
-func makeRoomUserID(roomUserID int) string {
-	return fmt.Sprintf("RoomUser:%d", roomUserID)
+func makeRoomUserID(userUID string) string {
+	return fmt.Sprintf("RoomUser:%s", userUID)
 }
