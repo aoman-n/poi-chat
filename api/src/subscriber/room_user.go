@@ -31,6 +31,7 @@ func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserS
 }
 
 func (s *RoomUserSubscriber) start(ctx context.Context) {
+	// subscribeCh "roomUser:*"
 	subscribeCh := fmt.Sprintf("%s:%s:%s", redis.KeySpace, RoomUserChannel, "*")
 	pubsub := s.client.PSubscribe(ctx, subscribeCh)
 	defer pubsub.Close()
@@ -39,7 +40,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 		msg := <-pubsub.Channel()
 
 		// debug log
-		log.Printf("channel: %s\npayload: %s\n\n", msg.Channel, msg.Payload)
+		log.Printf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
 		ch := removeKeyspacePrefix(msg.Channel)
 		roomID, userID, err := destructRoomUserKey(ch)

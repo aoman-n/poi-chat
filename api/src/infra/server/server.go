@@ -39,7 +39,10 @@ func Init() {
 	conf := generated.Config{Resolvers: resolver}
 
 	router.Use(cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedOrigins: []string{
+			"http://localhost:3000",
+			"http://localhost:8080",
+		},
 		AllowedMethods: []string{
 			http.MethodHead,
 			http.MethodGet,

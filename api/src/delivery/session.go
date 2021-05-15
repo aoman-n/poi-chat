@@ -72,7 +72,9 @@ const (
 	avatarKey = "avatar_url"
 )
 
+// TODO: Domainへ移動する
 type User struct {
+	// TODO: UIDにする
 	ID        string
 	Name      string
 	AvatarURL string

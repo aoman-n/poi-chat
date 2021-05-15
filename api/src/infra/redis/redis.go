@@ -27,6 +27,7 @@ func New(conf config.Redis) *redis.Client {
 		log.Fatal("failed to connect redis", err)
 	}
 
+	// TODO: dockerの設定に移す
 	// enable keyspace notification
 	client.Do(context, "CONFIG", "SET", "notify-keyspace-events", "KEA")
 

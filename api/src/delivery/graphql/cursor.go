@@ -10,10 +10,12 @@ import (
 
 type Prefix string
 
+// TODO: ':'は定数に入れないようにする
 var (
-	roomPrefix    Prefix = "Room:"
-	messagePrefix Prefix = "Message:"
-	userPrefix    Prefix = "User:"
+	roomPrefix     Prefix = "Room:"
+	messagePrefix  Prefix = "Message:"
+	userPrefix     Prefix = "User:"
+	roomUserPrefix Prefix = "RoomUser:"
 )
 
 var (
@@ -100,4 +102,13 @@ func decodeID(prefix Prefix, id string) (int, error) {
 	}
 
 	return retID, nil
+}
+
+func decodeIDStr(prefix Prefix, id string) (string, error) {
+	idParts := strings.Split(id, ":")
+	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
+		return "", fmt.Errorf(invalidIDMsg, id)
+	}
+
+	return idParts[1], nil
 }

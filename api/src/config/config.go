@@ -38,11 +38,6 @@ type Config struct {
 var Conf Config
 
 func init() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("failed to load .env file, err:", err)
-	// }
-
 	if err := envconfig.Process("", &Conf); err != nil {
 		log.Fatal("failed to read env variables,  err:", err)
 	}

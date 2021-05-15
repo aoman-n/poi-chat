@@ -85,7 +85,7 @@ func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userSession.SetUser(&delivery.User{
-		ID:        "User:" + account.ID,
+		ID:        account.ID,
 		Name:      account.Name,
 		AvatarURL: account.ProfileImageURL,
 	})

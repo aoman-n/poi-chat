@@ -1,6 +1,7 @@
 package subscriber
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -14,19 +15,28 @@ const (
 )
 
 // MakeRoomUserKey "roomUser:<roomId>:<userId>"
-func MakeRoomUserKey(roomID, userID int) string {
-	return fmt.Sprintf("%s:%d:%d", RoomUserChannel, roomID, userID)
+func MakeRoomUserKey(roomID int, userUID string) string {
+	return fmt.Sprintf("%s:%d:%s", RoomUserChannel, roomID, userUID)
 }
 
 var roomUserChannelChannelReg = regexp.MustCompile(RoomUserChannel + `:([\d]+):(\d+)`)
 
+// roomUser:1:User:335902496
+
 func destructRoomUserKey(key string) (roomID, userID int, err error) {
 	matches := roomUserChannelChannelReg.FindStringSubmatch(key)
-	roomID, err = strconv.Atoi(matches[1])
+
+	roomIDStr := matches[1]
+	userIDStr := matches[2]
+	if roomIDStr == "" || userIDStr == "" {
+		return 0, 0, errors.New("roomUserKey is invalid format")
+	}
+
+	roomID, err = strconv.Atoi(roomIDStr)
 	if err != nil {
 		return
 	}
-	userID, err = strconv.Atoi(matches[2])
+	userID, err = strconv.Atoi(userIDStr)
 	if err != nil {
 		return
 	}

@@ -11,57 +11,39 @@ import (
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/model"
+	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
 )
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
-	// currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	// if err != nil {
-	// 	return nil, errUnauthenticated
-	// }
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
 
-	// domainRoomID, err := decodeID(roomPrefix, input.RoomID)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	if err != nil {
+		return nil, err
+	}
 
-	// movedUser := &model.MovePayload{
-	// 	UserID: currentUser.ID,
-	// 	X:      input.X,
-	// 	Y:      input.Y,
-	// }
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.ID)
+	if err != nil {
+		log.Println("failed to get roomUser err:", err)
+	}
+	if roomUser == nil {
+		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
+	}
 
-	// if err := r.pubsubRepo.PubMovedUser(ctx, movedUser, domainRoomID); err != nil {
-	// 	return nil, err
-	// }
+	// moveイベントにしてx,yを更新
+	roomUser.LastEvent = domain.MoveEvent
+	roomUser.X = input.X
+	roomUser.Y = input.Y
 
-	// // userの位置の更新は最悪失敗しても良いので非同期で行う
-	// go func() {
-	// 	ctx2 := context.Background()
-	// 	domainUserID, err := decodeID(userPrefix, currentUser.ID)
-	// 	if err != nil {
-	// 		log.Println("failed to decode user id, err:", err)
-	// 		return
-	// 	}
+	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
+		return nil, err
+	}
 
-	// 	u, err := r.roomRepo.GetUserByID(ctx2, domainUserID)
-	// 	if err != nil {
-	// 		log.Println("failed to get user, err:", err)
-	// 		return
-	// 	}
-
-	// 	u.X = input.X
-	// 	u.Y = input.Y
-
-	// 	if err := r.roomRepo.UpdateUser(ctx, u); err != nil {
-	// 		log.Println("failed to update user position, err:", err)
-	// 		return
-	// 	}
-	// }()
-
-	// return movedUser, nil
-
-	return nil, nil
+	return toMovePayload(roomUser), nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
@@ -133,7 +115,10 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
+func (r *subscriptionResolver) ActedRoomUserEvent(
+	ctx context.Context,
+	roomID string,
+) (<-chan model.RoomUserEvent, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
@@ -142,6 +127,15 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 	domainRoomID, err := decodeID(roomPrefix, roomID)
 	if err != nil {
 		return nil, errors.New("roomId is invalid format")
+	}
+
+	// TODO: roomの存在チェック
+
+	if err := r.roomUserRepo.Insert(
+		ctx,
+		domain.NewDefaultRoomUser(domainRoomID, currentUser),
+	); err != nil {
+		return nil, err
 	}
 
 	return r.roomUserSubscriber.Subscribe(ctx, domainRoomID, currentUser.ID), nil

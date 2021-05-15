@@ -1,10 +1,14 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"github.com/laster18/poi/api/src/delivery"
+)
 
 // for Redis
 type RoomUser struct {
-	ID          int    `json:"id"`
+	UID         string `json:"id"`
 	RoomID      int    `json:"roomId"`
 	Name        string `json:"name"`
 	AvatarURL   string `json:"avatarUrl"`
@@ -14,6 +18,24 @@ type RoomUser struct {
 	LastEvent   RoomUserEvent
 }
 
+func NewDefaultRoomUser(roomID int, u *delivery.User) *RoomUser {
+	return &RoomUser{
+		UID:         u.ID,
+		RoomID:      roomID,
+		Name:        u.Name,
+		AvatarURL:   u.AvatarURL,
+		X:           DefaultX,
+		Y:           DefaultY,
+		LastMessage: "",
+		LastEvent:   JoinEvent,
+	}
+}
+
+const (
+	DefaultX = 100
+	DefaultY = 100
+)
+
 type RoomUserEvent int
 
 const (
@@ -22,9 +44,8 @@ const (
 	MessageEvent
 )
 
-type RoomUserRepo interface {
-	Create(ctx context.Context, u *RoomUser) error
-	Update(ctx context.Context, u *RoomUser) error
+type IRoomUserRepo interface {
+	Insert(ctx context.Context, u *RoomUser) error
 	Delete(ctx context.Context, u *RoomUser) error
-	Get(ctx context.Context, uID int) (*RoomUser, error)
+	Get(ctx context.Context, roomID int, uID string) (*RoomUser, error)
 }

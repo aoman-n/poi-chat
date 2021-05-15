@@ -37,6 +37,8 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
+			fmt.Printf("authed user: %+v\n", user)
+
 			ctx := context.WithValue(r.Context(), CurrentUserKey, user)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
