@@ -8,13 +8,13 @@ import (
 
 // for Redis
 type RoomUser struct {
-	UID         string `json:"id"`
-	RoomID      int    `json:"roomId"`
-	Name        string `json:"name"`
-	AvatarURL   string `json:"avatarUrl"`
-	X           int    `json:"x"`
-	Y           int    `json:"y"`
-	LastMessage string `json:"lastMessage"`
+	UID         string   `json:"id"`
+	RoomID      int      `json:"roomId"`
+	Name        string   `json:"name"`
+	AvatarURL   string   `json:"avatarUrl"`
+	X           int      `json:"x"`
+	Y           int      `json:"y"`
+	LastMessage *Message `json:"lastMessage"`
 	LastEvent   RoomUserEvent
 }
 
@@ -26,9 +26,20 @@ func NewDefaultRoomUser(roomID int, u *delivery.User) *RoomUser {
 		AvatarURL:   u.AvatarURL,
 		X:           DefaultX,
 		Y:           DefaultY,
-		LastMessage: "",
+		LastMessage: nil,
 		LastEvent:   JoinEvent,
 	}
+}
+
+func (r *RoomUser) SetPosition(x, y int) {
+	r.LastEvent = MoveEvent
+	r.X = x
+	r.Y = y
+}
+
+func (r *RoomUser) SetMessage(msg *Message) {
+	r.LastMessage = msg
+	r.LastEvent = MessageEvent
 }
 
 const (

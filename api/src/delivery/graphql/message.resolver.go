@@ -6,12 +6,14 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/clock"
 )
 
 func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, error) {
@@ -19,52 +21,55 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 }
 
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
-	// currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	// if err != nil {
-	// 	return nil, errUnauthenticated
-	// }
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
 
-	// _, ok := r.subscripters.Get(input.RoomID)
-	// if !ok {
-	// 	return nil, errRoomNotFound
-	// }
+	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	if err != nil {
+		return nil, err
+	}
 
-	// dmainRoomID, err := decodeID(roomPrefix, input.RoomID)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	msg := &domain.Message{
+		UserUID:       currentUser.ID,
+		Body:          input.Body,
+		UserName:      currentUser.Name,
+		UserAvatarURL: currentUser.AvatarURL,
+		RoomID:        domainRoomID,
+		CreatedAt:     clock.Now(),
+	}
 
-	// msg := &domain.Message{
-	// 	UserUID:       currentUser.ID,
-	// 	Body:          input.Body,
-	// 	UserName:      currentUser.Name,
-	// 	UserAvatarURL: currentUser.AvatarURL,
-	// 	RoomID:        dmainRoomID,
-	// 	CreatedAt:     clock.Now(),
-	// }
+	if err := r.messageRepo.Create(ctx, msg); err != nil {
+		log.Println("create message error:", err)
+		return nil, errUnexpected
+	}
 
-	// if err := r.messageRepo.Create(ctx, msg); err != nil {
-	// 	log.Println("create message error:", err)
-	// 	return nil, errUnexpected
-	// }
+	responseMsg := &model.Message{
+		ID:            encodeID(roomPrefix, msg.ID),
+		UserID:        currentUser.ID,
+		UserName:      msg.UserName,
+		UserAvatarURL: msg.UserAvatarURL,
+		Body:          msg.Body,
+		CreatedAt:     msg.CreatedAt,
+	}
 
-	// responseMsg := &model.Message{
-	// 	ID:            encodeID(roomPrefix, msg.ID),
-	// 	UserID:        currentUser.ID,
-	// 	UserName:      msg.UserName,
-	// 	UserAvatarURL: msg.UserAvatarURL,
-	// 	Body:          msg.Body,
-	// 	CreatedAt:     msg.CreatedAt,
-	// }
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.ID)
+	if err != nil {
+		log.Println("failed to get roomUser, err:", err)
+		return nil, err
+	}
+	if roomUser == nil {
+		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
+	}
+	roomUser.SetMessage(msg)
 
-	// if err := r.pubsubRepo.PubMessage(ctx, responseMsg, dmainRoomID); err != nil {
-	// 	log.Println("failed to publish message err:", err)
-	// 	return nil, errUnexpected
-	// }
+	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
+		log.Println("failed to insert roomUser, err:", err)
+		return nil, err
+	}
 
-	// return responseMsg, nil
-
-	return nil, nil
+	return responseMsg, nil
 }
 
 func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {
@@ -146,30 +151,28 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 }
 
 func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {
-	// fmt.Println("start subscribe message")
+	fmt.Println("start subscribe message")
 
-	// currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	// if err != nil {
-	// 	return nil, errUnauthenticated
-	// }
+	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	if err != nil {
+		return nil, errUnauthenticated
+	}
 
-	// subscripter, ok := r.subscripters.Get(roomID)
-	// if !ok {
-	// 	return nil, errRoomNotFound
-	// }
+	subscripter, ok := r.subscripters.Get(roomID)
+	if !ok {
+		return nil, errRoomNotFound
+	}
 
-	// ch := make(chan *model.Message, 1)
-	// subscripter.AddMessageChan(currentUser.ID, ch)
+	ch := make(chan *model.Message, 1)
+	subscripter.AddMessageChan(currentUser.ID, ch)
 
-	// go func() {
-	// 	<-ctx.Done()
-	// 	fmt.Println("stop subscribe message")
-	// 	subscripter.DeleteMessageChan(currentUser.ID)
-	// }()
+	go func() {
+		<-ctx.Done()
+		fmt.Println("stop subscribe message")
+		subscripter.DeleteMessageChan(currentUser.ID)
+	}()
 
-	// return ch, nil
-
-	return nil, nil
+	return ch, nil
 }
 
 // Message returns generated.MessageResolver implementation.

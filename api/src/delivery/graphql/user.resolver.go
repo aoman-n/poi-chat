@@ -33,11 +33,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	if roomUser == nil {
 		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
 	}
-
-	// moveイベントにしてx,yを更新
-	roomUser.LastEvent = domain.MoveEvent
-	roomUser.X = input.X
-	roomUser.Y = input.Y
+	roomUser.SetPosition(input.X, input.Y)
 
 	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
 		return nil, err
@@ -115,10 +111,7 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *subscriptionResolver) ActedRoomUserEvent(
-	ctx context.Context,
-	roomID string,
-) (<-chan model.RoomUserEvent, error) {
+func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
 	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
 		return nil, errUnauthenticated

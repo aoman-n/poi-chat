@@ -137,15 +137,37 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 			Y:      ru.Y,
 		}, nil
 	case domain.MessageEvent:
+		if ru.LastMessage == nil {
+			return nil, errors.New("not found roomUser.LastMessage")
+		}
+
 		return &model.SendedMassage{
-			UserID:  makeRoomUserID(userUID),
-			Message: ru.LastMessage,
+			UserID: makeRoomUserID(userUID),
+			Message: &model.Message{
+				ID:            makeMessageID(ru.LastMessage.ID),
+				UserID:        makeUserID(ru.LastMessage.UserUID),
+				UserName:      ru.LastMessage.UserName,
+				UserAvatarURL: ru.LastMessage.UserAvatarURL,
+				Body:          ru.LastMessage.Body,
+				CreatedAt:     ru.LastMessage.CreatedAt,
+			},
 		}, nil
 	default:
 		return nil, errors.New("getted unknown roomUser event")
 	}
 }
 
+// TODO: resolverで使っているものと共通化する
 func makeRoomUserID(userUID string) string {
 	return fmt.Sprintf("RoomUser:%s", userUID)
+}
+
+// TODO: resolverで使っているものと共通化する
+func makeMessageID(id int) string {
+	return fmt.Sprintf("Messaage:%d", id)
+}
+
+// TODO: resolverで使っているものと共通化する
+func makeUserID(userUID string) string {
+	return fmt.Sprintf("User:%s", userUID)
 }
