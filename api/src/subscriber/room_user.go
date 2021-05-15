@@ -3,6 +3,7 @@ package subscriber
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -37,8 +38,11 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 	for {
 		msg := <-pubsub.Channel()
 
-		subscribedChannel := removeKeyspacePrefix(msg.Channel)
-		roomID, userID, err := destructRoomUserKey(subscribedChannel)
+		// debug log
+		log.Printf("channel: %s\npayload: %s\n\n", msg.Channel, msg.Payload)
+
+		ch := removeKeyspacePrefix(msg.Channel)
+		roomID, userID, err := destructRoomUserKey(ch)
 		if err != nil {
 			log.Println("getted invalid channel key from redis")
 			continue
@@ -46,45 +50,23 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 
 		switch msg.Payload {
 		case redis.EventSet:
-			// dataをGet
-			roomUserJSON, err := s.client.Get(ctx, subscribedChannel).Result()
+			roomUserJSON, err := s.client.Get(ctx, ch).Result()
 			if err != nil {
 				log.Println("failed to get from redis, err:", err)
 				continue
 			}
-			// jsonUnmarshal
+
 			var roomUser domain.RoomUser
 			if err := json.Unmarshal([]byte(roomUserJSON), &roomUser); err != nil {
 				log.Println("getted unexpected json data struct from redis")
 				continue
 			}
-			// eventによる分岐
-			switch roomUser.LastEvent {
-			case domain.JoinEvent:
-				data := &model.Joined{
-					UserID:    makeRoomUserID(userID),
-					Name:      roomUser.Name,
-					AvatarURL: roomUser.AvatarURL,
-					X:         roomUser.X,
-					Y:         roomUser.Y,
-				}
-				s.deliver(roomID, data)
-			case domain.MoveEvent:
-				data := &model.Moved{
-					UserID: makeRoomUserID(userID),
-					X:      roomUser.X,
-					Y:      roomUser.Y,
-				}
-				s.deliver(roomID, data)
-			case domain.MessageEvent:
-				data := &model.SendedMassage{
-					UserID:  makeRoomUserID(userID),
-					Message: roomUser.LastMessage,
-				}
-				s.deliver(roomID, data)
-			default:
-				log.Println("getted unknown roomUser event")
+
+			d, err := s.makeDataFromSet(&roomUser, roomID, userID)
+			if err != nil {
+				log.Println(err)
 			}
+			s.deliver(roomID, d)
 		case redis.EventDel:
 			fallthrough
 		case redis.EventExpired:
@@ -129,6 +111,32 @@ func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userID s
 	}()
 
 	return createdCh
+}
+
+func (s *RoomUserSubscriber) makeDataFromSet(ru *domain.RoomUser, roomID, userID int) (model.RoomUserEvent, error) {
+	switch ru.LastEvent {
+	case domain.JoinEvent:
+		return &model.Joined{
+			UserID:    makeRoomUserID(userID),
+			Name:      ru.Name,
+			AvatarURL: ru.AvatarURL,
+			X:         ru.X,
+			Y:         ru.Y,
+		}, nil
+	case domain.MoveEvent:
+		return &model.Moved{
+			UserID: makeRoomUserID(userID),
+			X:      ru.X,
+			Y:      ru.Y,
+		}, nil
+	case domain.MessageEvent:
+		return &model.SendedMassage{
+			UserID:  makeRoomUserID(userID),
+			Message: ru.LastMessage,
+		}, nil
+	default:
+		return nil, errors.New("getted unknown roomUser event")
+	}
 }
 
 func makeRoomUserID(roomUserID int) string {
