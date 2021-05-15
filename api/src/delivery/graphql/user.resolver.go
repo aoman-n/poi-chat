@@ -131,12 +131,20 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 
 	// TODO: roomの存在チェック
 
-	if err := r.roomUserRepo.Insert(
-		ctx,
-		domain.NewDefaultRoomUser(domainRoomID, currentUser),
-	); err != nil {
+	newRoomUser := domain.NewDefaultRoomUser(domainRoomID, currentUser)
+	if err := r.roomUserRepo.Insert(ctx, newRoomUser); err != nil {
 		return nil, err
 	}
 
-	return r.roomUserSubscriber.Subscribe(ctx, domainRoomID, currentUser.ID), nil
+	ch := make(chan model.RoomUserEvent)
+	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.ID)
+
+	go func() {
+		<-ctx.Done()
+		if err := r.roomUserRepo.Delete(context.Background(), newRoomUser); err != nil {
+			log.Println("failed to delete roomUser, err:", err)
+		}
+	}()
+
+	return ch, nil
 }

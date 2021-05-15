@@ -95,23 +95,25 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	}
 }
 
-func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userID string) <-chan model.RoomUserEvent {
+func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userUID string) <-chan model.RoomUserEvent {
 	createdCh := make(chan model.RoomUserEvent)
-
-	s.Mutex.Lock()
-	userChannels, ok := s.chs[roomID]
-	if !ok {
-		userChannels = make(map[string]chan model.RoomUserEvent)
-		s.chs[roomID] = userChannels
-	}
-	userChannels[userID] = createdCh
-	s.Mutex.Unlock()
 
 	go func() {
 		<-ctx.Done()
 	}()
 
 	return createdCh
+}
+
+func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, userUID string) {
+	s.Mutex.Lock()
+	userChannels, ok := s.chs[roomID]
+	if !ok {
+		userChannels = make(map[string]chan model.RoomUserEvent)
+		s.chs[roomID] = userChannels
+	}
+	userChannels[userUID] = ch
+	s.Mutex.Unlock()
 }
 
 func (s *RoomUserSubscriber) makeDataFromSet(

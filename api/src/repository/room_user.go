@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	ExpireTimeSecond = 60 * time.Second
+	ExpireTimeSecond = 3600 * time.Second
 )
 
 type RoomUserRepo struct {
