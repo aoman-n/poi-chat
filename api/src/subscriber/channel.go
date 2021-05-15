@@ -1,7 +1,6 @@
 package subscriber
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -40,9 +39,7 @@ func destructGlobalUserKey(key string) (userUID string, err error) {
 
 	userUID = matches[1]
 	if userUID == "" {
-		return "", errors.New(
-			fmt.Sprintf(`globalUserKey is invalid format, key: "%s"` + key),
-		)
+		return "", fmt.Errorf(`globalUserKey is invalid format, key: "%s"`, key)
 	}
 
 	return
@@ -61,9 +58,7 @@ func destructRoomUserKey(key string) (roomID int, userUID string, err error) {
 	roomIDStr := matches[1]
 	userIDStr := matches[2]
 	if roomIDStr == "" || userIDStr == "" {
-		return 0, "", errors.New(
-			fmt.Sprintf(`"roomUserKey is invalid format", key: "%s"` + key),
-		)
+		return 0, "", fmt.Errorf(`roomUserKey is invalid format", key: "%s"`, key)
 	}
 
 	roomID, err = strconv.Atoi(roomIDStr)
