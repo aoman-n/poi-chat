@@ -30,12 +30,14 @@ func Init() {
 	ctx := context.Background()
 	db := db.NewDb()
 	redisClient := redis.New(config.Conf.Redis)
-	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
 
-	_ = repository.NewRoomRepo(db)
+	globalUserRepo := repository.NewGlobalUserRepo(redisClient)
+	// TODO: subscriberにredisClientを渡さないようにする
+	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
+	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, globalUserRepo)
 
 	router := chi.NewRouter()
-	resolver := graphql.NewResolver(db, redisClient, roomUserSubscriber)
+	resolver := graphql.NewResolver(db, redisClient, roomUserSubscriber, globalUserSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
 	router.Use(cors.New(cors.Options{

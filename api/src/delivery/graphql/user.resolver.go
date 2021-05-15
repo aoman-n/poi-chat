@@ -134,6 +134,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 
 	go func() {
 		<-ctx.Done()
+		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.ID)
 		if err := r.roomUserRepo.Delete(context.Background(), newRoomUser); err != nil {
 			log.Println("failed to delete roomUser, err:", err)
 		}

@@ -15,7 +15,7 @@ import (
 
 type RoomUserSubscriber struct {
 	client *redis.Client
-	Mutex  sync.Mutex
+	mutex  sync.Mutex
 	// channels map[roomId]map[userId]chan ...
 	chs map[int]map[string]chan model.RoomUserEvent
 }
@@ -23,7 +23,7 @@ type RoomUserSubscriber struct {
 func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
-		Mutex:  sync.Mutex{},
+		mutex:  sync.Mutex{},
 		chs:    make(map[int]map[string]chan model.RoomUserEvent),
 	}
 	go subscriber.start(ctx)
@@ -45,12 +45,13 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 		ch := removeKeyspacePrefix(msg.Channel)
 		roomID, userUID, err := destructRoomUserKey(ch)
 		if err != nil {
-			log.Println("getted invalid channel key from redis")
+			log.Println("getted invalid channel key from redis, err:", err)
 			continue
 		}
 
 		switch msg.Payload {
 		case redis.EventSet:
+			// TODO: repositoryへ移譲
 			roomUserJSON, err := s.client.Get(ctx, ch).Result()
 			if err != nil {
 				log.Println("failed to get from redis, err:", err)
@@ -59,7 +60,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 
 			var roomUser domain.RoomUser
 			if err := json.Unmarshal([]byte(roomUserJSON), &roomUser); err != nil {
-				log.Println("getted unexpected json data struct from redis")
+				log.Println("received unexpected json data struct from redis")
 				continue
 			}
 
@@ -82,8 +83,9 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 }
 
 func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
-	s.Mutex.Lock()
-	defer s.Mutex.Unlock()
+	// TODO: ここLock必要？
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	chs, ok := s.chs[roomID]
 	if !ok {
@@ -95,25 +97,25 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	}
 }
 
-func (s *RoomUserSubscriber) Subscribe(ctx context.Context, roomID int, userUID string) <-chan model.RoomUserEvent {
-	createdCh := make(chan model.RoomUserEvent)
-
-	go func() {
-		<-ctx.Done()
-	}()
-
-	return createdCh
-}
-
 func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, userUID string) {
-	s.Mutex.Lock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	userChannels, ok := s.chs[roomID]
 	if !ok {
 		userChannels = make(map[string]chan model.RoomUserEvent)
 		s.chs[roomID] = userChannels
 	}
 	userChannels[userUID] = ch
-	s.Mutex.Unlock()
+}
+
+func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	userChannels, ok := s.chs[roomID]
+	if !ok {
+		return
+	}
+	delete(userChannels, userUID)
 }
 
 func (s *RoomUserSubscriber) makeDataFromSet(
@@ -155,19 +157,4 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 	default:
 		return nil, errors.New("getted unknown roomUser event")
 	}
-}
-
-// TODO: resolverで使っているものと共通化する
-func makeRoomUserID(userUID string) string {
-	return fmt.Sprintf("RoomUser:%s", userUID)
-}
-
-// TODO: resolverで使っているものと共通化する
-func makeMessageID(id int) string {
-	return fmt.Sprintf("Messaage:%d", id)
-}
-
-// TODO: resolverで使っているものと共通化する
-func makeUserID(userUID string) string {
-	return fmt.Sprintf("User:%s", userUID)
 }
