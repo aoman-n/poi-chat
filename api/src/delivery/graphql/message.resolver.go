@@ -45,14 +45,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 		return nil, errUnexpected
 	}
 
-	responseMsg := &model.Message{
-		ID:            encodeID(roomPrefix, msg.ID),
-		UserID:        currentUser.ID,
-		UserName:      msg.UserName,
-		UserAvatarURL: msg.UserAvatarURL,
-		Body:          msg.Body,
-		CreatedAt:     msg.CreatedAt,
-	}
+	responseMsg := toMessage(msg)
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.ID)
 	if err != nil {
@@ -124,13 +117,7 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 	// create nodes, serializing message model
 	nodes := make([]*model.Message, len(messageListResp.List))
 	for i, message := range messageListResp.List {
-		nodes[i] = &model.Message{
-			ID:            strconv.Itoa(message.ID),
-			UserName:      message.UserName,
-			UserAvatarURL: message.UserAvatarURL,
-			Body:          message.Body,
-			CreatedAt:     message.CreatedAt,
-		}
+		nodes[i] = toMessage(message)
 	}
 
 	// create edges
