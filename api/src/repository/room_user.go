@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
@@ -96,4 +97,53 @@ func (r *RoomUserRepo) Get(ctx context.Context, roomID int, uID string) (*domain
 	}
 
 	return &roomUser, nil
+}
+
+func (r *RoomUserRepo) GetByRoomID(ctx context.Context, id int) ([]*domain.RoomUser, error) {
+	indexCh := r.makeRoomUserIndexKey(id)
+	keys, err := r.redisClient.SMembers(ctx, indexCh).Result()
+	if err != nil {
+		return nil, err
+	}
+	if len(keys) <= 0 {
+		return []*domain.RoomUser{}, nil
+	}
+
+	userJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	roomUsers := []*domain.RoomUser{}
+	for i, u := range userJSONs {
+		if u == nil {
+			if err := r.redisClient.SRem(ctx, indexCh, keys[i]).Err(); err != nil {
+				log.Printf("failed to delete roomUser index which never existed from Sets data")
+			}
+			continue
+		}
+
+		jsonStr, ok := u.(string)
+		if !ok {
+			log.Printf(
+				"globalUser data is invalid type on Redis, type: %T, data: %v\n",
+				u,
+				u,
+			)
+			continue
+		}
+
+		var ru domain.RoomUser
+		if err := json.Unmarshal([]byte(jsonStr), &ru); err != nil {
+			log.Printf(
+				"roomUser data is invalid format on Redis, data: %+v\n",
+				u,
+			)
+			continue
+		}
+
+		roomUsers = append(roomUsers, &ru)
+	}
+
+	return roomUsers, nil
 }

@@ -38,3 +38,29 @@ func toOnlineUsers(gs []*domain.GlobalUser) []*model.OnlineUser {
 
 	return os
 }
+
+func toRoomUsers(rus []*domain.RoomUser) []*model.RoomUser {
+	roomUsers := make([]*model.RoomUser, len(rus))
+	for i, r := range rus {
+		roomUser := &model.RoomUser{
+			ID:        r.UID,
+			Name:      r.Name,
+			AvatarURL: r.AvatarURL,
+			X:         r.X,
+			Y:         r.Y,
+		}
+		if r.LastMessage != nil {
+			roomUser.LastMessage = &model.Message{
+				ID:            strconv.Itoa(r.LastMessage.ID),
+				UserID:        r.LastMessage.UserUID,
+				UserName:      r.LastMessage.UserName,
+				UserAvatarURL: r.LastMessage.UserAvatarURL,
+				Body:          r.LastMessage.Body,
+				CreatedAt:     r.LastMessage.CreatedAt,
+			}
+		}
+		roomUsers[i] = roomUser
+	}
+
+	return roomUsers
+}

@@ -66,27 +66,14 @@ func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, e
 }
 
 func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.RoomUser, error) {
-	id, _ := strconv.Atoi(obj.ID)
+	roomID, _ := strconv.Atoi(obj.ID)
 
-	joinedUsers, err := r.roomRepo.GetUsers(ctx, id)
+	users, err := r.roomUserRepo.GetByRoomID(ctx, roomID)
 	if err != nil {
-		log.Println("failed to list joinedUser err:", err)
-		return nil, errUnexpected
+		return nil, err
 	}
 
-	// serialize
-	users := make([]*model.RoomUser, len(joinedUsers))
-	for i, ju := range joinedUsers {
-		users[i] = &model.RoomUser{
-			ID:        encodeIDStr(userPrefix, ju.UserID),
-			Name:      ju.DisplayName,
-			AvatarURL: ju.AvatarURL,
-			X:         ju.X,
-			Y:         ju.Y,
-		}
-	}
-
-	return users, nil
+	return toRoomUsers(users), nil
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
