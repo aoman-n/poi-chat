@@ -32,6 +32,8 @@ func Init() {
 	redisClient := redis.New(config.Conf.Redis)
 
 	globalUserRepo := repository.NewGlobalUserRepo(redisClient)
+	roomUserRepo := repository.NewRoomUserRepo(db, redisClient)
+
 	// TODO: subscriberにredisClientを渡さないようにする
 	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
 	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, globalUserRepo)
@@ -40,6 +42,7 @@ func Init() {
 	resolver := graphql.NewResolver(db, redisClient, roomUserSubscriber, globalUserSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
+	// set middlewares
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:3000",
@@ -57,13 +60,13 @@ func Init() {
 		AllowCredentials: true,
 		Debug:            false,
 	}).Handler)
-
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.GetHead)
 	router.Use(middleware.Recoverer)
 	router.Use(customMiddleware.AuthMiddleware())
+	router.Use(customMiddleware.InjectRoomUserCountLoader(roomUserRepo))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))
 

@@ -11,6 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/middleware"
 )
 
 func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.Room, error) {
@@ -100,6 +101,20 @@ func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error
 
 func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) {
 	return fmt.Sprintf(roomIDFormat, obj.ID), nil
+}
+
+func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, error) {
+	id, err := strconv.Atoi(obj.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := middleware.GetRoomUserCountLoader(ctx).Load(id)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 // Room returns generated.RoomResolver implementation.

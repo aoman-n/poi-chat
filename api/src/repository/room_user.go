@@ -102,6 +102,7 @@ func (r *RoomUserRepo) Get(ctx context.Context, roomID int, uID string) (*domain
 func (r *RoomUserRepo) GetByRoomID(ctx context.Context, id int) ([]*domain.RoomUser, error) {
 	indexCh := r.makeRoomUserIndexKey(id)
 	keys, err := r.redisClient.SMembers(ctx, indexCh).Result()
+
 	if err != nil {
 		return nil, err
 	}
@@ -146,4 +147,40 @@ func (r *RoomUserRepo) GetByRoomID(ctx context.Context, id int) ([]*domain.RoomU
 	}
 
 	return roomUsers, nil
+}
+
+func (r *RoomUserRepo) Counts(ctx context.Context, roomIDs []int) ([]int, error) {
+	roomUserIndexKeys := make([]string, len(roomIDs))
+	for i, id := range roomIDs {
+		roomUserIndexKeys[i] = r.makeRoomUserIndexKey(id)
+	}
+
+	// roomUserKeys:
+	// ["roomUser:<roomId>:<userId>", ...]
+	// ["roomUser:1:1111", ...]
+	roomUserKeys, err := r.redisClient.SUnion(ctx, roomUserIndexKeys...).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	countMap := map[int]int{}
+	for _, roomID := range roomIDs {
+		countMap[roomID] = 0
+	}
+
+	for _, key := range roomUserKeys {
+		// Splitで分解するようにしたほうがよい？
+		roomID, _, _ := subscriber.DestructRoomUserKey(key)
+		countMap[roomID]++
+	}
+
+	// TODO: もっと良い書き方をしたい
+	counts := make([]int, len(roomIDs))
+	i := 0
+	for _, count := range countMap {
+		counts[i] = count
+		i++
+	}
+
+	return counts, nil
 }

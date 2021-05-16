@@ -12,8 +12,6 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 )
 
-type key string
-
 // CurrentUserKey for middleware
 const CurrentUserKey key = "currentUser"
 
@@ -57,7 +55,7 @@ func handleSessionError(w http.ResponseWriter) {
 	fmt.Fprint(w, "server error")
 }
 
-func GetCurrentUserFromCtx(ctx context.Context) (*domain.GlobalUser, error) {
+func GetCurrentUser(ctx context.Context) (*domain.GlobalUser, error) {
 	errNoUserInContext := errors.New("no user in context")
 	if ctx.Value(CurrentUserKey) == nil {
 		return nil, errNoUserInContext

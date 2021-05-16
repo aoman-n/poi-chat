@@ -15,7 +15,7 @@ import (
 )
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -42,7 +42,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -77,7 +77,7 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -106,7 +106,7 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 }
 
 func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}

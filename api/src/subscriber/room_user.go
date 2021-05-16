@@ -44,7 +44,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 		log.Printf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
 		ch := removeKeyspacePrefix(msg.Channel)
-		roomID, userUID, err := destructRoomUserKey(ch)
+		roomID, userUID, err := DestructRoomUserKey(ch)
 		if err != nil {
 			log.Println("getted invalid channel key from redis, err:", err)
 			continue

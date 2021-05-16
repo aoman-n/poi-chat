@@ -21,7 +21,7 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 }
 
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
+	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}
@@ -64,7 +64,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 }
 
 func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
-	_, err := middleware.GetCurrentUserFromCtx(ctx)
+	_, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
 	}

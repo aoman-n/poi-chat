@@ -39,6 +39,6 @@ type IRoomRepo interface {
 	GetByID(ctx context.Context, id int) (*Room, error)
 	List(ctx context.Context, req *RoomListReq) (*RoomListResp, error)
 	ListAll(ctx context.Context) ([]*Room, error)
-	Count(ctx context.Context) (int, error)
 	Create(ctx context.Context, room *Room) error
+	Count(ctx context.Context) (int, error)
 }

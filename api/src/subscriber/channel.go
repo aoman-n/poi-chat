@@ -52,7 +52,7 @@ func destructGlobalUserKey(key string) (userUID string, err error) {
 // roomUser:1:335902496
 var roomUserChannelReg = regexp.MustCompile(RoomUserChannel + `:(\d+):([a-zA-Z\d]+)`)
 
-func destructRoomUserKey(key string) (roomID int, userUID string, err error) {
+func DestructRoomUserKey(key string) (roomID int, userUID string, err error) {
 	matches := roomUserChannelReg.FindStringSubmatch(key)
 
 	roomIDStr := matches[1]

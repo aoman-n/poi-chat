@@ -58,4 +58,5 @@ type IRoomUserRepo interface {
 	Delete(ctx context.Context, u *RoomUser) error
 	Get(ctx context.Context, roomID int, uID string) (*RoomUser, error)
 	GetByRoomID(ctx context.Context, roomID int) ([]*RoomUser, error)
+	Counts(ctx context.Context, roomIDs []int) ([]int, error)
 }

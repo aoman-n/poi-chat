@@ -10,6 +10,7 @@ extend type Mutation {
 type Room implements Node {
   id: ID!
   name: String!
+  userCount: Int!
 }
 
 type RoomEdge implements Edge {
