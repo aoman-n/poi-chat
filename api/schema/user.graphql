@@ -1,5 +1,5 @@
 extend type RoomDetail {
-  users: [User!]!
+  users: [RoomUser!]!
 }
 
 extend type Query {
@@ -37,12 +37,13 @@ type Me {
   avatarUrl: String!
 }
 
-type User {
+type RoomUser {
   id: ID!
   name: String!
   avatarUrl: String!
   x: Int!
   y: Int!
+  lastMessage: Message
 }
 
 type OnlineUser {
@@ -65,21 +66,14 @@ type Offlined {
 # RoomUserEvent
 union RoomUserEvent = Joined | Exited | Moved | SendedMassage
 type Joined {
-  userId: ID!
-  name: String!
-  avatarUrl: String!
-  x: Int!
-  y: Int!
+  roomUser: RoomUser!
+}
+type Moved {
+  roomUser: RoomUser!
+}
+type SendedMassage {
+  roomUser: RoomUser!
 }
 type Exited {
   userId: ID!
-}
-type Moved {
-  userId: ID!
-  x: Int!
-  y: Int!
-}
-type SendedMassage {
-  userId: ID!
-  message: Message!
 }

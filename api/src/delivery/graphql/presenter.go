@@ -1,6 +1,8 @@
 package graphql
 
 import (
+	"strconv"
+
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 )
@@ -15,7 +17,7 @@ func toMovePayload(ru *domain.RoomUser) *model.MovePayload {
 
 func toMessage(m *domain.Message) *model.Message {
 	return &model.Message{
-		ID:            encodeID(roomPrefix, m.ID),
+		ID:            strconv.Itoa(m.ID),
 		UserID:        encodeIDStr(userPrefix, m.UserUID),
 		UserName:      m.UserName,
 		UserAvatarURL: m.UserAvatarURL,

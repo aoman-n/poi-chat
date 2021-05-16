@@ -65,7 +65,7 @@ func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, e
 	return toOnlineUsers(globalUsers), nil
 }
 
-func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
+func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.RoomUser, error) {
 	id, _ := strconv.Atoi(obj.ID)
 
 	joinedUsers, err := r.roomRepo.GetUsers(ctx, id)
@@ -75,9 +75,9 @@ func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) (
 	}
 
 	// serialize
-	users := make([]*model.User, len(joinedUsers))
+	users := make([]*model.RoomUser, len(joinedUsers))
 	for i, ju := range joinedUsers {
-		users[i] = &model.User{
+		users[i] = &model.RoomUser{
 			ID:        encodeIDStr(userPrefix, ju.UserID),
 			Name:      ju.DisplayName,
 			AvatarURL: ju.AvatarURL,

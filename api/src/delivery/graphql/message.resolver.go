@@ -45,8 +45,6 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 		return nil, errUnexpected
 	}
 
-	responseMsg := toMessage(msg)
-
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
 		log.Println("failed to get roomUser, err:", err)
@@ -62,7 +60,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 		return nil, err
 	}
 
-	return responseMsg, nil
+	return toMessage(msg), nil
 }
 
 func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {

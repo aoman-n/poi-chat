@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/laster18/poi/api/graph/model"
@@ -68,6 +69,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 			if err != nil {
 				log.Println(err)
 			}
+
 			s.deliver(roomID, d)
 		case redis.EventDel:
 			fallthrough
@@ -126,17 +128,23 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 	switch ru.LastEvent {
 	case domain.JoinEvent:
 		return &model.Joined{
-			UserID:    makeRoomUserID(userUID),
-			Name:      ru.Name,
-			AvatarURL: ru.AvatarURL,
-			X:         ru.X,
-			Y:         ru.Y,
+			RoomUser: &model.RoomUser{
+				ID:        makeRoomUserID(userUID),
+				Name:      ru.Name,
+				AvatarURL: ru.AvatarURL,
+				X:         ru.X,
+				Y:         ru.Y,
+			},
 		}, nil
 	case domain.MoveEvent:
 		return &model.Moved{
-			UserID: makeRoomUserID(userUID),
-			X:      ru.X,
-			Y:      ru.Y,
+			RoomUser: &model.RoomUser{
+				ID:        makeRoomUserID(userUID),
+				Name:      ru.Name,
+				AvatarURL: ru.AvatarURL,
+				X:         ru.X,
+				Y:         ru.Y,
+			},
 		}, nil
 	case domain.MessageEvent:
 		if ru.LastMessage == nil {
@@ -144,14 +152,20 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 		}
 
 		return &model.SendedMassage{
-			UserID: makeRoomUserID(userUID),
-			Message: &model.Message{
-				ID:            makeMessageID(ru.LastMessage.ID),
-				UserID:        makeUserID(ru.LastMessage.UserUID),
-				UserName:      ru.LastMessage.UserName,
-				UserAvatarURL: ru.LastMessage.UserAvatarURL,
-				Body:          ru.LastMessage.Body,
-				CreatedAt:     ru.LastMessage.CreatedAt,
+			RoomUser: &model.RoomUser{
+				ID:        makeRoomUserID(userUID),
+				Name:      ru.Name,
+				AvatarURL: ru.AvatarURL,
+				X:         ru.X,
+				Y:         ru.Y,
+				LastMessage: &model.Message{
+					ID:            strconv.Itoa(ru.LastMessage.ID),
+					UserID:        makeUserID(ru.LastMessage.UserUID),
+					UserName:      ru.LastMessage.UserName,
+					UserAvatarURL: ru.LastMessage.UserAvatarURL,
+					Body:          ru.LastMessage.Body,
+					CreatedAt:     ru.LastMessage.CreatedAt,
+				},
 			},
 		}, nil
 	default:
