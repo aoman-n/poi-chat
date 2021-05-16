@@ -7,10 +7,6 @@ extend type Mutation {
   sendMessage(input: SendMessageInput): Message!
 }
 
-extend type Subscription {
-  subMessage(roomId: ID!): Message!
-}
-
 type Message implements Node {
   id: ID!
   userId: ID!

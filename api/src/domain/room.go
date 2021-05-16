@@ -41,10 +41,4 @@ type IRoomRepo interface {
 	ListAll(ctx context.Context) ([]*Room, error)
 	Count(ctx context.Context) (int, error)
 	Create(ctx context.Context, room *Room) error
-	// around users
-	GetUsers(ctx context.Context, roomID int) ([]*JoinedUser, error)
-	Join(ctx context.Context, joinedUser *JoinedUser) error
-	Exit(ctx context.Context, joinedUser *JoinedUser) error
-	UpdateUser(ctx context.Context, u *JoinedUser) error
-	GetUserByID(ctx context.Context, id int) (*JoinedUser, error)
 }

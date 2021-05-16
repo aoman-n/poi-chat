@@ -135,31 +135,6 @@ func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail
 	}, nil
 }
 
-func (r *subscriptionResolver) SubMessage(ctx context.Context, roomID string) (<-chan *model.Message, error) {
-	fmt.Println("start subscribe message")
-
-	currentUser, err := middleware.GetCurrentUserFromCtx(ctx)
-	if err != nil {
-		return nil, errUnauthenticated
-	}
-
-	subscripter, ok := r.subscripters.Get(roomID)
-	if !ok {
-		return nil, errRoomNotFound
-	}
-
-	ch := make(chan *model.Message, 1)
-	subscripter.AddMessageChan(currentUser.UID, ch)
-
-	go func() {
-		<-ctx.Done()
-		fmt.Println("stop subscribe message")
-		subscripter.DeleteMessageChan(currentUser.UID)
-	}()
-
-	return ch, nil
-}
-
 // Message returns generated.MessageResolver implementation.
 func (r *Resolver) Message() generated.MessageResolver { return &messageResolver{r} }
 

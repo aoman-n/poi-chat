@@ -23,17 +23,12 @@ func NewResolver(
 	messageRepo := repository.NewMessageRepo(db)
 	roomUserRepo := repository.NewRoomUserRepo(db, redis)
 	globalUserRepo := repository.NewGlobalUserRepo(redis)
-	pubsubRepo := repository.NewPubsubRepo(redis)
-	subscripters := NewSubscripters()
 
 	return &Resolver{
 		roomRepo:             roomRepo,
 		messageRepo:          messageRepo,
 		roomUserRepo:         roomUserRepo,
 		globalUserRepo:       globalUserRepo,
-		pubsubRepo:           pubsubRepo,
-		subscripters:         subscripters,
-		redisClient:          redis,
 		roomUserSubscriber:   roomUserSubscriber,
 		globalUserSubscriber: globalUserSubscriber,
 	}
@@ -44,9 +39,6 @@ type Resolver struct {
 	messageRepo          domain.IMessageRepo
 	roomUserRepo         domain.IRoomUserRepo
 	globalUserRepo       domain.GlobalUserRepo
-	pubsubRepo           *repository.PubsubRepo
-	subscripters         *Subscripters
-	redisClient          *redis.Client
 	roomUserSubscriber   *subscriber.RoomUserSubscriber
 	globalUserSubscriber *subscriber.GlobalUserSubscriber
 }
