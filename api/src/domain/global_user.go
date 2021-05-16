@@ -11,6 +11,7 @@ type GlobalUser struct {
 
 type GlobalUserRepo interface {
 	Insert(ctx context.Context, u *GlobalUser) error
-	Delete(ctx context.Context, u *GlobalUser) error
+	Delete(ctx context.Context, uID string) error
 	Get(ctx context.Context, uID string) (*GlobalUser, error)
+	GetAll(ctx context.Context) ([]*GlobalUser, error)
 }

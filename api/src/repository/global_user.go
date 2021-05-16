@@ -3,11 +3,14 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/subscriber"
 )
+
+const globalUserIndexKey = "globalUserIndex"
 
 type GlobalUserRepo struct {
 	redisClient *redis.Client
@@ -37,8 +40,8 @@ func (r *GlobalUserRepo) Insert(ctx context.Context, u *domain.GlobalUser) error
 	return nil
 }
 
-func (r *GlobalUserRepo) Delete(ctx context.Context, u *domain.GlobalUser) error {
-	key := subscriber.MakeGlobalUserKey(u.UID)
+func (r *GlobalUserRepo) Delete(ctx context.Context, uID string) error {
+	key := subscriber.MakeGlobalUserKey(uID)
 
 	if err := r.redisClient.Del(ctx, key).Err(); err != nil {
 		return err
@@ -65,4 +68,53 @@ func (r *GlobalUserRepo) Get(ctx context.Context, uID string) (*domain.GlobalUse
 	return &globalUser, nil
 }
 
-const globalUserIndexKey = "globalUserIndex"
+func (r *GlobalUserRepo) GetAll(ctx context.Context) ([]*domain.GlobalUser, error) {
+	keys, err := r.redisClient.SMembers(ctx, globalUserIndexKey).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(keys) <= 0 {
+		return []*domain.GlobalUser{}, nil
+	}
+
+	userJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: ここの処理並列でやりたい
+	onlineUsers := []*domain.GlobalUser{}
+	for i, u := range userJSONs {
+		if u == nil {
+			// dataが存在しないindexは削除しておく
+			if err := r.redisClient.SRem(ctx, globalUserIndexKey, keys[i]).Err(); err != nil {
+				log.Printf("failed to delete globalUser index which never existed from Sets data")
+			}
+			continue
+		}
+
+		jsonStr, ok := u.(string)
+		if !ok {
+			log.Printf(
+				"globalUser data is invalid type on Redis, type: %T, data: %v\n",
+				u,
+				u,
+			)
+			continue
+		}
+
+		var ou domain.GlobalUser
+		if err := json.Unmarshal([]byte(jsonStr), &ou); err != nil {
+			log.Printf(
+				"globalUser data is invalid format on Redis, data: %+v\n",
+				u,
+			)
+			continue
+		}
+
+		onlineUsers = append(onlineUsers, &ou)
+	}
+
+	return onlineUsers, nil
+}

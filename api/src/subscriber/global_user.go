@@ -78,6 +78,10 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 			fallthrough
 		case redis.EventExpired:
 			// offlineになった
+			err := s.globalUserRepo.Delete(ctx, userUID)
+			if err != nil {
+				log.Printf("failed to delete global user, err: %v", err)
+			}
 			s.deliver(&model.Offlined{
 				UserID: makeUserID(userUID),
 			})

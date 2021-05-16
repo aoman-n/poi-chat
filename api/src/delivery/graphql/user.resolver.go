@@ -57,29 +57,12 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, error) {
-	// ret := r.redisClient.Keys(ctx, fmt.Sprintf(userChFormat, "*"))
-	// userKeys, err := ret.Result()
-	// if err != nil {
-	// 	return nil, errUnexpected
-	// }
+	globalUsers, err := r.globalUserRepo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	// ret2 := r.redisClient.MGet(ctx, userKeys...)
-	// retOnlineUsers := ret2.Val()
-
-	// onlineUsers := []*model.OnlineUserStatus{}
-	// for _, user := range retOnlineUsers {
-	// 	userStr := user.(string)
-	// 	var u model.OnlineUserStatus
-	// 	if err := json.Unmarshal([]byte(userStr), &u); err != nil {
-	// 		log.Println("failed to unmarshal payload from redis data, data is", userStr)
-	// 		continue
-	// 	}
-	// 	onlineUsers = append(onlineUsers, &u)
-	// }
-
-	// return onlineUsers, nil
-
-	return nil, nil
+	return toOnlineUsers(globalUsers), nil
 }
 
 func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.User, error) {
@@ -127,7 +110,7 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	go func() {
 		<-ctx.Done()
 		r.globalUserSubscriber.RemoveCh(currentUser.UID)
-		if err := r.globalUserRepo.Delete(context.Background(), newGlobalUser); err != nil {
+		if err := r.globalUserRepo.Delete(context.Background(), currentUser.UID); err != nil {
 			log.Println("failed to delete globalUser, err:", err)
 		}
 	}()

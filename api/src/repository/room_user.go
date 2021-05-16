@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm"
 )
 
+const RoomUserIndexKey = "roomUserIndex"
+
+func (r *RoomUserRepo) makeRoomUserIndexKey(roomID int) string {
+	return fmt.Sprintf("%s:%d", RoomUserIndexKey, roomID)
+}
+
 type RoomUserRepo struct {
 	tx          *gorm.DB
 	redisClient *redis.Client
@@ -90,10 +96,4 @@ func (r *RoomUserRepo) Get(ctx context.Context, roomID int, uID string) (*domain
 	}
 
 	return &roomUser, nil
-}
-
-const RoomUserIndexKey = "roomUserIndex"
-
-func (r *RoomUserRepo) makeRoomUserIndexKey(roomID int) string {
-	return fmt.Sprintf("%s:%d", RoomUserIndexKey, roomID)
 }

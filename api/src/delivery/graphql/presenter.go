@@ -23,3 +23,16 @@ func toMessage(m *domain.Message) *model.Message {
 		CreatedAt:     m.CreatedAt,
 	}
 }
+
+func toOnlineUsers(gs []*domain.GlobalUser) []*model.OnlineUser {
+	os := make([]*model.OnlineUser, len(gs))
+	for i, g := range gs {
+		os[i] = &model.OnlineUser{
+			ID:        encodeIDStr(userPrefix, g.UID),
+			Name:      g.Name,
+			AvatarURL: g.AvatarURL,
+		}
+	}
+
+	return os
+}
