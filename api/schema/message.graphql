@@ -1,4 +1,4 @@
-extend type RoomDetail {
+extend type Room {
   # 最新のメッセージから順に取得
   messages(last: Int, before: String): MessageConnection!
 }

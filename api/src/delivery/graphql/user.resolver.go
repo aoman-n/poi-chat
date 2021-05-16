@@ -65,7 +65,7 @@ func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, e
 	return toOnlineUsers(globalUsers), nil
 }
 
-func (r *roomDetailResolver) Users(ctx context.Context, obj *model.RoomDetail) ([]*model.RoomUser, error) {
+func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error) {
 	roomID, _ := strconv.Atoi(obj.ID)
 
 	users, err := r.roomUserRepo.GetByRoomID(ctx, roomID)

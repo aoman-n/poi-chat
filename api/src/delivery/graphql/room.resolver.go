@@ -81,7 +81,7 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 	}, nil
 }
 
-func (r *queryResolver) RoomDetail(ctx context.Context, id string) (*model.RoomDetail, error) {
+func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
 	roomID, err := decodeID(roomPrefix, id)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (r *queryResolver) RoomDetail(ctx context.Context, id string) (*model.RoomD
 		return nil, err
 	}
 
-	return &model.RoomDetail{
+	return &model.Room{
 		ID:   strconv.Itoa(room.ID),
 		Name: room.Name,
 	}, nil
@@ -102,15 +102,7 @@ func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) 
 	return fmt.Sprintf(roomIDFormat, obj.ID), nil
 }
 
-func (r *roomDetailResolver) ID(ctx context.Context, obj *model.RoomDetail) (string, error) {
-	return fmt.Sprintf(roomIDFormat, obj.ID), nil
-}
-
 // Room returns generated.RoomResolver implementation.
 func (r *Resolver) Room() generated.RoomResolver { return &roomResolver{r} }
 
-// RoomDetail returns generated.RoomDetailResolver implementation.
-func (r *Resolver) RoomDetail() generated.RoomDetailResolver { return &roomDetailResolver{r} }
-
 type roomResolver struct{ *Resolver }
-type roomDetailResolver struct{ *Resolver }

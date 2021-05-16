@@ -1,6 +1,6 @@
 extend type Query {
   rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
-  roomDetail(id: ID!): RoomDetail!
+  room(id: ID!): Room!
 }
 
 extend type Mutation {
@@ -22,12 +22,6 @@ type RoomConnection implements Connection {
   edges: [RoomEdge!]!
   nodes: [Room!]!
   roomCount: Int!
-}
-
-# TODO: 名前をRoomDetail->Roomにする
-type RoomDetail implements Node {
-  id: ID!
-  name: String!
 }
 
 input CreateRoomInput {

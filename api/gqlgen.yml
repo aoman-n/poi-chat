@@ -28,10 +28,6 @@ models:
     fields:
       id:
         resolver: true
-  RoomDetail:
-    fields:
-      id:
-        resolver: true
       messages:
         resolver: true
       users:

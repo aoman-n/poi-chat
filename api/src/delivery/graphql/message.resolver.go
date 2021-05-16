@@ -63,7 +63,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	return toMessage(msg), nil
 }
 
-func (r *roomDetailResolver) Messages(ctx context.Context, obj *model.RoomDetail, last *int, before *string) (*model.MessageConnection, error) {
+func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
 	_, err := middleware.GetCurrentUserFromCtx(ctx)
 	if err != nil {
 		return nil, errUnauthenticated
