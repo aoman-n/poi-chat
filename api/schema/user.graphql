@@ -4,7 +4,7 @@ extend type RoomDetail {
 
 extend type Query {
   me: Me!
-  onlineUsers: [OnlineUserStatus!]!
+  onlineUsers: [OnlineUser!]!
 }
 
 extend type Mutation {
@@ -45,7 +45,7 @@ type User {
   y: Int!
 }
 
-type OnlineUserStatus {
+type OnlineUser {
   id: ID!
   name: String!
   avatarUrl: String!
@@ -55,9 +55,7 @@ type OnlineUserStatus {
 # GlobalUserEvent
 union GlobalUserEvent = Onlined | Offlined
 type Onlined {
-  userId: ID!
-  name: String!
-  avatarUrl: String!
+  onlineUser: OnlineUser!
 }
 type Offlined {
   userId: ID!

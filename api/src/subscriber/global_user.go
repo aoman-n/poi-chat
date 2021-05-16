@@ -67,9 +67,11 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 			}
 
 			s.deliver(&model.Onlined{
-				UserID:    makeUserID(globalUser.UID),
-				Name:      globalUser.Name,
-				AvatarURL: globalUser.AvatarURL,
+				OnlineUser: &model.OnlineUser{
+					ID:        makeUserID(globalUser.UID),
+					Name:      globalUser.Name,
+					AvatarURL: globalUser.AvatarURL,
+				},
 			})
 		case redis.EventDel:
 			// offlineになった

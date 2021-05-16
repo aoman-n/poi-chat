@@ -56,7 +56,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	return me, nil
 }
 
-func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUserStatus, error) {
+func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, error) {
 	// ret := r.redisClient.Keys(ctx, fmt.Sprintf(userChFormat, "*"))
 	// userKeys, err := ret.Result()
 	// if err != nil {
