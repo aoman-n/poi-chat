@@ -9,10 +9,23 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
 )
+
+func (r *exitedResolver) UserID(ctx context.Context, obj *model.Exited) (string, error) {
+	return encodeIDStr(userPrefix, obj.UserID), nil
+}
+
+func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
+	return encodeIDStr(userPrefix, obj.ID), nil
+}
+
+func (r *movePayloadResolver) UserID(ctx context.Context, obj *model.MovePayload) (string, error) {
+	return encodeIDStr(userPrefix, obj.UserID), nil
+}
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
@@ -41,6 +54,14 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return toMovePayload(roomUser), nil
 }
 
+func (r *offlinedResolver) UserID(ctx context.Context, obj *model.Offlined) (string, error) {
+	return encodeIDStr(userPrefix, obj.UserID), nil
+}
+
+func (r *onlineUserResolver) ID(ctx context.Context, obj *model.OnlineUser) (string, error) {
+	return encodeIDStr(userPrefix, obj.ID), nil
+}
+
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
@@ -48,7 +69,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	}
 
 	me := &model.Me{
-		ID:        encodeIDStr(userPrefix, currentUser.UID),
+		ID:        currentUser.UID,
 		Name:      currentUser.Name,
 		AvatarURL: currentUser.AvatarURL,
 	}
@@ -74,6 +95,10 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 	}
 
 	return toRoomUsers(users), nil
+}
+
+func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string, error) {
+	return encodeIDStr(roomUserPrefix, obj.ID), nil
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
@@ -136,3 +161,28 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 
 	return ch, nil
 }
+
+// Exited returns generated.ExitedResolver implementation.
+func (r *Resolver) Exited() generated.ExitedResolver { return &exitedResolver{r} }
+
+// Me returns generated.MeResolver implementation.
+func (r *Resolver) Me() generated.MeResolver { return &meResolver{r} }
+
+// MovePayload returns generated.MovePayloadResolver implementation.
+func (r *Resolver) MovePayload() generated.MovePayloadResolver { return &movePayloadResolver{r} }
+
+// Offlined returns generated.OfflinedResolver implementation.
+func (r *Resolver) Offlined() generated.OfflinedResolver { return &offlinedResolver{r} }
+
+// OnlineUser returns generated.OnlineUserResolver implementation.
+func (r *Resolver) OnlineUser() generated.OnlineUserResolver { return &onlineUserResolver{r} }
+
+// RoomUser returns generated.RoomUserResolver implementation.
+func (r *Resolver) RoomUser() generated.RoomUserResolver { return &roomUserResolver{r} }
+
+type exitedResolver struct{ *Resolver }
+type meResolver struct{ *Resolver }
+type movePayloadResolver struct{ *Resolver }
+type offlinedResolver struct{ *Resolver }
+type onlineUserResolver struct{ *Resolver }
+type roomUserResolver struct{ *Resolver }

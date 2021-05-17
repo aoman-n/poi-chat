@@ -38,3 +38,29 @@ models:
     fields:
       id:
         resolver: true
+      userId:
+        resolver: true
+  MovePayload:
+    fields:
+      userId:
+        resolver: true
+  Me:
+    fields:
+      id:
+        resolver: true
+  RoomUser:
+    fields:
+      id:
+        resolver: true
+  OnlineUser:
+    fields:
+      id:
+        resolver: true
+  Offlined:
+    fields:
+      userId:
+        resolver: true
+  Exited:
+    fields:
+      userId:
+        resolver: true

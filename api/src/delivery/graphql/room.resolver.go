@@ -69,7 +69,7 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 	edges := make([]*model.RoomEdge, len(roomListResp.List))
 	for i, room := range roomListResp.List {
 		edges[i] = &model.RoomEdge{
-			Cursor: *encodeCursor("Room:", room.ID, int(room.CreatedAt.Unix())),
+			Cursor: *encodeCursor(roomPrefix, room.ID, int(room.CreatedAt.Unix())),
 			Node:   nodes[i],
 		}
 	}

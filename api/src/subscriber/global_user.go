@@ -68,7 +68,7 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 
 			s.deliver(&model.Onlined{
 				OnlineUser: &model.OnlineUser{
-					ID:        makeUserID(globalUser.UID),
+					ID:        globalUser.UID,
 					Name:      globalUser.Name,
 					AvatarURL: globalUser.AvatarURL,
 				},
@@ -83,7 +83,7 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 				log.Printf("failed to delete global user, err: %v", err)
 			}
 			s.deliver(&model.Offlined{
-				UserID: makeUserID(userUID),
+				UserID: userUID,
 			})
 		default:
 			fmt.Println("received unknown event:", msg.Payload)

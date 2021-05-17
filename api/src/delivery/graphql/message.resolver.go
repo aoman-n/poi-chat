@@ -20,6 +20,10 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 	return fmt.Sprintf(messageIDFormat, obj.ID), nil
 }
 
+func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (string, error) {
+	return encodeIDStr(userPrefix, obj.UserID), nil
+}
+
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {

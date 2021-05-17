@@ -75,7 +75,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 			fallthrough
 		case redis.EventExpired:
 			data := &model.Exited{
-				UserID: makeRoomUserID(userUID),
+				UserID: userUID,
 			}
 			s.deliver(roomID, data)
 		default:
@@ -129,7 +129,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 	case domain.JoinEvent:
 		return &model.Joined{
 			RoomUser: &model.RoomUser{
-				ID:        makeRoomUserID(userUID),
+				ID:        userUID,
 				Name:      ru.Name,
 				AvatarURL: ru.AvatarURL,
 				X:         ru.X,
@@ -139,7 +139,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 	case domain.MoveEvent:
 		return &model.Moved{
 			RoomUser: &model.RoomUser{
-				ID:        makeRoomUserID(userUID),
+				ID:        userUID,
 				Name:      ru.Name,
 				AvatarURL: ru.AvatarURL,
 				X:         ru.X,
@@ -153,14 +153,14 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 
 		return &model.SendedMassage{
 			RoomUser: &model.RoomUser{
-				ID:        makeRoomUserID(userUID),
+				ID:        userUID,
 				Name:      ru.Name,
 				AvatarURL: ru.AvatarURL,
 				X:         ru.X,
 				Y:         ru.Y,
 				LastMessage: &model.Message{
 					ID:            strconv.Itoa(ru.LastMessage.ID),
-					UserID:        makeUserID(ru.LastMessage.UserUID),
+					UserID:        ru.LastMessage.UserUID,
 					UserName:      ru.LastMessage.UserName,
 					UserAvatarURL: ru.LastMessage.UserAvatarURL,
 					Body:          ru.LastMessage.Body,
