@@ -7,6 +7,19 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 )
 
+func toCreateRoomPayload(r *domain.Room) *model.CreateRoomPayload {
+	return &model.CreateRoomPayload{
+		Room: &model.Room{
+			ID:        strconv.Itoa(r.ID),
+			Name:      r.Name,
+			UserCount: r.UserCount,
+			BgColor:   r.BackgroundColor,
+			BgURL:     r.BackgroundURL,
+			CreatedAt: r.CreatedAt,
+		},
+	}
+}
+
 func toMovePayload(ru *domain.RoomUser) *model.MovePayload {
 	return &model.MovePayload{
 		UserID: ru.UID,

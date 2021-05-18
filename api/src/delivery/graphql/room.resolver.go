@@ -14,8 +14,25 @@ import (
 	"github.com/laster18/poi/api/src/middleware"
 )
 
-func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.Room, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.CreateRoomPayload, error) {
+	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
+	if err != nil {
+		return nil, err
+	}
+	if dupRoom != nil {
+		return nil, fmt.Errorf("%q is already exists", input.Name)
+	}
+
+	newRoom := domain.NewRoom(input.Name, "#20b2aa")
+	if err := newRoom.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := r.roomRepo.Create(ctx, newRoom); err != nil {
+		return nil, err
+	}
+
+	return toCreateRoomPayload(newRoom), nil
 }
 
 func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error) {

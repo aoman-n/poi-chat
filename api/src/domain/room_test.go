@@ -83,14 +83,14 @@ func TestRoom_Validate(t *testing.T) {
 			},
 			"[正常系] 有効な16進カラーコードだとエラーにならないこと": {
 				room: &domain.Room{
-					BackgroundColor: "ffffff",
+					BackgroundColor: "#ffffff",
 				},
 				fieldName: "BackgroundColor",
 				expectMsg: "",
 			},
 			"[異常系] 無効な16進カラーコードだとエラーにならないこと": {
 				room: &domain.Room{
-					BackgroundColor: "ffffffff",
+					BackgroundColor: "#ffffffff",
 				},
 				fieldName: "BackgroundColor",
 				expectMsg: "must be a valid hexadecimal color code",

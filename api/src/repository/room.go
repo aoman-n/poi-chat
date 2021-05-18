@@ -19,6 +19,18 @@ func NewRoomRepo(db *gorm.DB) *RoomRepo {
 	return &RoomRepo{db}
 }
 
+func (r *RoomRepo) GetByName(ctx context.Context, n string) (*domain.Room, error) {
+	var room domain.Room
+	if err := r.db.Where("name = ?", n).First(&room).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &room, nil
+}
+
 func (r *RoomRepo) GetByID(ctx context.Context, id int) (*domain.Room, error) {
 	var room domain.Room
 	if err := r.db.First(&room, id).Error; err != nil {

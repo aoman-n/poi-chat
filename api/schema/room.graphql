@@ -4,13 +4,16 @@ extend type Query {
 }
 
 extend type Mutation {
-  createRoom(input: CreateRoomInput): Room!
+  createRoom(input: CreateRoomInput): CreateRoomPayload!
 }
 
 type Room implements Node {
   id: ID!
   name: String!
   userCount: Int!
+  bgColor: String!
+  bgUrl: String!
+  createdAt: Time!
 }
 
 type RoomEdge implements Edge {
@@ -32,4 +35,8 @@ input CreateRoomInput {
 enum RoomOrderField {
   LATEST
   DESC_USER_COUNT
+}
+
+type CreateRoomPayload {
+  room: Room!
 }

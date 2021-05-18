@@ -8,18 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func AssertNoValidationErr(t *testing.T, err error, fieldName string) {
-// 	t.Helper()
-
-// 	var errV *validator.ErrValidation
-// 	if !errors.As(err, &errV) {
-// 		t.Errorf("expected=validator.ErrValidation,got=%T", err)
-// 	}
-
-// 	errFields := errV.GetErrFields()
-// 	assert.Equal(t, "", errFields[fieldName])
-// }
-
 func AssertValidationErr(t *testing.T, err error, fieldName, expectErrMsg string) {
 	var validationErr *validator.ErrValidation
 	if !errors.As(err, &validationErr) {
@@ -27,9 +15,6 @@ func AssertValidationErr(t *testing.T, err error, fieldName, expectErrMsg string
 	}
 	fieldErrs := validationErr.GetErrFields()
 	actualErrMsg := fieldErrs[fieldName]
-	// fmt.Println(strings.Repeat("*", 20))
-	// fmt.Printf("actual: %v, expect: %v\n", actualErrMsg, expectErrMsg)
-	// fmt.Println(strings.Repeat("*", 20))
 	assert.Equal(t, expectErrMsg, actualErrMsg)
 }
 
