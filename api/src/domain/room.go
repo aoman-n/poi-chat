@@ -3,6 +3,10 @@ package domain
 import (
 	"context"
 	"time"
+
+	val "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/laster18/poi/api/src/util/validator"
 )
 
 type Room struct {
@@ -22,6 +26,13 @@ func (r *Room) GetID() int {
 
 func (r *Room) GetCreatedAtUnix() int {
 	return int(r.CreatedAt.Unix())
+}
+
+func (r *Room) Validate() error {
+	return validator.ValidateStruct(r,
+		val.Field(&r.Name, val.Required, val.RuneLength(2, 20)),
+		val.Field(&r.BackgroundColor, val.Required, is.HexColor),
+	)
 }
 
 type RoomListReq struct {
