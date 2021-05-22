@@ -13,6 +13,7 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/laster18/poi/api/src/util/clock"
 )
 
@@ -27,7 +28,7 @@ func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (strin
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
@@ -46,7 +47,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 
 	if err := r.messageRepo.Create(ctx, msg); err != nil {
 		log.Println("create message error:", err)
-		return nil, errUnexpected
+		return nil, aerrors.Wrap(err, "failed to messageRepo.Create")
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
@@ -67,10 +68,14 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	return toMessage(msg), nil
 }
 
-func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
+func (r *roomResolver) Messages(
+	ctx context.Context,
+	obj *model.Room,
+	last *int, before *string,
+) (*model.MessageConnection, error) {
 	_, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	roomID, err := strconv.Atoi(obj.ID)

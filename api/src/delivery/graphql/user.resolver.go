@@ -30,7 +30,7 @@ func (r *movePayloadResolver) UserID(ctx context.Context, obj *model.MovePayload
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
@@ -65,7 +65,7 @@ func (r *onlineUserResolver) ID(ctx context.Context, obj *model.OnlineUser) (str
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	me := &model.Me{
@@ -104,7 +104,7 @@ func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string,
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	newGlobalUser := &domain.GlobalUser{
@@ -130,10 +130,13 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	return ch, nil
 }
 
-func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
+func (r *subscriptionResolver) ActedRoomUserEvent(
+	ctx context.Context,
+	roomID string,
+) (<-chan model.RoomUserEvent, error) {
 	currentUser, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
-		return nil, errUnauthenticated
+		return nil, errUnauthorized
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, roomID)

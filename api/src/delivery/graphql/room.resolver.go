@@ -14,7 +14,10 @@ import (
 	"github.com/laster18/poi/api/src/middleware"
 )
 
-func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.CreateRoomPayload, error) {
+func (r *mutationResolver) CreateRoom(
+	ctx context.Context,
+	input *model.CreateRoomInput,
+) (*model.CreateRoomPayload, error) {
 	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
 	if err != nil {
 		return nil, err
@@ -35,7 +38,11 @@ func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRo
 	return toCreateRoomPayload(newRoom), nil
 }
 
-func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error) {
+func (r *queryResolver) Rooms(
+	ctx context.Context,
+	first *int, after *string,
+	orderBy *model.RoomOrderField,
+) (*model.RoomConnection, error) {
 	roomListReq := &domain.RoomListReq{}
 
 	if first != nil {

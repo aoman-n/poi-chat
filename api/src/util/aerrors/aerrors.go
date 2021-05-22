@@ -79,12 +79,20 @@ func (e *ErrApp) Error() string {
 }
 
 // Messagef: ユーザー向けのメッセージを保存する
-func (e *ErrApp) Messagef(format string, a ...interface{}) {
-	e.infoMsg = fmt.Sprintf(format, a...)
+func (e *ErrApp) Message(infoMsg string) *ErrApp {
+	e.infoMsg = infoMsg
+	return e
 }
 
-func (e *ErrApp) SetCode(c Code) {
+// Messagef: ユーザー向けのメッセージを保存する
+func (e *ErrApp) Messagef(format string, a ...interface{}) *ErrApp {
+	e.infoMsg = fmt.Sprintf(format, a...)
+	return e
+}
+
+func (e *ErrApp) SetCode(c Code) *ErrApp {
 	e.code = c
+	return e
 }
 
 func (e *ErrApp) Code() Code {
