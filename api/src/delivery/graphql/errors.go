@@ -67,7 +67,7 @@ func handleErr(ctx context.Context, err error) {
 		addErr(ctx, getInfoMsg(e), codeNotFound)
 	case aerrors.CodeUnauthorized:
 		addErr(ctx, getInfoMsg(e), codeUnauthorized)
-	case aerrors.CodeBadParams:
+	case aerrors.CodeBadParams, aerrors.CodeDuplicated:
 		addErr(ctx, getInfoMsg(e), codeUserInput)
 	case aerrors.CodeDatabase, aerrors.CodeRedis, aerrors.CodeInternal:
 		addErr(ctx, getInfoMsg(e), codeInternal)

@@ -10,6 +10,7 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/subscriber"
+	"github.com/laster18/poi/api/src/util/aerrors"
 	"gorm.io/gorm"
 )
 
@@ -33,7 +34,7 @@ func NewRoomUserRepo(tx *gorm.DB, redisClient *redis.Client) *RoomUserRepo {
 func (r *RoomUserRepo) Insert(ctx context.Context, ru *domain.RoomUser) error {
 	ruJSON, err := json.Marshal(ru)
 	if err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
 	roomUserKey := subscriber.MakeRoomUserKey(ru.RoomID, ru.UID)
@@ -46,7 +47,7 @@ func (r *RoomUserRepo) Insert(ctx context.Context, ru *domain.RoomUser) error {
 		ruJSON,
 		expireTimeSecond,
 	).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	// ルーム内ユーザーのkey一覧を一括で取得するためindexとしてsaddで保存する
@@ -56,7 +57,7 @@ func (r *RoomUserRepo) Insert(ctx context.Context, ru *domain.RoomUser) error {
 		r.makeRoomUserIndexKey(ru.RoomID),
 		roomUserKey,
 	).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
@@ -66,7 +67,7 @@ func (r *RoomUserRepo) Delete(ctx context.Context, ru *domain.RoomUser) error {
 	roomUserKey := subscriber.MakeRoomUserKey(ru.RoomID, ru.UID)
 
 	if err := r.redisClient.Del(ctx, roomUserKey).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 	if err := r.redisClient.SRem(
 		ctx,
@@ -74,7 +75,7 @@ func (r *RoomUserRepo) Delete(ctx context.Context, ru *domain.RoomUser) error {
 		r.makeRoomUserIndexKey(ru.RoomID),
 		roomUserKey,
 	).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
@@ -88,12 +89,12 @@ func (r *RoomUserRepo) Get(ctx context.Context, roomID int, uID string) (*domain
 			return nil, nil
 		}
 
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	var roomUser domain.RoomUser
 	if err := json.Unmarshal([]byte(ruJSON), &roomUser); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
 	return &roomUser, nil
@@ -104,7 +105,7 @@ func (r *RoomUserRepo) GetByRoomID(ctx context.Context, id int) ([]*domain.RoomU
 	keys, err := r.redisClient.SMembers(ctx, indexCh).Result()
 
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 	if len(keys) <= 0 {
 		return []*domain.RoomUser{}, nil
@@ -112,7 +113,7 @@ func (r *RoomUserRepo) GetByRoomID(ctx context.Context, id int) ([]*domain.RoomU
 
 	userJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	roomUsers := []*domain.RoomUser{}
@@ -160,7 +161,7 @@ func (r *RoomUserRepo) Counts(ctx context.Context, roomIDs []int) ([]int, error)
 	// ["roomUser:1:1111", ...]
 	roomUserKeys, err := r.redisClient.SUnion(ctx, roomUserIndexKeys...).Result()
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	countMap := map[int]int{}

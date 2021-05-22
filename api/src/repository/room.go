@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/util/aerrors"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +26,7 @@ func (r *RoomRepo) GetByName(ctx context.Context, n string) (*domain.Room, error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return &room, nil
@@ -35,10 +36,11 @@ func (r *RoomRepo) GetByID(ctx context.Context, id int) (*domain.Room, error) {
 	var room domain.Room
 	if err := r.db.First(&room, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, NewNotFoundErr(fmt.Sprintf("not found room, id: %d", id))
+			msg := fmt.Sprintf("not found room, id: %d", id)
+			return nil, aerrors.New(msg).SetCode(aerrors.CodeNotFound).Message(msg)
 		}
 
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return &room, nil
@@ -93,7 +95,7 @@ func (r *RoomRepo) ListAll(ctx context.Context) ([]*domain.Room, error) {
 			return []*domain.Room{}, nil
 		}
 
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return rooms, nil
@@ -102,12 +104,15 @@ func (r *RoomRepo) ListAll(ctx context.Context) ([]*domain.Room, error) {
 func (r *RoomRepo) Count(ctx context.Context) (int, error) {
 	var count int64
 	if err := r.db.Model(&domain.Room{}).Count(&count).Error; err != nil {
-		return 0, err
+		return 0, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return int(count), nil
 }
 
 func (r *RoomRepo) Create(ctx context.Context, room *domain.Room) error {
-	return r.db.Create(room).Error
+	if err := r.db.Create(room).Error; err != nil {
+		return aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+	return nil
 }

@@ -67,17 +67,17 @@ func encodeCursor(prefix Prefix, id, unix int) *string {
 func decodeCursor(cursorPrefix Prefix, cursor *string) (objID int, objUnix int, err error) {
 	cursorParts := strings.Split(*cursor, ":")
 	if !strings.HasPrefix(*cursor, string(cursorPrefix)) || len(cursorParts) != 3 {
-		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor)
+		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor).SetCode(aerrors.CodeBadParams)
 	}
 
 	id, err := strconv.Atoi(cursorParts[1])
 	if err != nil {
-		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor)
+		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor).SetCode(aerrors.CodeBadParams)
 	}
 
 	unix, err := strconv.Atoi(cursorParts[2])
 	if err != nil {
-		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor)
+		return 0, 0, aerrors.Errorf(invalidIDMsg, *cursor).SetCode(aerrors.CodeBadParams)
 	}
 
 	return id, unix, nil
@@ -94,12 +94,12 @@ func encodeIDStr(prefix Prefix, idStr string) string {
 func decodeID(prefix Prefix, id string) (int, error) {
 	idParts := strings.Split(id, ":")
 	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
-		return 0, aerrors.Errorf(invalidIDMsg, id)
+		return 0, aerrors.Errorf(invalidIDMsg, id).SetCode(aerrors.CodeBadParams)
 	}
 
 	retID, err := strconv.Atoi(idParts[1])
 	if err != nil {
-		return 0, aerrors.Errorf(invalidIDMsg, id)
+		return 0, aerrors.Errorf(invalidIDMsg, id).SetCode(aerrors.CodeBadParams)
 	}
 
 	return retID, nil
@@ -108,7 +108,7 @@ func decodeID(prefix Prefix, id string) (int, error) {
 func decodeIDStr(prefix Prefix, id string) (string, error) {
 	idParts := strings.Split(id, ":")
 	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
-		return "", aerrors.Errorf(invalidIDMsg, id)
+		return "", aerrors.Errorf(invalidIDMsg, id).SetCode(aerrors.CodeBadParams)
 	}
 
 	return idParts[1], nil

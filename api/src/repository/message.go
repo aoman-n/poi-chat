@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/util/aerrors"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +47,7 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 			}, nil
 		}
 
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	if len(messages) >= req.Limit {
@@ -63,7 +64,11 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 }
 
 func (r *MessageRepo) Create(ctx context.Context, message *domain.Message) error {
-	return r.db.Create(message).Error
+	if err := r.db.Create(message).Error; err != nil {
+		return aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+
+	return nil
 }
 
 func (r *MessageRepo) Count(ctx context.Context, roomID int) (int, error) {
@@ -71,7 +76,7 @@ func (r *MessageRepo) Count(ctx context.Context, roomID int) (int, error) {
 	if err := r.db.Model(&domain.Message{}).
 		Where("room_id = ?", roomID).
 		Count(&count).Error; err != nil {
-		return 0, err
+		return 0, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return int(count), nil

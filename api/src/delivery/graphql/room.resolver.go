@@ -12,6 +12,7 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
 func (r *mutationResolver) CreateRoom(
@@ -20,19 +21,20 @@ func (r *mutationResolver) CreateRoom(
 ) (*model.CreateRoomPayload, error) {
 	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomRepo.GetByName")
 	}
 	if dupRoom != nil {
-		return nil, fmt.Errorf("%q is already exists", input.Name)
+		msg := fmt.Sprintf("%q is already exists", input.Name)
+		return nil, aerrors.New(msg).Message(msg)
 	}
 
 	newRoom := domain.NewRoom(input.Name, "#20b2aa")
 	if err := newRoom.Validate(); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err)
 	}
 
 	if err := r.roomRepo.Create(ctx, newRoom); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomRepo.Create")
 	}
 
 	return toCreateRoomPayload(newRoom), nil
@@ -52,7 +54,7 @@ func (r *queryResolver) Rooms(
 		// afterCursorのformatチェック
 		id, unix, err := decodeCursor(roomPrefix, after)
 		if err != nil {
-			return nil, err
+			return nil, aerrors.Wrap(err)
 		}
 
 		roomListReq.LastKnownID = id
@@ -61,11 +63,11 @@ func (r *queryResolver) Rooms(
 
 	roomListResp, err := r.roomRepo.List(ctx, roomListReq)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomRepo.List")
 	}
 	roomCount, err := r.roomRepo.Count(ctx)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomRepo.Count")
 	}
 
 	// create pageInfo
@@ -109,12 +111,12 @@ func (r *queryResolver) Rooms(
 func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
 	roomID, err := decodeID(roomPrefix, id)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err)
 	}
 
 	room, err := r.roomRepo.GetByID(ctx, roomID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomRepo.GetByID")
 	}
 
 	return &model.Room{
@@ -135,7 +137,7 @@ func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, err
 
 	count, err := middleware.GetRoomUserCountLoader(ctx).Load(id)
 	if err != nil {
-		return 0, err
+		return 0, aerrors.Wrap(err, "failed to GetRoomUserCountLoader.Load")
 	}
 
 	return count, nil

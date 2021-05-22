@@ -5,7 +5,6 @@ package graphql
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strconv"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
 func (r *exitedResolver) UserID(ctx context.Context, obj *model.Exited) (string, error) {
@@ -35,7 +35,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err)
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
@@ -48,7 +48,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	roomUser.SetPosition(input.X, input.Y)
 
 	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
 	}
 
 	return toMovePayload(roomUser), nil
@@ -80,7 +80,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, error) {
 	globalUsers, err := r.globalUserRepo.GetAll(ctx)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to globalUserRepo.GetAll")
 	}
 
 	return toOnlineUsers(globalUsers), nil
@@ -91,7 +91,7 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 
 	users, err := r.roomUserRepo.GetByRoomID(ctx, roomID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomUserRepo.GetByRoomID")
 	}
 
 	return toRoomUsers(users), nil
@@ -141,14 +141,14 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 
 	domainRoomID, err := decodeID(roomPrefix, roomID)
 	if err != nil {
-		return nil, errors.New("roomId is invalid format")
+		return nil, aerrors.Wrap(err, "roomId is invalid format")
 	}
 
 	// TODO: roomの存在チェック
 
 	newRoomUser := domain.NewDefaultRoomUser(domainRoomID, currentUser)
 	if err := r.roomUserRepo.Insert(ctx, newRoomUser); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
 	}
 
 	ch := make(chan model.RoomUserEvent)

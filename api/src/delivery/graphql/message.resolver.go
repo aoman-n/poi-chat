@@ -6,7 +6,6 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
@@ -33,7 +32,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err)
 	}
 
 	msg := &domain.Message{
@@ -46,14 +45,12 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	}
 
 	if err := r.messageRepo.Create(ctx, msg); err != nil {
-		log.Println("create message error:", err)
 		return nil, aerrors.Wrap(err, "failed to messageRepo.Create")
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
-		log.Println("failed to get roomUser, err:", err)
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Get")
 	}
 	if roomUser == nil {
 		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
@@ -61,8 +58,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	roomUser.SetMessage(msg)
 
 	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		log.Println("failed to insert roomUser, err:", err)
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
 	}
 
 	return toMessage(msg), nil
@@ -80,7 +76,7 @@ func (r *roomResolver) Messages(
 
 	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err)
 	}
 
 	messageListReq := &domain.MessageListReq{
@@ -93,7 +89,7 @@ func (r *roomResolver) Messages(
 	if before != nil {
 		id, unix, err := decodeCursor(messagePrefix, before)
 		if err != nil {
-			return nil, err
+			return nil, aerrors.Wrap(err)
 		}
 
 		messageListReq.LastKnownID = id
@@ -102,11 +98,11 @@ func (r *roomResolver) Messages(
 
 	messageListResp, err := r.messageRepo.List(ctx, messageListReq)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to messageRepo.List")
 	}
 	messageCount, err := r.messageRepo.Count(ctx, roomID)
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err, "failed to messageRepo.Count")
 	}
 
 	// create pageInfo

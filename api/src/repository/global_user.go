@@ -8,6 +8,7 @@ import (
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/subscriber"
+	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
 const globalUserIndexKey = "globalUserIndex"
@@ -25,16 +26,16 @@ func NewGlobalUserRepo(redis *redis.Client) *GlobalUserRepo {
 func (r *GlobalUserRepo) Insert(ctx context.Context, u *domain.GlobalUser) error {
 	uJSON, err := json.Marshal(u)
 	if err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
 	key := subscriber.MakeGlobalUserKey(u.UID)
 
 	if err := r.redisClient.Set(ctx, key, uJSON, expireTimeSecond).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 	if err := r.redisClient.SAdd(ctx, globalUserIndexKey, key).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
@@ -44,10 +45,10 @@ func (r *GlobalUserRepo) Delete(ctx context.Context, uID string) error {
 	key := subscriber.MakeGlobalUserKey(uID)
 
 	if err := r.redisClient.Del(ctx, key).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 	if err := r.redisClient.SRem(ctx, globalUserIndexKey, key).Err(); err != nil {
-		return err
+		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
@@ -57,12 +58,12 @@ func (r *GlobalUserRepo) Get(ctx context.Context, uID string) (*domain.GlobalUse
 	key := subscriber.MakeGlobalUserKey(uID)
 	uJSON, err := r.redisClient.Get(ctx, key).Result()
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	var globalUser domain.GlobalUser
 	if err := json.Unmarshal([]byte(uJSON), &globalUser); err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
 	return &globalUser, nil
@@ -71,7 +72,7 @@ func (r *GlobalUserRepo) Get(ctx context.Context, uID string) (*domain.GlobalUse
 func (r *GlobalUserRepo) GetAll(ctx context.Context) ([]*domain.GlobalUser, error) {
 	keys, err := r.redisClient.SMembers(ctx, globalUserIndexKey).Result()
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	if len(keys) <= 0 {
@@ -80,7 +81,7 @@ func (r *GlobalUserRepo) GetAll(ctx context.Context) ([]*domain.GlobalUser, erro
 
 	userJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
 	if err != nil {
-		return nil, err
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	// TODO: ここの処理並列でやりたい
