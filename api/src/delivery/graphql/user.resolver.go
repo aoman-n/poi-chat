@@ -11,7 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
-	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
@@ -28,8 +28,8 @@ func (r *movePayloadResolver) UserID(ctx context.Context, obj *model.MovePayload
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
-	currentUser, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 
@@ -63,8 +63,8 @@ func (r *onlineUserResolver) ID(ctx context.Context, obj *model.OnlineUser) (str
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
-	currentUser, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 
@@ -102,8 +102,8 @@ func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string,
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
-	currentUser, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 
@@ -134,8 +134,8 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	ctx context.Context,
 	roomID string,
 ) (<-chan model.RoomUserEvent, error) {
-	currentUser, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 

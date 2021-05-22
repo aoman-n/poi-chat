@@ -1,19 +1,15 @@
 package middleware
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/session"
 )
-
-// CurrentUserKey for middleware
-const CurrentUserKey key = "currentUser"
 
 // AuthMiddleware inject user struct when exists user info in cookie
 func AuthMiddleware() func(http.Handler) http.Handler {
@@ -22,7 +18,8 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			sess, err := session.GetUserSession(r)
 			if err != nil {
 				log.Printf("session get error in auth middleware, err: %v", err)
-				handleSessionError(w)
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprint(w, "server error")
 				return
 			}
 
@@ -39,34 +36,15 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 
 			userUID, _ := decodeIDStr(UserPrefix, user.ID)
 
-			ctx := context.WithValue(r.Context(), CurrentUserKey, &domain.GlobalUser{
+			newCtx := acontext.SetUser(r.Context(), &domain.GlobalUser{
 				UID:       userUID,
 				Name:      user.Name,
 				AvatarURL: user.AvatarURL,
 			})
 
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r.WithContext(newCtx))
 		})
 	}
-}
-
-func handleSessionError(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
-	fmt.Fprint(w, "server error")
-}
-
-func GetCurrentUser(ctx context.Context) (*domain.GlobalUser, error) {
-	errNoUserInContext := errors.New("no user in context")
-	if ctx.Value(CurrentUserKey) == nil {
-		return nil, errNoUserInContext
-	}
-
-	user, ok := ctx.Value(CurrentUserKey).(*domain.GlobalUser)
-	if !ok || user.UID == "" {
-		return nil, errNoUserInContext
-	}
-
-	return user, nil
 }
 
 // --------------------------

@@ -11,7 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
-	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/laster18/poi/api/src/util/clock"
 )
@@ -25,8 +25,8 @@ func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (strin
 }
 
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
-	currentUser, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 
@@ -69,8 +69,8 @@ func (r *roomResolver) Messages(
 	obj *model.Room,
 	last *int, before *string,
 ) (*model.MessageConnection, error) {
-	_, err := middleware.GetCurrentUser(ctx)
-	if err != nil {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
 		return nil, errUnauthorized
 	}
 

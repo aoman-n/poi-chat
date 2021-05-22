@@ -11,7 +11,7 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
-	"github.com/laster18/poi/api/src/middleware"
+	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
@@ -135,9 +135,9 @@ func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, err
 		return 0, err
 	}
 
-	count, err := middleware.GetRoomUserCountLoader(ctx).Load(id)
+	count, err := acontext.GetRoomUserCountLoader(ctx).Load(id)
 	if err != nil {
-		return 0, aerrors.Wrap(err, "failed to GetRoomUserCountLoader.Load")
+		return 0, aerrors.Wrap(err, "failed to roomUserCountLoader.Load")
 	}
 
 	return count, nil
