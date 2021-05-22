@@ -11,8 +11,8 @@ import (
 	"github.com/laster18/poi/api/src/util/session"
 )
 
-// AuthMiddleware inject user struct when exists user info in cookie
-func AuthMiddleware() func(http.Handler) http.Handler {
+// Authorize inject user struct when exists user info in cookie
+func Authorize() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sess, err := session.GetUserSession(r)

@@ -53,6 +53,19 @@ const (
 	MessageEvent
 )
 
+func (r RoomUserEvent) String() string {
+	switch r {
+	case JoinEvent:
+		return "join_event"
+	case MoveEvent:
+		return "move_event"
+	case MessageEvent:
+		return "message_event"
+	default:
+		return "unknown_event"
+	}
+}
+
 type IRoomUserRepo interface {
 	Insert(ctx context.Context, u *RoomUser) error
 	Delete(ctx context.Context, u *RoomUser) error

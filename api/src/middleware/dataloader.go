@@ -8,7 +8,7 @@ import (
 	"github.com/laster18/poi/api/src/util/acontext"
 )
 
-func InjectRoomUserCountLoader(repo domain.IRoomUserRepo) func(http.Handler) http.Handler {
+func RoomUserCountLoader(repo domain.IRoomUserRepo) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			l := dataloader.NewRoomUserCountLoader(r.Context(), repo)

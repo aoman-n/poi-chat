@@ -3,6 +3,7 @@ package acontext
 import (
 	"context"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/domain"
 )
@@ -12,7 +13,6 @@ type key string
 const (
 	userKey                key = "user"
 	roomUserCountLoaderKey key = "roomUserCountLoader"
-	requestIDKey           key = "requestId"
 )
 
 func SetUser(c context.Context, u *domain.GlobalUser) context.Context {
@@ -52,19 +52,6 @@ func GetRoomUserCountLoader(c context.Context) *generated.RoomUserCountLoader {
 	return loader
 }
 
-func SetRequestID(c context.Context, i string) context.Context {
-	return context.WithValue(c, requestIDKey, i)
-}
-
 func GetRequestID(c context.Context) string {
-	i := c.Value(requestIDKey)
-	if i == nil {
-		return ""
-	}
-
-	id, ok := i.(string)
-	if !ok {
-		return ""
-	}
-	return id
+	return middleware.GetReqID(c)
 }
