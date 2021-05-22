@@ -10,12 +10,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/laster18/poi/api/src/config"
-	"github.com/laster18/poi/api/src/delivery"
+	"github.com/laster18/poi/api/src/util/session"
 	"github.com/olahol/go-imageupload"
 )
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	userSession, err := delivery.GetUserSession(r)
+	userSession, err := session.GetUserSession(r)
 	if err != nil {
 		handleInvalidSessionErr(w, err)
 		return
@@ -67,14 +67,14 @@ func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "internal server error")
 	}
 
-	userSession, err := delivery.GetUserSession(r)
+	userSession, err := session.GetUserSession(r)
 	if err != nil {
 		log.Printf("failed to get user session, the cause was %v", err)
 		handleInvalidSessionErr(w, err)
 		return
 	}
 
-	userSession.SetUser(&delivery.User{
+	userSession.SetUser(&session.User{
 		ID:        "User:" + uuid.NewString(),
 		Name:      username,
 		AvatarURL: uploadedAvatarURL,

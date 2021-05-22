@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/iancoleman/strcase v0.1.3 // indirect
+	github.com/iancoleman/strcase v0.1.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/olahol/go-imageupload v0.0.0-20160503070439-09d2b92fa05e

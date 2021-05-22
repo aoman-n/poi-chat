@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/laster18/poi/api/src/delivery"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/util/session"
 )
 
 // CurrentUserKey for middleware
@@ -19,7 +19,7 @@ const CurrentUserKey key = "currentUser"
 func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			sess, err := delivery.GetUserSession(r)
+			sess, err := session.GetUserSession(r)
 			if err != nil {
 				log.Printf("session get error in auth middleware, err: %v", err)
 				handleSessionError(w)

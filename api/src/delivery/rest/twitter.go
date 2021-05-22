@@ -6,7 +6,7 @@ import (
 
 	"github.com/garyburd/go-oauth/oauth"
 	"github.com/laster18/poi/api/src/config"
-	"github.com/laster18/poi/api/src/delivery"
+	"github.com/laster18/poi/api/src/util/session"
 	"github.com/laster18/poi/api/src/util/twitter"
 )
 
@@ -19,7 +19,7 @@ func twitterOauthHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	session, err := delivery.GetAuthSession(r)
+	session, err := session.GetAuthSession(r)
 	if err != nil {
 		log.Print("failed to get auth session err:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -41,14 +41,14 @@ func twitterOauthHandler(w http.ResponseWriter, r *http.Request) {
 func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("start callbackHandler")
 
-	session, err := delivery.GetAuthSession(r)
+	sess, err := session.GetAuthSession(r)
 	if err != nil {
 		log.Printf("failed to get auth session, the cause was %v", err)
 		handleInvalidSessionErr(w, err)
 		return
 	}
 
-	token, secret, err := session.GetCredentials()
+	token, secret, err := sess.GetCredentials()
 	if err != nil {
 		log.Print(err)
 		handleNotMatchTokenErr(w, err)
@@ -77,14 +77,14 @@ func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	userSession, err := delivery.GetUserSession(r)
+	userSession, err := session.GetUserSession(r)
 	if err != nil {
 		log.Printf("failed to get user session, the cause was %v", err)
 		handleInvalidSessionErr(w, err)
 		return
 	}
 
-	userSession.SetUser(&delivery.User{
+	userSession.SetUser(&session.User{
 		ID:        account.ID,
 		Name:      account.Name,
 		AvatarURL: account.ProfileImageURL,
@@ -95,7 +95,7 @@ func twitterCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := session.RemoveCredentials(r, w); err != nil {
+	if err := sess.RemoveCredentials(r, w); err != nil {
 		handleSaveOrRemoveSessionErr(w, err)
 		return
 	}
