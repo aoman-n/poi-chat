@@ -9,7 +9,7 @@ import (
 
 func create(msg string) *ErrApp {
 	return &ErrApp{
-		frame: xerrors.Caller(1),
+		frame: Caller(2),
 		// code:  code,
 		msg: msg,
 	}
@@ -68,7 +68,7 @@ func As(err error, target interface{}) bool {
 // ErrApp: アプリケーション用のエラー。外部APIのエラーはすべてErrAppに変換する
 type ErrApp struct {
 	next    error
-	frame   xerrors.Frame
+	frame   Frame
 	msg     string
 	code    Code
 	infoMsg string
@@ -119,4 +119,50 @@ func (e *ErrApp) InfoMsg() string {
 	}
 
 	return next.infoMsg
+}
+
+func (e *ErrApp) Format(f fmt.State, c rune) {
+	xerrors.FormatError(e, f, c)
+}
+
+func (e *ErrApp) FormatError(p xerrors.Printer) error {
+	p.Print(e.Error())
+	if p.Detail() {
+		e.frame.Format(p)
+	}
+	return e.next
+}
+
+func (e *ErrApp) Unwrap() error {
+	return e.next
+}
+
+type Stack struct {
+	Func string
+	File string
+	Line int
+	Msg  string
+}
+
+func (e *ErrApp) StackTrace() []*Stack {
+	n := e
+	stacktrace := []*Stack{}
+	for n != nil {
+		f, file, line := n.frame.location()
+		stacktrace = append(stacktrace, &Stack{
+			Func: f,
+			File: file,
+			Line: line,
+			Msg:  n.Error(),
+		})
+
+		nn := n.next
+		if next, ok := nn.(*ErrApp); ok {
+			n = next
+		} else {
+			n = nil
+		}
+	}
+
+	return stacktrace
 }

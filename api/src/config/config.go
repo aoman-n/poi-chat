@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"os"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -30,6 +31,7 @@ type Config struct {
 	GoEnv        string `split_words:"true"`
 	SessionKey   string `split_words:"true"`
 	FrontBaseURL string `split_words:"true"`
+	LogLevel     string `split_words:"true"`
 	Db           DB
 	Redis        Redis
 	Twitter      Twitter
@@ -41,4 +43,16 @@ func init() {
 	if err := envconfig.Process("", &Conf); err != nil {
 		log.Fatal("failed to read env variables,  err:", err)
 	}
+}
+
+func IsDev() bool {
+	return os.Getenv("GO_ENV") == "development"
+}
+
+func IsTest() bool {
+	return os.Getenv("GO_ENV") == "test"
+}
+
+func IsProd() bool {
+	return os.Getenv("GO_ENV") == "production"
 }

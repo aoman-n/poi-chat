@@ -2,12 +2,12 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/laster18/poi/api/src/config"
-	"github.com/pkg/errors"
 )
 
 var (

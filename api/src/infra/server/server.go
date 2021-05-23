@@ -61,11 +61,11 @@ func Init() {
 		Debug:            false,
 	}).Handler)
 	router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.GetHead)
 	router.Use(middleware.Recoverer)
 	router.Use(customMiddleware.Authorize())
+	router.Use(customMiddleware.Logger())
 	router.Use(customMiddleware.RoomUserCountLoader(roomUserRepo))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))

@@ -22,6 +22,7 @@ services:
       - TWITTER_API_KEY=${TWITTER_API_KEY}
       - TWITTER_SECRET_KEY=${TWITTER_SECRET_KEY}
       - SESSION_KEY=${SESSION_KEY}
+      - LOG_LEVEL=debug
     ports:
       - "8080:8080"
     depends_on:

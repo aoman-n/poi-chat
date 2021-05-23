@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/util/alog"
 )
 
 type key string
@@ -13,6 +14,7 @@ type key string
 const (
 	userKey                key = "user"
 	roomUserCountLoaderKey key = "roomUserCountLoader"
+	loggerKey              key = "logger"
 )
 
 func SetUser(c context.Context, u *domain.GlobalUser) context.Context {
@@ -43,15 +45,31 @@ func GetRoomUserCountLoader(c context.Context) *generated.RoomUserCountLoader {
 		panic("must inject roomUserCountLoader")
 	}
 
-	loader, ok := l.(*generated.RoomUserCountLoader)
-	if !ok {
-		// TODO: return error
-		panic("roomUserCountLoeader is different type on context")
+	if loader, ok := l.(*generated.RoomUserCountLoader); ok {
+		return loader
 	}
 
-	return loader
+	// TODO: return error
+	panic("roomUserCountLoeader is different type on context")
 }
 
 func GetRequestID(c context.Context) string {
 	return middleware.GetReqID(c)
+}
+
+func SetLogger(c context.Context, l alog.Logger) context.Context {
+	return context.WithValue(c, loggerKey, l)
+}
+
+func GetLogger(c context.Context) alog.Logger {
+	l := c.Value(loggerKey)
+	if l == nil {
+		return alog.DefaultLogger
+	}
+
+	if logger, ok := l.(alog.Logger); ok {
+		return logger
+	}
+
+	return alog.DefaultLogger
 }
