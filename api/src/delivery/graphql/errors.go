@@ -5,6 +5,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/iancoleman/strcase"
+	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/laster18/poi/api/src/util/validator"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -56,11 +57,15 @@ const (
 var errUnauthorized = aerrors.New("unauthorized").SetCode(aerrors.CodeUnauthorized)
 
 func handleErr(ctx context.Context, err error) {
+	logger := acontext.GetLogger(ctx)
+
 	e := aerrors.AsErrApp(err)
 	if e == nil {
 		// TODO: unexpected error handling
 		return
 	}
+
+	logger.WarnWithErr(err, "handlerErr")
 
 	switch e.Code() {
 	case aerrors.CodeNotFound:

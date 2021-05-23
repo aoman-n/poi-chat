@@ -10,8 +10,7 @@ import (
 func create(msg string) *ErrApp {
 	return &ErrApp{
 		frame: Caller(2),
-		// code:  code,
-		msg: msg,
+		msg:   msg,
 	}
 }
 
@@ -30,13 +29,14 @@ func Wrap(err error, msg ...string) *ErrApp {
 	}
 
 	var m string
-	if len(m) != 0 {
+	if len(msg) != 0 {
 		m = msg[0]
 	} else {
 		if e := AsErrApp(err); e != nil {
 			e.msg = string(e.Code())
 		}
 	}
+
 	e := create(m)
 	e.next = err
 

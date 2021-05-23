@@ -116,7 +116,8 @@ func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error
 
 	room, err := r.roomRepo.GetByID(ctx, roomID)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomRepo.GetByID")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByID"))
+		return nil, nil
 	}
 
 	return &model.Room{

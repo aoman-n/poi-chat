@@ -61,13 +61,12 @@ func create(c *Conf) *Log {
 		if uname == "" {
 			uname = "unknown"
 		}
+		lc = lc.Str("userName", uname)
 
 		uid := c.User.ID
 		if uid == "" {
 			uid = "unknown"
 		}
-
-		lc = lc.Str("userName", uname)
 		lc = lc.Str("userId", uid)
 	}
 
