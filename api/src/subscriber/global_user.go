@@ -16,8 +16,8 @@ type GlobalUserSubscriber struct {
 	globalUserRepo domain.GlobalUserRepo
 	client         *redis.Client
 	mutex          sync.Mutex
-	// chs map[userUID]chan ...
-	chs map[string]chan<- model.GlobalUserEvent
+	// chans map[userUID]chan ...
+	chans map[string]chan<- model.GlobalUserEvent
 }
 
 func NewGlobalUserSubscriber(
@@ -29,7 +29,7 @@ func NewGlobalUserSubscriber(
 		globalUserRepo: globalUserRepo,
 		client:         client,
 		mutex:          sync.Mutex{},
-		chs:            make(map[string]chan<- model.GlobalUserEvent),
+		chans:          make(map[string]chan<- model.GlobalUserEvent),
 	}
 	go subscriber.start(ctx)
 	return subscriber
@@ -92,19 +92,19 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 }
 
 func (s *GlobalUserSubscriber) deliver(data model.GlobalUserEvent) {
-	for _, ch := range s.chs {
+	for _, ch := range s.chans {
 		ch <- data
 	}
 }
 
 func (s *GlobalUserSubscriber) AddCh(ch chan<- model.GlobalUserEvent, userUID string) {
 	s.mutex.Lock()
-	s.chs[userUID] = ch
+	s.chans[userUID] = ch
 	s.mutex.Unlock()
 }
 
 func (s *GlobalUserSubscriber) RemoveCh(userUID string) {
 	s.mutex.Lock()
-	delete(s.chs, userUID)
+	delete(s.chans, userUID)
 	s.mutex.Unlock()
 }

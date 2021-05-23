@@ -16,7 +16,7 @@ func New(conf config.Redis) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     conf.URL,
 		Password: conf.Passowrd,
-		DB:       0,
+		DB:       conf.Db,
 	})
 
 	context := context.Background()
@@ -26,10 +26,6 @@ func New(conf config.Redis) *redis.Client {
 	if err != nil {
 		log.Fatal("failed to connect redis", err)
 	}
-
-	// TODO: dockerの設定に移す
-	// enable keyspace notification
-	client.Do(context, "CONFIG", "SET", "notify-keyspace-events", "KEA")
 
 	log.Print("success to connect redis")
 

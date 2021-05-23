@@ -18,14 +18,14 @@ type RoomUserSubscriber struct {
 	client *redis.Client
 	mutex  sync.Mutex
 	// channels map[roomId]map[userId]chan ...
-	chs map[int]map[string]chan model.RoomUserEvent
+	chans map[int]map[string]chan model.RoomUserEvent
 }
 
 func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
 		mutex:  sync.Mutex{},
-		chs:    make(map[int]map[string]chan model.RoomUserEvent),
+		chans:  make(map[int]map[string]chan model.RoomUserEvent),
 	}
 	go subscriber.start(ctx)
 	return subscriber
@@ -89,7 +89,7 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	chs, ok := s.chs[roomID]
+	chs, ok := s.chans[roomID]
 	if !ok {
 		return
 	}
@@ -102,10 +102,10 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, userUID string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	userChannels, ok := s.chs[roomID]
+	userChannels, ok := s.chans[roomID]
 	if !ok {
 		userChannels = make(map[string]chan model.RoomUserEvent)
-		s.chs[roomID] = userChannels
+		s.chans[roomID] = userChannels
 	}
 	userChannels[userUID] = ch
 }
@@ -113,7 +113,7 @@ func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, user
 func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	userChannels, ok := s.chs[roomID]
+	userChannels, ok := s.chans[roomID]
 	if !ok {
 		return
 	}

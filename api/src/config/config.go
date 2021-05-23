@@ -24,6 +24,7 @@ type DB struct {
 type Redis struct {
 	URL      string `split_words:"true"`
 	Passowrd string `split_words:"true"`
+	Db       int    `split_words:"true"`
 }
 
 type Config struct {
