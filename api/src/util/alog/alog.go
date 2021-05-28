@@ -83,6 +83,19 @@ func create(c *Conf) *Log {
 	return &Log{logger}
 }
 
+func New(c *Conf) *Log {
+	return create(c)
+}
+
+func Default() *Log {
+	return create(&Conf{
+		IsJSON:    true,
+		RequestID: "notFound",
+		User:      nil,
+		IsCaller:  false,
+	})
+}
+
 func level(l string) zerolog.Level {
 	switch l {
 	case "info":
@@ -117,19 +130,6 @@ func marshalStack(err error) interface{} {
 	}
 
 	return out
-}
-
-func New(c *Conf) *Log {
-	return create(c)
-}
-
-func Default() *Log {
-	return create(&Conf{
-		IsJSON:    true,
-		RequestID: "notFound",
-		User:      nil,
-		IsCaller:  false,
-	})
 }
 
 func (l *Log) Warn(msg string) {

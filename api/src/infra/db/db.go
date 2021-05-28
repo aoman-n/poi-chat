@@ -74,7 +74,7 @@ func newLogger() logger.Interface {
 		SlowThreshold: time.Second,
 		Colorful:      false,
 	}
-	if config.Conf.GoEnv == "development" {
+	if config.IsDev() {
 		loggerConfig.LogLevel = logger.Info
 	} else {
 		loggerConfig.LogLevel = logger.Silent

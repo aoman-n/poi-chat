@@ -1,12 +1,18 @@
 package redis
 
+import (
+	"fmt"
+
+	"github.com/laster18/poi/api/src/config"
+)
+
 const (
 	EventSet     = "set"
 	EventExpired = "expired"
 	EventDel     = "del"
 )
 
-const (
-	KeySpace = "__keyspace@0__"
-	KeyEvent = "__keyevent@0__"
+var (
+	KeySpace = fmt.Sprintf("__keyspace@%d__", config.Conf.Redis.Db)
+	KeyEvent = fmt.Sprintf("__keyevent@%d__", config.Conf.Redis.Db)
 )
