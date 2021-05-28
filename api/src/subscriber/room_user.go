@@ -24,7 +24,6 @@ type RoomUserSubscriber struct {
 func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
-		mutex:  sync.Mutex{},
 		chans:  make(map[int]map[string]chan model.RoomUserEvent),
 	}
 	go subscriber.start(ctx)

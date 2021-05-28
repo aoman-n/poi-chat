@@ -28,7 +28,6 @@ func NewGlobalUserSubscriber(
 	subscriber := &GlobalUserSubscriber{
 		globalUserRepo: globalUserRepo,
 		client:         client,
-		mutex:          sync.Mutex{},
 		chans:          make(map[string]chan<- model.GlobalUserEvent),
 	}
 	go subscriber.start(ctx)
