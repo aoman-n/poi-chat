@@ -76,7 +76,7 @@ func create(c *Conf) *Log {
 	}
 
 	if c.IsCaller {
-		lc = lc.Caller()
+		lc = lc.CallerWithSkipFrameCount(3)
 	}
 
 	logger := lc.Logger().Level(level(c.Level))
@@ -91,7 +91,7 @@ func New(c *Conf) *Log {
 func Default() *Log {
 	return create(&Conf{
 		IsJSON:    !config.IsDev(),
-		RequestID: "notFound",
+		RequestID: "Unknown",
 		User:      nil,
 		IsCaller:  false,
 		Level:     config.Conf.LogLevel,
