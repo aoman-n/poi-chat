@@ -65,8 +65,8 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 				continue
 			}
 
-			s.deliver(&model.Onlined{
-				OnlineUser: &model.OnlineUser{
+			s.deliver(&model.OnlinedPayload{
+				GlobalUser: &model.GlobalUser{
 					ID:        globalUser.UID,
 					Name:      globalUser.Name,
 					AvatarURL: globalUser.AvatarURL,
@@ -81,7 +81,7 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 			if err != nil {
 				log.Printf("failed to delete global user, err: %v", err)
 			}
-			s.deliver(&model.Offlined{
+			s.deliver(&model.OfflinedPayload{
 				UserID: userUID,
 			})
 		default:

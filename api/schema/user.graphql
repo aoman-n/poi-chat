@@ -4,7 +4,7 @@ extend type Room {
 
 extend type Query {
   me: Me!
-  onlineUsers: [OnlineUser!]!
+  globalUsers: [GlobalUser!]!
 }
 
 extend type Mutation {
@@ -26,9 +26,7 @@ input MoveInput {
 }
 
 type MovePayload {
-  userId: ID!
-  x: Int!
-  y: Int!
+  roomUser: RoomUser!
 }
 
 type Me {
@@ -46,7 +44,7 @@ type RoomUser {
   lastMessage: Message
 }
 
-type OnlineUser {
+type GlobalUser {
   id: ID!
   name: String!
   avatarUrl: String!
@@ -54,26 +52,26 @@ type OnlineUser {
 
 # -------------------------------
 # GlobalUserEvent
-union GlobalUserEvent = Onlined | Offlined
-type Onlined {
-  onlineUser: OnlineUser!
+union GlobalUserEvent = OnlinedPayload | OfflinedPayload
+type OnlinedPayload {
+  globalUser: GlobalUser!
 }
-type Offlined {
+type OfflinedPayload {
   userId: ID!
 }
 
 # -------------------------------
 # RoomUserEvent
-union RoomUserEvent = Joined | Exited | Moved | SendedMassage
-type Joined {
+union RoomUserEvent = JoinedPayload | ExitedPayload | MovedPayload | SendedMassagePayload
+type JoinedPayload {
   roomUser: RoomUser!
 }
-type Moved {
-  roomUser: RoomUser!
-}
-type SendedMassage {
-  roomUser: RoomUser!
-}
-type Exited {
+type ExitedPayload {
   userId: ID!
+}
+type MovedPayload {
+  roomUser: RoomUser!
+}
+type SendedMassagePayload {
+  roomUser: RoomUser!
 }

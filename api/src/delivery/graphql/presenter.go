@@ -22,13 +22,26 @@ func toCreateRoomPayload(r *domain.Room) *model.CreateRoomPayload {
 
 func toMovePayload(ru *domain.RoomUser) *model.MovePayload {
 	return &model.MovePayload{
-		UserID: ru.UID,
-		X:      ru.X,
-		Y:      ru.Y,
+		RoomUser: toRoomUser(ru),
+	}
+}
+
+func toRoomUser(ru *domain.RoomUser) *model.RoomUser {
+	return &model.RoomUser{
+		ID:          ru.UID,
+		Name:        ru.Name,
+		AvatarURL:   ru.AvatarURL,
+		X:           ru.X,
+		Y:           ru.Y,
+		LastMessage: toMessage(ru.LastMessage),
 	}
 }
 
 func toMessage(m *domain.Message) *model.Message {
+	if m == nil {
+		return nil
+	}
+
 	return &model.Message{
 		ID:            strconv.Itoa(m.ID),
 		UserID:        m.UserUID,
@@ -39,10 +52,16 @@ func toMessage(m *domain.Message) *model.Message {
 	}
 }
 
-func toOnlineUsers(gs []*domain.GlobalUser) []*model.OnlineUser {
-	os := make([]*model.OnlineUser, len(gs))
+func toSendMessagePayload(m *domain.Message) *model.SendMassagePaylaod {
+	return &model.SendMassagePaylaod{
+		Message: toMessage(m),
+	}
+}
+
+func toGlobalUsers(gs []*domain.GlobalUser) []*model.GlobalUser {
+	os := make([]*model.GlobalUser, len(gs))
 	for i, g := range gs {
-		os[i] = &model.OnlineUser{
+		os[i] = &model.GlobalUser{
 			ID:        g.UID,
 			Name:      g.Name,
 			AvatarURL: g.AvatarURL,

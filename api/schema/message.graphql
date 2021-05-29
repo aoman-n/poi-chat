@@ -4,7 +4,11 @@ extend type Room {
 }
 
 extend type Mutation {
-  sendMessage(input: SendMessageInput): Message!
+  sendMessage(input: SendMessageInput): SendMassagePaylaod!
+}
+
+type SendMassagePaylaod {
+  message: Message!
 }
 
 type Message implements Node {

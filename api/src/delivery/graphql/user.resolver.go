@@ -5,6 +5,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -15,16 +16,8 @@ import (
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
-func (r *exitedResolver) UserID(ctx context.Context, obj *model.Exited) (string, error) {
-	return encodeIDStr(userPrefix, obj.UserID), nil
-}
-
 func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
 	return encodeIDStr(userPrefix, obj.ID), nil
-}
-
-func (r *movePayloadResolver) UserID(ctx context.Context, obj *model.MovePayload) (string, error) {
-	return encodeIDStr(userPrefix, obj.UserID), nil
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
@@ -54,14 +47,6 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return toMovePayload(roomUser), nil
 }
 
-func (r *offlinedResolver) UserID(ctx context.Context, obj *model.Offlined) (string, error) {
-	return encodeIDStr(userPrefix, obj.UserID), nil
-}
-
-func (r *onlineUserResolver) ID(ctx context.Context, obj *model.OnlineUser) (string, error) {
-	return encodeIDStr(userPrefix, obj.ID), nil
-}
-
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
@@ -77,13 +62,8 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	return me, nil
 }
 
-func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.OnlineUser, error) {
-	globalUsers, err := r.globalUserRepo.GetAll(ctx)
-	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to globalUserRepo.GetAll")
-	}
-
-	return toOnlineUsers(globalUsers), nil
+func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error) {
@@ -162,27 +142,11 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 	return ch, nil
 }
 
-// Exited returns generated.ExitedResolver implementation.
-func (r *Resolver) Exited() generated.ExitedResolver { return &exitedResolver{r} }
-
 // Me returns generated.MeResolver implementation.
 func (r *Resolver) Me() generated.MeResolver { return &meResolver{r} }
-
-// MovePayload returns generated.MovePayloadResolver implementation.
-func (r *Resolver) MovePayload() generated.MovePayloadResolver { return &movePayloadResolver{r} }
-
-// Offlined returns generated.OfflinedResolver implementation.
-func (r *Resolver) Offlined() generated.OfflinedResolver { return &offlinedResolver{r} }
-
-// OnlineUser returns generated.OnlineUserResolver implementation.
-func (r *Resolver) OnlineUser() generated.OnlineUserResolver { return &onlineUserResolver{r} }
 
 // RoomUser returns generated.RoomUserResolver implementation.
 func (r *Resolver) RoomUser() generated.RoomUserResolver { return &roomUserResolver{r} }
 
-type exitedResolver struct{ *Resolver }
 type meResolver struct{ *Resolver }
-type movePayloadResolver struct{ *Resolver }
-type offlinedResolver struct{ *Resolver }
-type onlineUserResolver struct{ *Resolver }
 type roomUserResolver struct{ *Resolver }

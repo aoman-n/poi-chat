@@ -73,7 +73,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 		case redis.EventDel:
 			fallthrough
 		case redis.EventExpired:
-			data := &model.Exited{
+			data := &model.ExitedPayload{
 				UserID: userUID,
 			}
 			s.deliver(roomID, data)
@@ -126,7 +126,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 ) (model.RoomUserEvent, error) {
 	switch ru.LastEvent {
 	case domain.JoinEvent:
-		return &model.Joined{
+		return &model.JoinedPayload{
 			RoomUser: &model.RoomUser{
 				ID:        userUID,
 				Name:      ru.Name,
@@ -136,7 +136,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 			},
 		}, nil
 	case domain.MoveEvent:
-		return &model.Moved{
+		return &model.MovedPayload{
 			RoomUser: &model.RoomUser{
 				ID:        userUID,
 				Name:      ru.Name,
@@ -150,7 +150,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 			return nil, errors.New("not found roomUser.LastMessage")
 		}
 
-		return &model.SendedMassage{
+		return &model.SendedMassagePayload{
 			RoomUser: &model.RoomUser{
 				ID:        userUID,
 				Name:      ru.Name,

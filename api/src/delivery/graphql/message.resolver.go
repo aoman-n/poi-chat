@@ -24,7 +24,7 @@ func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (strin
 	return encodeIDStr(userPrefix, obj.UserID), nil
 }
 
-func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.Message, error) {
+func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		return nil, errUnauthorized
@@ -61,7 +61,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
 	}
 
-	return toMessage(msg), nil
+	return toSendMessagePayload(msg), nil
 }
 
 func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
