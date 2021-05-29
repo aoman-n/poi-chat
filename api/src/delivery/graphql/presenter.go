@@ -77,3 +77,74 @@ func toRoomUsers(rus []*domain.RoomUser) []*model.RoomUser {
 
 	return roomUsers
 }
+
+func toMessageConnection(before *string, resp *domain.MessageListResp, totalCount int) *model.MessageConnection {
+	// create pageInfo
+	hasNextPage := false
+	if before != nil {
+		hasNextPage = true
+	}
+	startCursor, endCursor := getMessageCursors(resp.List)
+
+	pageInfo := &model.PageInfo{
+		StartCursor:     startCursor,
+		EndCursor:       endCursor,
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: resp.HasPreviousPage,
+	}
+
+	// create nodes and edges
+	nodes := make([]*model.Message, len(resp.List))
+	edges := make([]*model.MessageEdge, len(resp.List))
+
+	for i, message := range resp.List {
+		nodes[i] = toMessage(message)
+		edges[i] = &model.MessageEdge{
+			Cursor: *encodeCursor(messagePrefix, message.GetID(), message.GetCreatedAtUnix()),
+			Node:   nodes[i],
+		}
+	}
+
+	return &model.MessageConnection{
+		PageInfo:     pageInfo,
+		Nodes:        nodes,
+		Edges:        edges,
+		MessageCount: totalCount,
+	}
+}
+
+func toRoomConnection(after *string, resp *domain.RoomListResp, total int) *model.RoomConnection {
+	// create pageInfo
+	hasPrevious := false
+	if after != nil {
+		hasPrevious = true
+	}
+	startCursor, endCursor := getRoomCursors(resp.List)
+	pageInfo := model.PageInfo{
+		StartCursor:     startCursor,
+		EndCursor:       endCursor,
+		HasNextPage:     resp.HasNext,
+		HasPreviousPage: hasPrevious,
+	}
+
+	// create nodes and edges
+	nodes := make([]*model.Room, len(resp.List))
+	edges := make([]*model.RoomEdge, len(resp.List))
+	for i, room := range resp.List {
+		nodes[i] = &model.Room{
+			ID:   strconv.Itoa(int(room.ID)),
+			Name: room.Name,
+		}
+		edges[i] = &model.RoomEdge{
+			Cursor: *encodeCursor(roomPrefix, room.ID, int(room.CreatedAt.Unix())),
+			Node:   nodes[i],
+		}
+	}
+
+	return &model.RoomConnection{
+		PageInfo:  &pageInfo,
+		Nodes:     nodes,
+		Edges:     edges,
+		RoomCount: total,
+	}
+}

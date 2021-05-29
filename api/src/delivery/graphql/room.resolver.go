@@ -42,7 +42,8 @@ func (r *mutationResolver) CreateRoom(
 
 func (r *queryResolver) Rooms(
 	ctx context.Context,
-	first *int, after *string,
+	first *int,
+	after *string,
 	orderBy *model.RoomOrderField,
 ) (*model.RoomConnection, error) {
 	roomListReq := &domain.RoomListReq{}
@@ -65,47 +66,12 @@ func (r *queryResolver) Rooms(
 	if err != nil {
 		return nil, aerrors.Wrap(err, "failed to roomRepo.List")
 	}
-	roomCount, err := r.roomRepo.Count(ctx)
+	totalCount, err := r.roomRepo.Count(ctx)
 	if err != nil {
 		return nil, aerrors.Wrap(err, "failed to roomRepo.Count")
 	}
 
-	// create pageInfo
-	var pageInfo model.PageInfo
-	pageInfo.HasNextPage = roomListResp.HasNext
-	if after != nil {
-		pageInfo.HasPreviousPage = true
-	} else {
-		pageInfo.HasPreviousPage = false
-	}
-	startCursor, endCursor := getRoomCursors(roomListResp.List)
-	pageInfo.StartCursor = startCursor
-	pageInfo.EndCursor = endCursor
-
-	// serialize room model
-	nodes := make([]*model.Room, len(roomListResp.List))
-	for i, room := range roomListResp.List {
-		nodes[i] = &model.Room{
-			ID:   strconv.Itoa(int(room.ID)),
-			Name: room.Name,
-		}
-	}
-
-	// create connection
-	edges := make([]*model.RoomEdge, len(roomListResp.List))
-	for i, room := range roomListResp.List {
-		edges[i] = &model.RoomEdge{
-			Cursor: *encodeCursor(roomPrefix, room.ID, int(room.CreatedAt.Unix())),
-			Node:   nodes[i],
-		}
-	}
-
-	return &model.RoomConnection{
-		PageInfo:  &pageInfo,
-		Nodes:     nodes,
-		Edges:     edges,
-		RoomCount: roomCount,
-	}, nil
+	return toRoomConnection(after, roomListResp, totalCount), nil
 }
 
 func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {

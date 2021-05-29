@@ -64,11 +64,7 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	return toMessage(msg), nil
 }
 
-func (r *roomResolver) Messages(
-	ctx context.Context,
-	obj *model.Room,
-	last *int, before *string,
-) (*model.MessageConnection, error) {
+func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		return nil, errUnauthorized
@@ -100,44 +96,13 @@ func (r *roomResolver) Messages(
 	if err != nil {
 		return nil, aerrors.Wrap(err, "failed to messageRepo.List")
 	}
-	messageCount, err := r.messageRepo.Count(ctx, roomID)
+
+	totalCount, err := r.messageRepo.Count(ctx, roomID)
 	if err != nil {
 		return nil, aerrors.Wrap(err, "failed to messageRepo.Count")
 	}
 
-	// create pageInfo
-	var pageInfo model.PageInfo
-	pageInfo.HasPreviousPage = messageListResp.HasPreviousPage
-	if before != nil {
-		pageInfo.HasNextPage = true
-	} else {
-		pageInfo.HasNextPage = false
-	}
-	startCursor, endCursor := getMessageCursors(messageListResp.List)
-	pageInfo.StartCursor = startCursor
-	pageInfo.EndCursor = endCursor
-
-	// create nodes, serializing message model
-	nodes := make([]*model.Message, len(messageListResp.List))
-	for i, message := range messageListResp.List {
-		nodes[i] = toMessage(message)
-	}
-
-	// create edges
-	edges := make([]*model.MessageEdge, len(messageListResp.List))
-	for i, message := range messageListResp.List {
-		edges[i] = &model.MessageEdge{
-			Cursor: *encodeCursor(messagePrefix, message.GetID(), message.GetCreatedAtUnix()),
-			Node:   nodes[i],
-		}
-	}
-
-	return &model.MessageConnection{
-		PageInfo:     &pageInfo,
-		Nodes:        nodes,
-		Edges:        edges,
-		MessageCount: messageCount,
-	}, nil
+	return toMessageConnection(before, messageListResp, totalCount), nil
 }
 
 // Message returns generated.MessageResolver implementation.

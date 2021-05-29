@@ -130,10 +130,7 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	return ch, nil
 }
 
-func (r *subscriptionResolver) ActedRoomUserEvent(
-	ctx context.Context,
-	roomID string,
-) (<-chan model.RoomUserEvent, error) {
+func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		return nil, errUnauthorized

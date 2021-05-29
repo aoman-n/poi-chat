@@ -37,7 +37,7 @@ func seedRoomsAndMessages(db *gorm.DB) {
 			BackgroundURL:   "https://example.com/image.png",
 			BackgroundColor: "#66cdaa",
 			UserCount:       0,
-			CreatedAt:       time.Date(2021, 2, 2, 0, 0, 0, 0, time.UTC),
+			CreatedAt:       time.Date(2021, 1, 2, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			ID:              3,
@@ -45,7 +45,7 @@ func seedRoomsAndMessages(db *gorm.DB) {
 			BackgroundURL:   "https://example.com/image.png",
 			BackgroundColor: "#66cdaa",
 			UserCount:       0,
-			CreatedAt:       time.Date(2021, 2, 3, 0, 0, 0, 0, time.UTC),
+			CreatedAt:       time.Date(2021, 1, 3, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			ID:              4,
@@ -61,7 +61,7 @@ func seedRoomsAndMessages(db *gorm.DB) {
 			BackgroundURL:   "https://example.com/image.png",
 			BackgroundColor: "#66cdaa",
 			UserCount:       0,
-			CreatedAt:       time.Date(2021, 3, 5, 0, 0, 0, 0, time.UTC),
+			CreatedAt:       time.Date(2021, 1, 5, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			ID:              6,
@@ -77,7 +77,7 @@ func seedRoomsAndMessages(db *gorm.DB) {
 			BackgroundURL:   "https://example.com/image.png",
 			BackgroundColor: "#66cdaa",
 			UserCount:       0,
-			CreatedAt:       time.Date(2021, 3, 7, 0, 0, 0, 0, time.UTC),
+			CreatedAt:       time.Date(2021, 1, 7, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			ID:              8,
@@ -109,7 +109,23 @@ func seedRoomsAndMessages(db *gorm.DB) {
 			BackgroundURL:   "https://example.com/image.png",
 			BackgroundColor: "#66cdaa",
 			UserCount:       0,
-			CreatedAt:       time.Date(2021, 2, 3, 0, 0, 0, 0, time.UTC),
+			CreatedAt:       time.Date(2021, 1, 11, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			ID:              12,
+			Name:            "room12",
+			BackgroundURL:   "https://example.com/image.png",
+			BackgroundColor: "#66cdaa",
+			UserCount:       0,
+			CreatedAt:       time.Date(2021, 1, 12, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			ID:              13,
+			Name:            "room13",
+			BackgroundURL:   "https://example.com/image.png",
+			BackgroundColor: "#66cdaa",
+			UserCount:       0,
+			CreatedAt:       time.Date(2021, 1, 13, 0, 0, 0, 0, time.UTC),
 		},
 	}
 
