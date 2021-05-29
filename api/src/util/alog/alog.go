@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/rs/zerolog"
 )
@@ -89,10 +90,11 @@ func New(c *Conf) *Log {
 
 func Default() *Log {
 	return create(&Conf{
-		IsJSON:    true,
+		IsJSON:    !config.IsDev(),
 		RequestID: "notFound",
 		User:      nil,
 		IsCaller:  false,
+		Level:     config.Conf.LogLevel,
 	})
 }
 

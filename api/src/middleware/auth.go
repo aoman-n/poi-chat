@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/util/acontext"
@@ -34,10 +33,12 @@ func Authorize() func(http.Handler) http.Handler {
 				return
 			}
 
-			userUID, _ := decodeIDStr(UserPrefix, user.ID)
+			logger := acontext.GetLogger(r.Context())
+
+			logger.Debugf("authenticated user is %+v\n", user)
 
 			newCtx := acontext.SetUser(r.Context(), &domain.GlobalUser{
-				UID:       userUID,
+				UID:       user.ID,
 				Name:      user.Name,
 				AvatarURL: user.AvatarURL,
 			})
@@ -46,25 +47,3 @@ func Authorize() func(http.Handler) http.Handler {
 		})
 	}
 }
-
-// --------------------------
-// TODO: 下記は消す
-
-func decodeIDStr(prefix Prefix, id string) (string, error) {
-	idParts := strings.Split(id, ":")
-	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {
-		return "", fmt.Errorf("invalid id %q", id)
-	}
-
-	return idParts[1], nil
-}
-
-type Prefix string
-
-// TODO: ':'は定数に入れないようにする
-var (
-	roomPrefix     Prefix = "Room:"
-	messagePrefix  Prefix = "Message:"
-	UserPrefix     Prefix = "User:"
-	roomUserPrefix Prefix = "RoomUser:"
-)

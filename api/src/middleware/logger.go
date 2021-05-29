@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/laster18/poi/api/src/config"
@@ -23,8 +22,6 @@ func Logger() func(http.Handler) http.Handler {
 					Name: user.Name,
 				}
 			}
-
-			fmt.Println("logLevel:", config.Conf.LogLevel)
 
 			logger := alog.New(&alog.Conf{
 				RequestID: reqID,
