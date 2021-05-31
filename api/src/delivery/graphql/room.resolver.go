@@ -95,6 +95,7 @@ func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, err
 	}
 
 	count, err := acontext.GetRoomUserCountLoader(ctx).Load(id)
+
 	if err != nil {
 		return 0, aerrors.Wrap(err, "failed to roomUserCountLoader.Load")
 	}

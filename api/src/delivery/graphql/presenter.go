@@ -151,8 +151,12 @@ func toRoomConnection(after *string, resp *domain.RoomListResp, total int) *mode
 	edges := make([]*model.RoomEdge, len(resp.List))
 	for i, room := range resp.List {
 		nodes[i] = &model.Room{
-			ID:   strconv.Itoa(int(room.ID)),
-			Name: room.Name,
+			ID:        strconv.Itoa(int(room.ID)),
+			Name:      room.Name,
+			UserCount: 0,
+			BgColor:   room.BackgroundColor,
+			BgURL:     room.BackgroundURL,
+			CreatedAt: room.CreatedAt,
 		}
 		edges[i] = &model.RoomEdge{
 			Cursor: *encodeCursor(roomPrefix, room.ID, int(room.CreatedAt.Unix())),

@@ -5,7 +5,6 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -16,8 +15,16 @@ import (
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
+func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {
+	return encodeIDStr(roomUserPrefix, obj.UserID), nil
+}
+
+func (r *globalUserResolver) ID(ctx context.Context, obj *model.GlobalUser) (string, error) {
+	return encodeIDStr(globalUserPrefix, obj.ID), nil
+}
+
 func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
-	return encodeIDStr(userPrefix, obj.ID), nil
+	return encodeIDStr(globalUserPrefix, obj.ID), nil
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
@@ -47,6 +54,10 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return toMovePayload(roomUser), nil
 }
 
+func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error) {
+	return encodeIDStr(globalUserPrefix, obj.UserID), nil
+}
+
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
@@ -63,7 +74,17 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 }
 
 func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
-	panic(fmt.Errorf("not implemented"))
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
+		return nil, errUnauthorized
+	}
+
+	users, err := r.globalUserRepo.GetAll(ctx)
+	if err != nil {
+		handleErr(ctx, err)
+	}
+
+	return toGlobalUsers(users), nil
 }
 
 func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error) {
@@ -142,11 +163,25 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 	return ch, nil
 }
 
+// ExitedPayload returns generated.ExitedPayloadResolver implementation.
+func (r *Resolver) ExitedPayload() generated.ExitedPayloadResolver { return &exitedPayloadResolver{r} }
+
+// GlobalUser returns generated.GlobalUserResolver implementation.
+func (r *Resolver) GlobalUser() generated.GlobalUserResolver { return &globalUserResolver{r} }
+
 // Me returns generated.MeResolver implementation.
 func (r *Resolver) Me() generated.MeResolver { return &meResolver{r} }
+
+// OfflinedPayload returns generated.OfflinedPayloadResolver implementation.
+func (r *Resolver) OfflinedPayload() generated.OfflinedPayloadResolver {
+	return &offlinedPayloadResolver{r}
+}
 
 // RoomUser returns generated.RoomUserResolver implementation.
 func (r *Resolver) RoomUser() generated.RoomUserResolver { return &roomUserResolver{r} }
 
+type exitedPayloadResolver struct{ *Resolver }
+type globalUserResolver struct{ *Resolver }
 type meResolver struct{ *Resolver }
+type offlinedPayloadResolver struct{ *Resolver }
 type roomUserResolver struct{ *Resolver }

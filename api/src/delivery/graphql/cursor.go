@@ -13,10 +13,11 @@ type Prefix string
 
 // TODO: ':'は定数に入れないようにする
 var (
-	roomPrefix     Prefix = "Room:"
-	messagePrefix  Prefix = "Message:"
-	userPrefix     Prefix = "User:"
-	roomUserPrefix Prefix = "RoomUser:"
+	roomPrefix       Prefix = "Room:"
+	messagePrefix    Prefix = "Message:"
+	userPrefix       Prefix = "User:"
+	roomUserPrefix   Prefix = "RoomUser:"
+	globalUserPrefix Prefix = "GlobalUser:"
 )
 
 var (

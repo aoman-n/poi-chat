@@ -52,15 +52,15 @@ models:
     fields:
       id:
         resolver: true
-  OnlineUser:
+  GlobalUser:
     fields:
       id:
         resolver: true
-  Offlined:
+  OfflinedPayload:
     fields:
       userId:
         resolver: true
-  Exited:
+  ExitedPayload:
     fields:
       userId:
         resolver: true

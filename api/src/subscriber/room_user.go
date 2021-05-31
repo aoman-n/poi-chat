@@ -150,7 +150,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 			return nil, errors.New("not found roomUser.LastMessage")
 		}
 
-		return &model.SendedMassagePayload{
+		return &model.SentMassagePayload{
 			RoomUser: &model.RoomUser{
 				ID:        userUID,
 				Name:      ru.Name,

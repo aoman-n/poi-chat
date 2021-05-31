@@ -19,7 +19,6 @@ extend type Subscription {
 }
 
 input MoveInput {
-  # TODO: roomIdはcookieに持たせるようにする
   roomId: ID!
   x: Int!
   y: Int!
@@ -62,7 +61,7 @@ type OfflinedPayload {
 
 # -------------------------------
 # RoomUserEvent
-union RoomUserEvent = JoinedPayload | ExitedPayload | MovedPayload | SendedMassagePayload
+union RoomUserEvent = JoinedPayload | ExitedPayload | MovedPayload | SentMassagePayload
 type JoinedPayload {
   roomUser: RoomUser!
 }
@@ -72,6 +71,6 @@ type ExitedPayload {
 type MovedPayload {
   roomUser: RoomUser!
 }
-type SendedMassagePayload {
+type SentMassagePayload {
   roomUser: RoomUser!
 }
