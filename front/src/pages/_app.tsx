@@ -10,7 +10,7 @@ import Entrance from '@/components/templates/Entrance'
 import GuestLogin from '@/components/templates/GuestLogin'
 import '../styles/globals.css'
 
-import { useAuthQuery } from '@/graphql'
+import { useCommonQuery } from '@/graphql'
 
 const Noop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>{children}</>
@@ -20,12 +20,12 @@ const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { setCurrentUser, setOnlineUsers } = useAuthContext()
-  const { data, error } = useAuthQuery()
+  const { data, error } = useCommonQuery()
 
   useEffect(() => {
     if (data) {
       setCurrentUser(data.me)
-      setOnlineUsers(data.onlineUsers)
+      setOnlineUsers(data.globalUsers)
     }
 
     if (error) {

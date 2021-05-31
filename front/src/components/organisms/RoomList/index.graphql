@@ -1,4 +1,4 @@
-fragment Rooms on Query {
+fragment RoomList on Query {
   rooms {
     pageInfo {
       startCursor
@@ -6,16 +6,11 @@ fragment Rooms on Query {
       hasNextPage
       hasPreviousPage
     }
-    edges {
-      cursor
-      node {
-        id
-        name
-      }
-    }
     nodes {
       id
       name
+      userCount
+      createdAt
     }
     roomCount
   }

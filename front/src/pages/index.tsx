@@ -3,14 +3,18 @@ import { NextPage } from 'next'
 import { filter } from 'graphql-anywhere'
 
 import { AppGetStaticProps } from '@/types'
-import { useIndexPageQuery, RoomsFragment, RoomsFragmentDoc } from '@/graphql'
+import {
+  useIndexPageQuery,
+  RoomListFragment,
+  RoomListFragmentDoc,
+} from '@/graphql'
 import RoomList from '@/components/organisms/RoomList'
 
 const IndexRoomsPage: NextPage = () => {
   const { data } = useIndexPageQuery()
 
   const rooms =
-    data && filter<RoomsFragment>(RoomsFragmentDoc, data).rooms.nodes
+    data && filter<RoomListFragment>(RoomListFragmentDoc, data).rooms.nodes
 
   if (!rooms) return <div>スケルトン表示</div>
 

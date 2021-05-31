@@ -1,4 +1,4 @@
-import { UserInfo } from '@/painter/user'
+import { UserInfo } from '@/utils/painter/user'
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
 import { Message } from '@/components/organisms/Playground/presentation'

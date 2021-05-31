@@ -4,6 +4,8 @@ import { useCurrentUser } from '@/contexts/auth'
 
 export function useRequireNotLogin() {
   const { isAuthChecking, currentUser } = useCurrentUser()
+  console.log({ isAuthChecking, currentUser })
+
   const router = useRouter()
 
   useEffect(() => {

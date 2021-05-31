@@ -1,25 +1,3 @@
-query Rooms ($roomId: ID!) {
-  ...RoomDetail
-}
-
-subscription JoinRoom($roomId: ID!) {
-  joinRoom(roomID: $roomId) {
-    id
-    displayName
-    avatarUrl
-    x
-    y
-  }
-}
-
-mutation Move($roomId: ID!, $x: Int!, $y: Int!) {
-  move(input: {
-    roomId: $roomId,
-    x: $x,
-    y: $y
-  }) {
-    id
-    x
-    y
-  }
+query RoomPage ($roomId: ID!) {
+  ...Room
 }

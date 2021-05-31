@@ -2,7 +2,7 @@ import React from 'react'
 
 export type OnlineUser = {
   id: string
-  displayName: string
+  name: string
   avatarUrl: string
 }
 
@@ -21,9 +21,9 @@ const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
             className="flex items-center mb-0 space-x-3 text-gray-700 justify-center"
           >
             <div className="w-12 border border-gray-200 rounded-full overflow-hidden">
-              <img src={user.avatarUrl} alt={user.displayName + ' avatar'} />
+              <img src={user.avatarUrl} alt={user.name + ' avatar'} />
             </div>
-            <div>{user.displayName}</div>
+            <div>{user.name}</div>
             <div>
               <div className="bg-green-500 w-3 h-3 rounded-full"></div>
             </div>

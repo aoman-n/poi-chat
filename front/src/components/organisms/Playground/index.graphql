@@ -1,3 +1,79 @@
+# -----------------------------------
+# query fragments on root Query
+fragment Room on Query {
+  room(id: $roomId) {
+    id
+    name
+    users {
+      ... RoomUserFields
+    }
+    messages(last: 20) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        ... MessageFields
+      }
+    }
+  }
+}
+
+# -----------------------------------
+# mutations
+mutation SendMessage($roomId: ID!, $body: String!) {
+  sendMessage(input: {
+    roomID: $roomId,
+    body: $body
+  }) {
+    message {
+      ... MessageFields
+    }
+  }
+}
+
+mutation Move($roomId: ID!, $x: Int!, $y: Int!) {
+  move(input: {
+    roomId: $roomId,
+    x: $x,
+    y: $y
+  }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
+# -----------------------------------
+# subscriptions
+subscription actedRoomUserEvent($roomId: ID!) {
+  actedRoomUserEvent(roomId: $roomId) {
+    __typename
+    ... on JoinedPayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on ExitedPayload {
+      userId
+    }
+    ... on MovedPayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on SentMassagePayload {
+       roomUser {
+        ... RoomUserFields
+      }
+    }
+  }
+}
+
+# -----------------------------------
+# fields fragments
 fragment MessageFields on Message {
   id
   userId
@@ -7,62 +83,13 @@ fragment MessageFields on Message {
   createdAt
 }
 
-fragment RoomDetail on Query {
-  roomDetail(id: $roomId) {
-    id
-    name
-    users {
-      id
-      displayName
-      avatarUrl
-      x
-      y
-    }
-    messages(last: 20) {
-      nodes {
-        ... MessageFields
-      }
-    }
-  }
-}
-
-subscription UserEvent($roomId: ID!) {
-  subUserEvent(roomId: $roomId) {
-    __typename
-    ... on MovedUser {
-      id
-      x
-      y
-    }
-    ... on ExitedUser {
-      id
-    }
-    ... on JoinedUser {
-      id
-      displayName
-      avatarUrl
-      x
-      y
-    }
-  }
-}
-
-subscription Message($roomId: ID!) {
-  subMessage(roomId: $roomId) {
+fragment RoomUserFields on RoomUser {
+  id
+  name
+  avatarUrl
+  x
+  y
+  lastMessage {
     ... MessageFields
-  }
-}
-
-mutation SendMessage($roomId: ID!, $body: String!) {
-  sendMessage(input: {
-    roomID: $roomId,
-    body: $body
-  }) {
-    id
-    userId
-    userName
-    userAvatarUrl
-    body
-    createdAt
   }
 }

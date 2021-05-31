@@ -5,23 +5,17 @@ import { filter } from 'graphql-anywhere'
 import { useRequireLogin } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
 import Playground from '@/components/organisms/Playground'
-import {
-  useRoomsQuery,
-  RoomDetailFragment,
-  RoomDetailFragmentDoc,
-} from '@/graphql'
-import { UserManager, User } from '@/painter/user'
+import { useRoomPageQuery, RoomFragment, RoomFragmentDoc } from '@/graphql'
+import { UserManager, User } from '@/utils/painter/user'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
   const isCreatedUserManager = useRef<boolean>(false)
   const [userManager, setUserManager] = useState<UserManager | null>(null)
-  const { data } = useRoomsQuery({ variables: { roomId } })
+  const { data } = useRoomPageQuery({ variables: { roomId } })
 
   const roomDetail =
-    (data &&
-      filter<RoomDetailFragment>(RoomDetailFragmentDoc, data).roomDetail) ||
-    null
+    (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
 
   useEffect(() => {
     if (isCreatedUserManager.current) return

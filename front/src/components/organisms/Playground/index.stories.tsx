@@ -4,7 +4,7 @@ import { ROOM_SIZE } from '@/constants'
 import { mockMessages, mockUsers } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
 
-import { UserManager, User } from '@/painter/user'
+import { UserManager, User } from '@/utils/painter/user'
 
 export const mockUserManager = new UserManager(
   mockUsers.map((u) => new User(u)),

@@ -1,12 +1,10 @@
 import React, { useCallback, useState } from 'react'
-import { UserManager, User } from '@/painter/user'
+import { UserManager, User } from '@/utils/painter/user'
 import Playground, { Message } from './presentation'
 import {
-  RoomDetailFragment,
-  useUserEventSubscription,
-  useJoinRoomSubscription,
+  RoomFragment,
+  useActedRoomUserEventSubscription,
   useMoveMutation,
-  useMessageSubscription,
   MessageFieldsFragment,
   useSendMessageMutation,
 } from '@/graphql'
@@ -14,7 +12,7 @@ import { useCurrentUser } from '@/contexts/auth'
 
 type PlaygroundContainerProps = {
   roomId: string
-  roomDetail: RoomDetailFragment['roomDetail']
+  roomDetail: RoomFragment['room']
   userManager: UserManager
 }
 
@@ -59,41 +57,46 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
     [setMessages],
   )
 
-  useMessageSubscription({
-    variables: { roomId },
-    onSubscriptionData: ({ subscriptionData }) => {
-      if (!subscriptionData.data) return
-      handleAddMessage(subscriptionData.data.subMessage)
-    },
-  })
-
-  useJoinRoomSubscription({ variables: { roomId } })
-  useUserEventSubscription({
+  useActedRoomUserEventSubscription({
     variables: { roomId },
     onSubscriptionData: ({ subscriptionData }) => {
       if (!subscriptionData.data) return
 
-      const { subUserEvent } = subscriptionData.data
+      const { actedRoomUserEvent } = subscriptionData.data
 
-      switch (subUserEvent.__typename) {
-        case 'JoinedUser':
+      switch (actedRoomUserEvent.__typename) {
+        case 'JoinedPayload': {
+          // TODO: 自身は弾く
+          const { roomUser } = actedRoomUserEvent
           userManager.addUser(
             new User({
-              id: subUserEvent.id,
-              avatarUrl: subUserEvent.avatarUrl,
-              currentX: subUserEvent.x,
-              currentY: subUserEvent.y,
+              id: roomUser.id,
+              avatarUrl: roomUser.avatarUrl,
+              currentX: roomUser.x,
+              currentY: roomUser.y,
             }),
           )
           break
-        case 'MovedUser':
-          if (currentUser && subUserEvent.id === currentUser.id) break
-          userManager.changePos(subUserEvent.id, subUserEvent.x, subUserEvent.y)
+        }
+        case 'ExitedPayload':
+          userManager.deleteUser(actedRoomUserEvent.userId)
           break
-        case 'ExitedUser':
-          userManager.deleteUser(subUserEvent.id)
+        case 'MovedPayload': {
+          // TODO: 自身は弾く？
+          const { roomUser } = actedRoomUserEvent
+          userManager.changePos(roomUser.id, roomUser.x, roomUser.y)
           break
+        }
+        case 'SentMassagePayload': {
+          const { lastMessage } = actedRoomUserEvent.roomUser
+          if (!lastMessage) return
+
+          handleAddMessage(lastMessage)
+          break
+        }
       }
+
+      console.log({ subscriptionData })
     },
   })
 

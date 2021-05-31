@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useContext, useState } from 'react'
-import { AuthQuery } from '@/graphql'
+import { CommonQuery } from '@/graphql'
 
-type CurrentUser = AuthQuery['me']
-type OnlineUser = AuthQuery['onlineUsers'][0]
+type CurrentUser = CommonQuery['me']
+type OnlineUser = CommonQuery['globalUsers'][0]
 
 type AuthContextValue = {
   // undefined : まだログイン確認が完了していない状態とする

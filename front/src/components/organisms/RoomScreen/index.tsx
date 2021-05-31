@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
-import RoomScreenPainter from '@/painter/roomScreen'
-import { UserManager } from '@/painter/user'
+import RoomScreenPainter from '@/utils/painter/roomScreen'
+import { UserManager } from '@/utils/painter/user'
 import { ROOM_SIZE } from '@/constants'
 
 const mainLoop = (ctx: CanvasRenderingContext2D, userManager: UserManager) => {

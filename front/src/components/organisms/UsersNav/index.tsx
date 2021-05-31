@@ -2,30 +2,28 @@ import React from 'react'
 import { useAuthContext } from '@/contexts/auth'
 import { useUsersContext } from '@/contexts/users'
 import UsersNav from './presentation'
-import {
-  useKeeoOnlineSubscription,
-  useChangedUserStatusSubscription,
-} from '@/graphql'
+import { useActedGlobalUserEventSubscription } from '@/graphql'
 
 const UsersNavContainer: React.FC = () => {
   const { currentUser, isAuthChecking } = useAuthContext()
   const { onlineUsers, addOnlineUser, removeOnlineUser } = useUsersContext()
-  useKeeoOnlineSubscription({
+
+  useActedGlobalUserEventSubscription({
     onSubscriptionComplete: () => {
-      console.log('complete keep online connected')
+      console.log('start subscribe global user events')
     },
-  })
-  useChangedUserStatusSubscription({
     onSubscriptionData: ({ client, subscriptionData }) => {
       if (!subscriptionData.data) return
-      if (!subscriptionData.data.changedUserStatus) return
+      if (!subscriptionData.data.actedGlobalUserEvent) return
 
-      const { changedUserStatus } = subscriptionData.data
+      const { actedGlobalUserEvent } = subscriptionData.data
 
-      if (changedUserStatus.__typename === 'OnlineUserStatus') {
-        addOnlineUser(changedUserStatus)
-      } else if (changedUserStatus.__typename === 'OfflineUserStatus') {
-        removeOnlineUser(changedUserStatus.id)
+      switch (actedGlobalUserEvent.__typename) {
+        case 'OnlinedPayload':
+          addOnlineUser(actedGlobalUserEvent.globalUser)
+          break
+        case 'OfflinedPayload':
+          removeOnlineUser(actedGlobalUserEvent.userId)
       }
     },
   })
@@ -33,7 +31,7 @@ const UsersNavContainer: React.FC = () => {
   const props = {
     profile: currentUser
       ? {
-          name: currentUser.displayName,
+          name: currentUser.name,
           avatarUrl: currentUser.avatarUrl,
         }
       : null,
