@@ -59,38 +59,11 @@ export class User {
     this._currentY = this._currentY + (this._targetY - this._currentY) / 8
   }
 
-  equal(id: string) {
+  equalId(id: string) {
     return id === this._id
   }
-}
 
-export class UserManager {
-  private _users: User[]
-
-  constructor(users: User[]) {
-    this._users = users
-  }
-
-  update() {
-    for (const user of this._users) user.update()
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    for (const user of this._users) user.draw(ctx)
-  }
-
-  changePos(id: string, targetX: number, targetY: number) {
-    const user = this._users.find((u) => u.equal(id))
-    if (!user) return
-
-    user.changePos(targetX, targetY)
-  }
-
-  addUser(user: User) {
-    this._users.push(user)
-  }
-
-  deleteUser(id: string) {
-    this._users = this._users.filter((u) => !u.equal(id))
+  equal(user: User) {
+    return user._id === this._id
   }
 }

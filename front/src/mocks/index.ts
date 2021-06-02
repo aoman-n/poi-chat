@@ -1,4 +1,4 @@
-import { UserInfo } from '@/utils/painter/user'
+import { UserInfo } from '@/utils/painter'
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
 import { Message } from '@/components/organisms/Playground/presentation'
@@ -30,25 +30,25 @@ export const mockUsers: UserInfo[] = [
 export const mockOnlineUsers: OnlineUser[] = [
   {
     id: '1',
-    displayName: 'サンプルユーザー1',
+    name: 'サンプルユーザー1',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '2',
-    displayName: 'サンプルユーザー2',
+    name: 'サンプルユーザー2',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '3',
-    displayName: 'サンプルユーザー3',
+    name: 'サンプルユーザー3',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
   {
     id: '4',
-    displayName: 'サンプルユーザー4',
+    name: 'サンプルユーザー4',
     avatarUrl:
       'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
   },
@@ -58,22 +58,26 @@ export const mockRooms: Room[] = [
   {
     id: 'Room:1',
     name: 'サンプルチャットルーム1',
-    // userCount: 8,
+    userCount: 8,
+    createdAt: '',
   },
   {
     id: 'Room:2',
     name: 'サンプルチャットルーム2',
-    // userCount: 10,
+    userCount: 10,
+    createdAt: '',
   },
   {
     id: 'Room:3',
     name: 'サンプルチャットルーム3',
-    // userCount: 3,
+    userCount: 3,
+    createdAt: '',
   },
   {
     id: 'Room:4',
     name: 'サンプルチャットルーム4',
-    // userCount: 60,
+    userCount: 60,
+    createdAt: '',
   },
 ]
 

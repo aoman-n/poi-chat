@@ -1,18 +1,10 @@
 import React, { useCallback, useState } from 'react'
 import { useScrollBottom } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
-
-export type Message = {
-  id: string
-  userId: string
-  userName: string
-  userAvatarUrl: string
-  body: string
-  createdAt: string
-}
+import { RoomFragment } from '@/graphql'
 
 export type PlaygroundProps = {
-  messages: Message[]
+  messages: RoomFragment['room']['messages']['nodes']
   handleSubmitMessage: (values: { body: string }) => void
   rooomScreenProps: RoomScreenProps
 }

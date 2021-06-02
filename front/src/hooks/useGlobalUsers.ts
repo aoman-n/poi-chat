@@ -1,22 +1,24 @@
 import { useCallback } from 'react'
-import { apolloClient } from '@/lib/apolloClient'
+import { useApolloClient } from '@apollo/client'
+
 import { CommonQuery, CommonDocument } from '@/graphql'
+import { GlobalUser } from '@/types/user'
 
-type OnlineUser = CommonQuery['globalUsers'][0]
+export const useGlobalUsers = () => {
+  const client = useApolloClient()
 
-export const useUsersContext = () => {
-  const data = apolloClient.readQuery<CommonQuery>({
+  const data = client.readQuery<CommonQuery>({
     query: CommonDocument,
   })
 
-  const addOnlineUser = useCallback((user: OnlineUser) => {
-    const data = apolloClient.readQuery<CommonQuery>({
+  const addOnlineUser = useCallback((user: GlobalUser) => {
+    const data = client.readQuery<CommonQuery>({
       query: CommonDocument,
     })
 
     if (!data) return
 
-    apolloClient.writeQuery<CommonQuery>({
+    client.writeQuery<CommonQuery>({
       query: CommonDocument,
       data: {
         ...data,
@@ -26,13 +28,13 @@ export const useUsersContext = () => {
   }, [])
 
   const removeOnlineUser = useCallback((id: string) => {
-    const data = apolloClient.readQuery<CommonQuery>({
+    const data = client.readQuery<CommonQuery>({
       query: CommonDocument,
     })
 
     if (!data) return
 
-    apolloClient.writeQuery<CommonQuery>({
+    client.writeQuery<CommonQuery>({
       query: CommonDocument,
       data: {
         ...data,

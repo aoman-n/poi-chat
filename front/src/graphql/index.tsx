@@ -60,9 +60,10 @@ export type JoinedPayload = {
 
 export type Me = {
   __typename?: 'Me'
-  id: Scalars['ID']
-  name: Scalars['String']
   avatarUrl: Scalars['String']
+  id: Scalars['ID']
+  isMen: Scalars['Boolean']
+  name: Scalars['String']
 }
 
 export type Message = Node & {

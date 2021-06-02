@@ -1,51 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React from 'react'
 import { NextPage } from 'next'
 import { filter } from 'graphql-anywhere'
-
-import { useRequireLogin } from '@/hooks'
+import { useRequireLogin, useUserManager } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
 import Playground from '@/components/organisms/Playground'
 import { useRoomPageQuery, RoomFragment, RoomFragmentDoc } from '@/graphql'
-import { UserManager, User } from '@/utils/painter/user'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
-  const isCreatedUserManager = useRef<boolean>(false)
-  const [userManager, setUserManager] = useState<UserManager | null>(null)
-  const { data } = useRoomPageQuery({ variables: { roomId } })
 
-  const roomDetail =
+  const { data } = useRoomPageQuery({ variables: { roomId } })
+  const { userManager } = useUserManager(data?.room.users)
+
+  const room =
     (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
 
-  useEffect(() => {
-    if (isCreatedUserManager.current) return
+  if (!room || !userManager) return <div>スケルトン表示</div>
 
-    if (roomDetail) {
-      const { users } = roomDetail
-      const userInstances = users.map(
-        (user) =>
-          new User({
-            id: user.id,
-            avatarUrl: user.avatarUrl,
-            currentX: user.x,
-            currentY: user.y,
-          }),
-      )
-      setUserManager(new UserManager(userInstances))
-      isCreatedUserManager.current = true
-    }
-  }, [roomDetail])
-
-  // roomDeailtがnull & userManager未作成 のときはスケルトンを表示
-  if (!roomDetail || !userManager) return <div>スケルトン表示</div>
-
-  return (
-    <Playground
-      roomDetail={roomDetail}
-      roomId={roomId}
-      userManager={userManager}
-    />
-  )
+  return <Playground room={room} roomId={roomId} userManager={userManager} />
 }
 
 export const getServerSideProps: AppGetServerSideProps<{

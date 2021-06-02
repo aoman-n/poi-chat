@@ -5,7 +5,7 @@ type RoomScreenOpts = {
   bgColor?: string
 }
 
-class RoomScreen {
+export class RoomScreenPainter {
   private _bgImageEl: HTMLImageElement
   private _isBgLoaded: boolean
   private _bgColor: string
@@ -43,5 +43,3 @@ class RoomScreen {
     }
   }
 }
-
-export default RoomScreen

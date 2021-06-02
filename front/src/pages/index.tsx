@@ -18,7 +18,11 @@ const IndexRoomsPage: NextPage = () => {
 
   if (!rooms) return <div>スケルトン表示</div>
 
-  return <RoomList rooms={rooms} />
+  return (
+    <div>
+      <RoomList rooms={rooms} />
+    </div>
+  )
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {

@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
-import RoomScreenPainter from '@/utils/painter/roomScreen'
-import { UserManager } from '@/utils/painter/user'
+import { RoomScreenPainter, UserManager } from '@/utils/painter'
 import { ROOM_SIZE } from '@/constants'
 
 const mainLoop = (ctx: CanvasRenderingContext2D, userManager: UserManager) => {
@@ -33,8 +32,6 @@ const RoomScreen: React.FC<RoomScreenProps> = ({
     const clickHandler = (e: MouseEvent) => {
       const x = e.offsetX
       const y = e.offsetY
-
-      console.log({ x, y })
       handleMovePos(x, y)
     }
 

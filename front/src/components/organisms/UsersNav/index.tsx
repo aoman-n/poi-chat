@@ -1,18 +1,20 @@
 import React from 'react'
 import { useAuthContext } from '@/contexts/auth'
-import { useUsersContext } from '@/contexts/users'
+import { useGlobalUsers } from '@/hooks'
 import UsersNav from './presentation'
 import { useActedGlobalUserEventSubscription } from '@/graphql'
 
 const UsersNavContainer: React.FC = () => {
   const { currentUser, isAuthChecking } = useAuthContext()
-  const { onlineUsers, addOnlineUser, removeOnlineUser } = useUsersContext()
+  const { onlineUsers, addOnlineUser, removeOnlineUser } = useGlobalUsers()
 
   useActedGlobalUserEventSubscription({
     onSubscriptionComplete: () => {
       console.log('start subscribe global user events')
     },
     onSubscriptionData: ({ client, subscriptionData }) => {
+      console.log({ globalEventData: subscriptionData })
+
       if (!subscriptionData.data) return
       if (!subscriptionData.data.actedGlobalUserEvent) return
 

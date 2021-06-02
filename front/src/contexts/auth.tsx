@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useState } from 'react'
 import { CommonQuery } from '@/graphql'
+import { GlobalUser as CurrentUser } from '@/types/user'
 
-type CurrentUser = CommonQuery['me']
 type OnlineUser = CommonQuery['globalUsers'][0]
 
 type AuthContextValue = {

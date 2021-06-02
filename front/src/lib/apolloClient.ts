@@ -2,7 +2,7 @@ import { ApolloClient, HttpLink, InMemoryCache, split } from '@apollo/client'
 import { WebSocketLink } from '@apollo/client/link/ws'
 import { getMainDefinition } from '@apollo/client/utilities'
 
-function getLink() {
+const getLink = () => {
   let terminatingLink
   if (!process.browser) {
     const httpLink = new HttpLink({
@@ -42,8 +42,32 @@ function getLink() {
   return terminatingLink
 }
 
+const makeCache = () => {
+  let cache: InMemoryCache
+  if (process.browser) {
+    cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            isLoggedIn: {
+              read() {
+                return true
+              },
+            },
+          },
+        },
+      },
+    })
+  } else {
+    cache = new InMemoryCache()
+  }
+
+  return cache
+}
+
 export const apolloClient = new ApolloClient({
   link: getLink(),
-  cache: new InMemoryCache(),
+  cache: makeCache(),
   credentials: 'inclued',
+  connectToDevTools: true, // TODO: import environment
 })

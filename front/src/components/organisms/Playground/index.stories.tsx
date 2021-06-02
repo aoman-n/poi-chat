@@ -4,7 +4,7 @@ import { ROOM_SIZE } from '@/constants'
 import { mockMessages, mockUsers } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
 
-import { UserManager, User } from '@/utils/painter/user'
+import { UserManager, User } from '@/utils/painter'
 
 export const mockUserManager = new UserManager(
   mockUsers.map((u) => new User(u)),
@@ -24,7 +24,7 @@ const Template: Story<PlaygroundProps> = (args) => (
 export const Default = Template.bind({})
 Default.args = {
   messages: mockMessages,
-  handleSubmitMessage: (e: React.FormEvent<HTMLFormElement>) =>
-    e.preventDefault(),
-  userManager: mockUserManager,
+  // handleSubmitMessage: (e: React.FormEvent<HTMLFormElement>) =>
+  //   e.preventDefault(),
+  // userManager: mockUserManager,
 }
