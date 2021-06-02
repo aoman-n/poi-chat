@@ -108,6 +108,9 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 		return nil, errUnauthorized
 	}
 
+	ch := make(chan model.GlobalUserEvent)
+	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
+
 	newGlobalUser := &domain.GlobalUser{
 		UID:       currentUser.UID,
 		Name:      currentUser.Name,
@@ -116,9 +119,6 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	if err := r.globalUserRepo.Insert(ctx, newGlobalUser); err != nil {
 		return nil, err
 	}
-
-	ch := make(chan model.GlobalUserEvent)
-	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
 
 	go func() {
 		<-ctx.Done()
@@ -144,13 +144,13 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 
 	// TODO: roomの存在チェック
 
+	ch := make(chan model.RoomUserEvent)
+	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
+
 	newRoomUser := domain.NewDefaultRoomUser(domainRoomID, currentUser)
 	if err := r.roomUserRepo.Insert(ctx, newRoomUser); err != nil {
 		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
 	}
-
-	ch := make(chan model.RoomUserEvent)
-	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	go func() {
 		<-ctx.Done()

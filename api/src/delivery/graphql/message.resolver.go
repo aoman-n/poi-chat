@@ -21,7 +21,7 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 }
 
 func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (string, error) {
-	return encodeIDStr(userPrefix, obj.UserID), nil
+	return encodeIDStr(roomUserPrefix, obj.UserID), nil
 }
 
 func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.SendMassagePaylaod, error) {

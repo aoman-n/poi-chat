@@ -12,6 +12,7 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
+	"github.com/laster18/poi/api/src/util/acontext"
 )
 
 type RoomUserSubscriber struct {
@@ -31,16 +32,19 @@ func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserS
 }
 
 func (s *RoomUserSubscriber) start(ctx context.Context) {
+	logger := acontext.GetLogger(ctx)
+
 	// subscribeCh "roomUser:*"
 	subscribeCh := fmt.Sprintf("%s:%s:%s", redis.KeySpace, RoomUserChannel, "*")
 	pubsub := s.client.PSubscribe(ctx, subscribeCh)
 	defer pubsub.Close()
 
 	for {
+		logger.Debugf("on subscribe room user event, channel: %s \n", subscribeCh)
+
 		msg := <-pubsub.Channel()
 
-		// debug log
-		log.Printf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
+		logger.Debugf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
 		ch := removeKeyspacePrefix(msg.Channel)
 		roomID, userUID, err := DestructRoomUserKey(ch)
@@ -54,13 +58,13 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 			// TODO: repositoryへ移譲
 			roomUserJSON, err := s.client.Get(ctx, ch).Result()
 			if err != nil {
-				log.Println("failed to get from redis, err:", err)
+				logger.Infof("failed to get from redis, err: %v", err)
 				continue
 			}
 
 			var roomUser domain.RoomUser
 			if err := json.Unmarshal([]byte(roomUserJSON), &roomUser); err != nil {
-				log.Println("received unexpected json data struct from redis")
+				logger.Info("received unexpected json data struct from redis")
 				continue
 			}
 
@@ -89,6 +93,7 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	defer s.mutex.Unlock()
 
 	chs, ok := s.chans[roomID]
+
 	if !ok {
 		return
 	}

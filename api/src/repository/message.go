@@ -50,6 +50,10 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
+	for i := 0; i < len(messages)/2; i++ {
+		messages[i], messages[len(messages)-i-1] = messages[len(messages)-i-1], messages[i]
+	}
+
 	if len(messages) >= req.Limit {
 		return &domain.MessageListResp{
 			List:            messages[:req.Limit],
