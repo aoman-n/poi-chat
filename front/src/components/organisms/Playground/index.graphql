@@ -7,19 +7,31 @@ fragment Room on Query {
     users {
       ... RoomUserFields
     }
-    messages(last: 20) {
-      pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
-      }
-      nodes {
-        ... MessageFields
-      }
+    ... PageMessagesField
+  }
+}
+
+fragment PageMessagesField on Room {
+  messages(last: 10, before: $before) {
+    pageInfo {
+      startCursor
+      endCursor
+      hasNextPage
+      hasPreviousPage
+    }
+    nodes {
+      ... MessageFields
     }
   }
 }
+
+# messagesのfieldのみをmoreFetchでpaginationさせるためのQuery
+query OnlyMessages($roomId: ID!, $before: String) {
+  room(id: $roomId) {
+    id
+    ... PageMessagesField
+  }
+} 
 
 # -----------------------------------
 # mutations

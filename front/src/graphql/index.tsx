@@ -257,14 +257,26 @@ export type SubscriptionActedRoomUserEventArgs = {
 export type RoomFragment = { __typename?: 'Query' } & {
   room: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'> & {
       users: Array<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
-      messages: { __typename?: 'MessageConnection' } & {
-        pageInfo: { __typename?: 'PageInfo' } & Pick<
-          PageInfo,
-          'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
-        >
-        nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
-      }
-    }
+    } & PageMessagesFieldFragment
+}
+
+export type PageMessagesFieldFragment = { __typename?: 'Room' } & {
+  messages: { __typename?: 'MessageConnection' } & {
+    pageInfo: { __typename?: 'PageInfo' } & Pick<
+      PageInfo,
+      'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
+    >
+    nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
+  }
+}
+
+export type OnlyMessagesQueryVariables = Exact<{
+  roomId: Scalars['ID']
+  before?: Maybe<Scalars['String']>
+}>
+
+export type OnlyMessagesQuery = { __typename?: 'Query' } & {
+  room: { __typename?: 'Room' } & Pick<Room, 'id'> & PageMessagesFieldFragment
 }
 
 export type SendMessageMutationVariables = Exact<{
@@ -368,6 +380,7 @@ export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
 
 export type RoomPageQueryVariables = Exact<{
   roomId: Scalars['ID']
+  before?: Maybe<Scalars['String']>
 }>
 
 export type RoomPageQuery = { __typename?: 'Query' } & RoomFragment
@@ -395,6 +408,22 @@ export const RoomUserFieldsFragmentDoc = gql`
   }
   ${MessageFieldsFragmentDoc}
 `
+export const PageMessagesFieldFragmentDoc = gql`
+  fragment PageMessagesField on Room {
+    messages(last: 10, before: $before) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        ...MessageFields
+      }
+    }
+  }
+  ${MessageFieldsFragmentDoc}
+`
 export const RoomFragmentDoc = gql`
   fragment Room on Query {
     room(id: $roomId) {
@@ -403,21 +432,11 @@ export const RoomFragmentDoc = gql`
       users {
         ...RoomUserFields
       }
-      messages(last: 20) {
-        pageInfo {
-          startCursor
-          endCursor
-          hasNextPage
-          hasPreviousPage
-        }
-        nodes {
-          ...MessageFields
-        }
-      }
+      ...PageMessagesField
     }
   }
   ${RoomUserFieldsFragmentDoc}
-  ${MessageFieldsFragmentDoc}
+  ${PageMessagesFieldFragmentDoc}
 `
 export const RoomListFragmentDoc = gql`
   fragment RoomList on Query {
@@ -445,6 +464,67 @@ export const GlobalUserFieldsFragmentDoc = gql`
     avatarUrl
   }
 `
+export const OnlyMessagesDocument = gql`
+  query OnlyMessages($roomId: ID!, $before: String) {
+    room(id: $roomId) {
+      id
+      ...PageMessagesField
+    }
+  }
+  ${PageMessagesFieldFragmentDoc}
+`
+
+/**
+ * __useOnlyMessagesQuery__
+ *
+ * To run a query within a React component, call `useOnlyMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOnlyMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnlyMessagesQuery({
+ *   variables: {
+ *      roomId: // value for 'roomId'
+ *      before: // value for 'before'
+ *   },
+ * });
+ */
+export function useOnlyMessagesQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    OnlyMessagesQuery,
+    OnlyMessagesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<OnlyMessagesQuery, OnlyMessagesQueryVariables>(
+    OnlyMessagesDocument,
+    options,
+  )
+}
+export function useOnlyMessagesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    OnlyMessagesQuery,
+    OnlyMessagesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<OnlyMessagesQuery, OnlyMessagesQueryVariables>(
+    OnlyMessagesDocument,
+    options,
+  )
+}
+export type OnlyMessagesQueryHookResult = ReturnType<
+  typeof useOnlyMessagesQuery
+>
+export type OnlyMessagesLazyQueryHookResult = ReturnType<
+  typeof useOnlyMessagesLazyQuery
+>
+export type OnlyMessagesQueryResult = Apollo.QueryResult<
+  OnlyMessagesQuery,
+  OnlyMessagesQueryVariables
+>
 export const SendMessageDocument = gql`
   mutation SendMessage($roomId: ID!, $body: String!) {
     sendMessage(input: { roomID: $roomId, body: $body }) {
@@ -762,7 +842,7 @@ export type IndexPageQueryResult = Apollo.QueryResult<
   IndexPageQueryVariables
 >
 export const RoomPageDocument = gql`
-  query RoomPage($roomId: ID!) {
+  query RoomPage($roomId: ID!, $before: String) {
     ...Room
   }
   ${RoomFragmentDoc}
@@ -781,6 +861,7 @@ export const RoomPageDocument = gql`
  * const { data, loading, error } = useRoomPageQuery({
  *   variables: {
  *      roomId: // value for 'roomId'
+ *      before: // value for 'before'
  *   },
  * });
  */
