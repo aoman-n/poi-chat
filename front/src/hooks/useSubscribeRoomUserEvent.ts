@@ -18,6 +18,8 @@ export const useSubscribeRoomUserEvent = (
       console.log('start subscribe actedRoomUserEvent')
     },
     onSubscriptionData: ({ subscriptionData, client }) => {
+      console.log({ roomUserEvent: subscriptionData })
+
       if (!subscriptionData.data) return
 
       const { actedRoomUserEvent } = subscriptionData.data
@@ -60,7 +62,6 @@ export const useSubscribeRoomUserEvent = (
             query: RoomPageDocument,
             data: newPageQueryData,
           })
-
           break
         }
       }

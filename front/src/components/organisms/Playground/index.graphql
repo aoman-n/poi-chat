@@ -26,7 +26,7 @@ fragment PageMessagesField on Room {
 }
 
 # messagesのfieldのみをmoreFetchでpaginationさせるためのQuery
-query OnlyMessages($roomId: ID!, $before: String) {
+query MoreRoomMessages($roomId: ID!, $before: String) {
   room(id: $roomId) {
     id
     ... PageMessagesField

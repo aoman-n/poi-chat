@@ -8,12 +8,14 @@ type PlaygroundContainerProps = {
   roomId: string
   room: RoomFragment['room']
   userManager: UserManager
+  handleMoreMessage: () => void
 }
 
 const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   roomId,
   room,
   userManager,
+  handleMoreMessage,
 }) => {
   useSubscribeRoomUserEvent(roomId, userManager)
   const { handleMovePos } = useMove(roomId, userManager)
@@ -27,6 +29,7 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
         userManager: userManager,
         handleMovePos: handleMovePos,
       }}
+      handleMoreMessage={handleMoreMessage}
     />
   )
 }

@@ -60,15 +60,25 @@ const makeCache = () => {
           fields: {
             messages: {
               keyArgs: false,
-              merge(existing, incoming) {
+              merge(existing, incoming, { readField }) {
                 if (!incoming) return existing
                 if (!existing) return incoming
-
                 const { nodes, ...rest } = incoming
-                // We only need to merge the nodes array.
-                // The rest of the fields (pagination) should always be overwritten by incoming
+
                 const result = rest
-                result.nodes = [...nodes, ...existing.nodes]
+
+                const isWriteQuery =
+                  nodes[0] &&
+                  existing.nodes[0] &&
+                  readField('id', nodes[0]) ===
+                    readField('id', existing.nodes[0])
+
+                if (isWriteQuery) {
+                  result.nodes = [...existing.nodes, nodes[nodes.length - 1]]
+                } else {
+                  result.nodes = [...nodes, ...existing.nodes]
+                }
+
                 return result
               },
             },

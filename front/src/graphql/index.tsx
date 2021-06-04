@@ -270,12 +270,12 @@ export type PageMessagesFieldFragment = { __typename?: 'Room' } & {
   }
 }
 
-export type OnlyMessagesQueryVariables = Exact<{
+export type MoreRoomMessagesQueryVariables = Exact<{
   roomId: Scalars['ID']
   before?: Maybe<Scalars['String']>
 }>
 
-export type OnlyMessagesQuery = { __typename?: 'Query' } & {
+export type MoreRoomMessagesQuery = { __typename?: 'Query' } & {
   room: { __typename?: 'Room' } & Pick<Room, 'id'> & PageMessagesFieldFragment
 }
 
@@ -464,8 +464,8 @@ export const GlobalUserFieldsFragmentDoc = gql`
     avatarUrl
   }
 `
-export const OnlyMessagesDocument = gql`
-  query OnlyMessages($roomId: ID!, $before: String) {
+export const MoreRoomMessagesDocument = gql`
+  query MoreRoomMessages($roomId: ID!, $before: String) {
     room(id: $roomId) {
       id
       ...PageMessagesField
@@ -475,55 +475,55 @@ export const OnlyMessagesDocument = gql`
 `
 
 /**
- * __useOnlyMessagesQuery__
+ * __useMoreRoomMessagesQuery__
  *
- * To run a query within a React component, call `useOnlyMessagesQuery` and pass it any options that fit your needs.
- * When your component renders, `useOnlyMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useMoreRoomMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMoreRoomMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useOnlyMessagesQuery({
+ * const { data, loading, error } = useMoreRoomMessagesQuery({
  *   variables: {
  *      roomId: // value for 'roomId'
  *      before: // value for 'before'
  *   },
  * });
  */
-export function useOnlyMessagesQuery(
+export function useMoreRoomMessagesQuery(
   baseOptions: Apollo.QueryHookOptions<
-    OnlyMessagesQuery,
-    OnlyMessagesQueryVariables
+    MoreRoomMessagesQuery,
+    MoreRoomMessagesQueryVariables
   >,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<OnlyMessagesQuery, OnlyMessagesQueryVariables>(
-    OnlyMessagesDocument,
+  return Apollo.useQuery<MoreRoomMessagesQuery, MoreRoomMessagesQueryVariables>(
+    MoreRoomMessagesDocument,
     options,
   )
 }
-export function useOnlyMessagesLazyQuery(
+export function useMoreRoomMessagesLazyQuery(
   baseOptions?: Apollo.LazyQueryHookOptions<
-    OnlyMessagesQuery,
-    OnlyMessagesQueryVariables
+    MoreRoomMessagesQuery,
+    MoreRoomMessagesQueryVariables
   >,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<OnlyMessagesQuery, OnlyMessagesQueryVariables>(
-    OnlyMessagesDocument,
-    options,
-  )
+  return Apollo.useLazyQuery<
+    MoreRoomMessagesQuery,
+    MoreRoomMessagesQueryVariables
+  >(MoreRoomMessagesDocument, options)
 }
-export type OnlyMessagesQueryHookResult = ReturnType<
-  typeof useOnlyMessagesQuery
+export type MoreRoomMessagesQueryHookResult = ReturnType<
+  typeof useMoreRoomMessagesQuery
 >
-export type OnlyMessagesLazyQueryHookResult = ReturnType<
-  typeof useOnlyMessagesLazyQuery
+export type MoreRoomMessagesLazyQueryHookResult = ReturnType<
+  typeof useMoreRoomMessagesLazyQuery
 >
-export type OnlyMessagesQueryResult = Apollo.QueryResult<
-  OnlyMessagesQuery,
-  OnlyMessagesQueryVariables
+export type MoreRoomMessagesQueryResult = Apollo.QueryResult<
+  MoreRoomMessagesQuery,
+  MoreRoomMessagesQueryVariables
 >
 export const SendMessageDocument = gql`
   mutation SendMessage($roomId: ID!, $body: String!) {

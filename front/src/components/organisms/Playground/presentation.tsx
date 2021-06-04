@@ -7,12 +7,14 @@ export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
   handleSubmitMessage: (values: { body: string }) => void
   rooomScreenProps: RoomScreenProps
+  handleMoreMessage: () => void
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
   messages,
   handleSubmitMessage,
   rooomScreenProps,
+  handleMoreMessage,
 }) => {
   const [inputMesage, setInputMessage] = useState('')
   const { scrollAreaRef, endItemRef } = useScrollBottom(messages)
@@ -32,6 +34,9 @@ const Playground: React.FC<PlaygroundProps> = ({
 
   return (
     <div>
+      <div>
+        <button onClick={handleMoreMessage}>more</button>
+      </div>
       {/* RoomScreenは一旦決め打ちサイズで */}
       <RoomScreen {...rooomScreenProps} />
       <div className={['mt-6'].join(' ')}>

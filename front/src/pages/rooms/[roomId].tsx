@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { NextPage } from 'next'
 import { filter } from 'graphql-anywhere'
 import { useRequireLogin, useUserManager } from '@/hooks'
@@ -8,7 +8,7 @@ import {
   useRoomPageQuery,
   RoomFragment,
   RoomFragmentDoc,
-  OnlyMessagesDocument,
+  MoreRoomMessagesDocument,
 } from '@/graphql'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
@@ -19,34 +19,28 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   })
   const { userManager } = useUserManager(data?.room.users)
 
+  const handleMoreMessage = useCallback(() => {
+    fetchMore({
+      query: MoreRoomMessagesDocument,
+      variables: {
+        roomId,
+        before: data?.room.messages.pageInfo.startCursor,
+      },
+    })
+  }, [fetchMore, data, roomId])
+
   const room =
     (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
 
   if (!room || !userManager) return <div>スケルトン表示</div>
 
   return (
-    <div>
-      <div>
-        {room.messages.pageInfo.hasPreviousPage && (
-          <button
-            onClick={() => {
-              fetchMore({
-                query: OnlyMessagesDocument,
-                variables: {
-                  roomId,
-                  before: room.messages.pageInfo.startCursor,
-                },
-              })
-            }}
-          >
-            more
-          </button>
-        )}
-      </div>
-      <div>
-        <Playground room={room} roomId={roomId} userManager={userManager} />
-      </div>
-    </div>
+    <Playground
+      room={room}
+      roomId={roomId}
+      userManager={userManager}
+      handleMoreMessage={handleMoreMessage}
+    />
   )
 }
 
