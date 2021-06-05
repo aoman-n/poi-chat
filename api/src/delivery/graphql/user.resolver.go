@@ -30,12 +30,14 @@ func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, errUnauthorized)
+		return nil, nil
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
 	if err != nil {
-		return nil, aerrors.Wrap(err)
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
@@ -48,7 +50,8 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	roomUser.SetPosition(input.X, input.Y)
 
 	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+		return nil, nil
 	}
 
 	return toMovePayload(roomUser), nil
@@ -76,12 +79,14 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, errUnauthorized)
+		return nil, nil
 	}
 
 	users, err := r.globalUserRepo.GetAll(ctx)
 	if err != nil {
-		handleErr(ctx, err)
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	return toGlobalUsers(users), nil
@@ -92,7 +97,8 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 
 	users, err := r.roomUserRepo.GetByRoomID(ctx, roomID)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomUserRepo.GetByRoomID")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.GetByRoomID"))
+		return nil, nil
 	}
 
 	return toRoomUsers(users), nil
@@ -105,7 +111,8 @@ func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string,
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, errUnauthorized)
+		return nil, nil
 	}
 
 	ch := make(chan model.GlobalUserEvent)
@@ -117,7 +124,8 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 		AvatarURL: currentUser.AvatarURL,
 	}
 	if err := r.globalUserRepo.Insert(ctx, newGlobalUser); err != nil {
-		return nil, err
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	go func() {
@@ -131,15 +139,20 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 	return ch, nil
 }
 
-func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error) {
+func (r *subscriptionResolver) ActedRoomUserEvent(
+	ctx context.Context,
+	roomID string,
+) (<-chan model.RoomUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, errUnauthorized)
+		return nil, nil
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, roomID)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "roomId is invalid format")
+		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		return nil, nil
 	}
 
 	// TODO: roomの存在チェック
@@ -149,7 +162,8 @@ func (r *subscriptionResolver) ActedRoomUserEvent(ctx context.Context, roomID st
 
 	newRoomUser := domain.NewDefaultRoomUser(domainRoomID, currentUser)
 	if err := r.roomUserRepo.Insert(ctx, newRoomUser); err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+		return nil, nil
 	}
 
 	go func() {

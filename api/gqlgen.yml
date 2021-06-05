@@ -9,11 +9,11 @@ model:
   filename: graph/model/models_gen.go
   package: model
 
-resolver:
-  layout: follow-schema
-  dir: src/delivery/graphql
-  package: graphql
-  filename_template: "{name}.resolver.go"
+# resolver:
+#   layout: follow-schema
+#   dir: src/delivery/graphql
+#   package: graphql
+#   filename_template: "{name}.resolver.go"
 
 autobind:
   - "github.com/laster18/poi/api/graph/model"

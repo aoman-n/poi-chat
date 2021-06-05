@@ -15,29 +15,41 @@ import (
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
-func (r *mutationResolver) CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.CreateRoomPayload, error) {
+func (r *mutationResolver) CreateRoom(
+	ctx context.Context,
+	input *model.CreateRoomInput,
+) (*model.CreateRoomPayload, error) {
 	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomRepo.GetByName")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByName"))
+		return nil, nil
 	}
 	if dupRoom != nil {
 		msg := fmt.Sprintf("%q is already exists", input.Name)
-		return nil, aerrors.New(msg).Message(msg)
+		handleErr(ctx, aerrors.New(msg).Message(msg))
+		return nil, nil
 	}
 
 	newRoom := domain.NewRoom(input.Name, "#20b2aa")
 	if err := newRoom.Validate(); err != nil {
-		return nil, aerrors.Wrap(err)
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	if err := r.roomRepo.Create(ctx, newRoom); err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomRepo.Create")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.Create"))
+		return nil, nil
 	}
 
 	return toCreateRoomPayload(newRoom), nil
 }
 
-func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error) {
+func (r *queryResolver) Rooms(
+	ctx context.Context,
+	first *int,
+	after *string,
+	orderBy *model.RoomOrderField,
+) (*model.RoomConnection, error) {
 	roomListReq := &domain.RoomListReq{}
 
 	if first != nil {
@@ -47,7 +59,8 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 		// afterCursorのformatチェック
 		id, unix, err := decodeCursor(roomPrefix, after)
 		if err != nil {
-			return nil, aerrors.Wrap(err)
+			handleErr(ctx, aerrors.Wrap(err))
+			return nil, nil
 		}
 
 		roomListReq.LastKnownID = id
@@ -56,11 +69,13 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 
 	roomListResp, err := r.roomRepo.List(ctx, roomListReq)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomRepo.List")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.List"))
+		return nil, nil
 	}
 	totalCount, err := r.roomRepo.Count(ctx)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomRepo.Count")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.Count"))
+		return nil, nil
 	}
 
 	return toRoomConnection(after, roomListResp, totalCount), nil
@@ -69,7 +84,8 @@ func (r *queryResolver) Rooms(ctx context.Context, first *int, after *string, or
 func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
 	roomID, err := decodeID(roomPrefix, id)
 	if err != nil {
-		return nil, aerrors.Wrap(err)
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	room, err := r.roomRepo.GetByID(ctx, roomID)
@@ -91,13 +107,14 @@ func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) 
 func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, error) {
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
-		return 0, err
+		handleErr(ctx, aerrors.Wrap(err))
+		return 0, nil
 	}
 
 	count, err := acontext.GetRoomUserCountLoader(ctx).Load(id)
-
 	if err != nil {
-		return 0, aerrors.Wrap(err, "failed to roomUserCountLoader.Load")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserCountLoader.Load"))
+		return 0, nil
 	}
 
 	return count, nil

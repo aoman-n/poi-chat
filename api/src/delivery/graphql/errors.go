@@ -62,6 +62,7 @@ func handleErr(ctx context.Context, err error) {
 	e := aerrors.AsErrApp(err)
 	if e == nil {
 		// TODO: unexpected error handling
+		addErr(ctx, "server errror", codeInternal)
 		return
 	}
 
@@ -81,6 +82,8 @@ func handleErr(ctx context.Context, err error) {
 	default:
 		addErr(ctx, getInfoMsg(e), codeInternal)
 	}
+
+	return
 }
 
 var errInfoMsgMap = map[aerrors.Code]string{

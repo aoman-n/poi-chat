@@ -24,7 +24,10 @@ func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (strin
 	return encodeIDStr(roomUserPrefix, obj.UserID), nil
 }
 
-func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMessageInput) (*model.SendMassagePaylaod, error) {
+func (r *mutationResolver) SendMessage(
+	ctx context.Context,
+	input *model.SendMessageInput,
+) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		return nil, errUnauthorized
@@ -45,12 +48,14 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	}
 
 	if err := r.messageRepo.Create(ctx, msg); err != nil {
-		return nil, aerrors.Wrap(err, "failed to messageRepo.Create")
+		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Create"))
+		return nil, nil
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Get")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Get"))
+		return nil, nil
 	}
 	if roomUser == nil {
 		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
@@ -58,21 +63,29 @@ func (r *mutationResolver) SendMessage(ctx context.Context, input *model.SendMes
 	roomUser.SetMessage(msg)
 
 	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		return nil, aerrors.Wrap(err, "failed to roomUserRepo.Insert")
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+		return nil, nil
 	}
 
 	return toSendMessagePayload(msg), nil
 }
 
-func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error) {
+func (r *roomResolver) Messages(
+	ctx context.Context,
+	obj *model.Room,
+	last *int,
+	before *string,
+) (*model.MessageConnection, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, errUnauthorized)
+		return nil, nil
 	}
 
 	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
-		return nil, aerrors.Wrap(err)
+		handleErr(ctx, aerrors.Wrap(err))
+		return nil, nil
 	}
 
 	messageListReq := &domain.MessageListReq{
@@ -85,7 +98,8 @@ func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int,
 	if before != nil {
 		id, unix, err := decodeCursor(messagePrefix, before)
 		if err != nil {
-			return nil, aerrors.Wrap(err)
+			handleErr(ctx, aerrors.Wrap(err))
+			return nil, nil
 		}
 
 		messageListReq.LastKnownID = id
@@ -94,12 +108,14 @@ func (r *roomResolver) Messages(ctx context.Context, obj *model.Room, last *int,
 
 	messageListResp, err := r.messageRepo.List(ctx, messageListReq)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to messageRepo.List")
+		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.List"))
+		return nil, nil
 	}
 
 	totalCount, err := r.messageRepo.Count(ctx, roomID)
 	if err != nil {
-		return nil, aerrors.Wrap(err, "failed to messageRepo.Count")
+		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Count"))
+		return nil, nil
 	}
 
 	return toMessageConnection(before, messageListResp, totalCount), nil
