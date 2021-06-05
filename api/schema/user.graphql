@@ -1,9 +1,19 @@
 extend type Room {
+  """
+  ルーム内のユーザー一覧を取得
+  """
   users: [RoomUser!]!
 }
 
 extend type Query {
+  """
+  ログイン中のユーザーが自身の情報を取得
+  """
   me: Me!
+
+  """
+  本アプリケーションにオンラインしているユーザー一覧を取得
+  """
   globalUsers: [GlobalUser!]!
 }
 
@@ -12,9 +22,16 @@ extend type Mutation {
 }
 
 extend type Subscription {
-  # ここに接続することで、グローバルのオンライン状態を同時に管理する
+  """
+  ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
+  このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
+  """
   actedGlobalUserEvent: GlobalUserEvent!
-  # ここに接続することで、roomに入室している状態も管理する
+
+  """
+  ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
+  このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
+  """
   actedRoomUserEvent(roomId: ID!): RoomUserEvent!
 }
 
@@ -50,8 +67,9 @@ type GlobalUser {
   joined: Room
 }
 
-# -------------------------------
-# GlobalUserEvent
+"""
+ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ
+"""
 union GlobalUserEvent = OnlinedPayload | OfflinedPayload
 type OnlinedPayload {
   globalUser: GlobalUser!
@@ -60,8 +78,10 @@ type OfflinedPayload {
   userId: ID!
 }
 
-# -------------------------------
-# RoomUserEvent
+
+"""
+ルーム内のユーザーの行動を取得するためのイベントタイプ
+"""
 union RoomUserEvent = JoinedPayload | ExitedPayload | MovedPayload | SentMassagePayload
 type JoinedPayload {
   roomUser: RoomUser!

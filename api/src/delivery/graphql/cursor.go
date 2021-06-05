@@ -11,23 +11,22 @@ import (
 
 type Prefix string
 
-// TODO: ':'は定数に入れないようにする
 var (
-	roomPrefix       Prefix = "Room:"
-	messagePrefix    Prefix = "Message:"
-	userPrefix       Prefix = "User:"
-	roomUserPrefix   Prefix = "RoomUser:"
-	globalUserPrefix Prefix = "GlobalUser:"
+	roomPrefix       Prefix = "Room"
+	messagePrefix    Prefix = "Message"
+	userPrefix       Prefix = "User"
+	roomUserPrefix   Prefix = "RoomUser"
+	globalUserPrefix Prefix = "GlobalUser"
 )
 
 var (
 	// ex: "Room:<id>"
-	roomIDFormat    = fmt.Sprintf("%s%%s", roomPrefix)
-	messageIDFormat = fmt.Sprintf("%s%%s", messagePrefix)
-	userIDFormat    = fmt.Sprintf("%s%%s", userPrefix)
-	// ex: "Room:<id>:<unixTimestamp>"
-	roomCursorFormat    = fmt.Sprintf("%s%%s:%%s", roomPrefix)
-	messageCursorFormat = fmt.Sprintf("%s%%s:%%s", messagePrefix)
+	roomIDFormat    = fmt.Sprintf("%s:%%s", roomPrefix)
+	messageIDFormat = fmt.Sprintf("%s:%%s", messagePrefix)
+	userIDFormat    = fmt.Sprintf("%s:%%s", userPrefix)
+	// ex: "Message:<id>:<unixTimestamp>"
+	roomCursorFormat    = fmt.Sprintf("%s:%%s:%%s", roomPrefix)
+	messageCursorFormat = fmt.Sprintf("%s:%%s:%%s", messagePrefix)
 )
 
 func getCursors(nodes []domain.INode, prefix Prefix) (startCursor *string, endCursor *string) {
@@ -61,7 +60,7 @@ func getMessageCursors(messages []*domain.Message) (startCursor *string, endCurs
 }
 
 func encodeCursor(prefix Prefix, id, unix int) *string {
-	cursor := fmt.Sprintf(string(prefix)+"%d:%d", id, unix)
+	cursor := fmt.Sprintf("%s:%d:%d", string(prefix), id, unix)
 	return &cursor
 }
 
@@ -85,11 +84,11 @@ func decodeCursor(cursorPrefix Prefix, cursor *string) (objID int, objUnix int, 
 }
 
 func encodeID(prefix Prefix, id int) string {
-	return fmt.Sprintf(string(prefix)+"%d", id)
+	return fmt.Sprintf("%s:%d", string(prefix), id)
 }
 
 func encodeIDStr(prefix Prefix, idStr string) string {
-	return fmt.Sprintf(string(prefix)+"%s", idStr)
+	return fmt.Sprintf("%s:%s", string(prefix), idStr)
 }
 
 func decodeID(prefix Prefix, id string) (int, error) {

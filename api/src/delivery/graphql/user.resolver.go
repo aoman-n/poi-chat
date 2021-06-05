@@ -5,6 +5,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -21,6 +22,10 @@ func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPay
 
 func (r *globalUserResolver) ID(ctx context.Context, obj *model.GlobalUser) (string, error) {
 	return encodeIDStr(globalUserPrefix, obj.ID), nil
+}
+
+func (r *globalUserResolver) Joined(ctx context.Context, obj *model.GlobalUser) (*model.Room, error) {
+	panic(fmt.Errorf("not impelemented"))
 }
 
 func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
