@@ -47,6 +47,7 @@ type GlobalUser {
   id: ID!
   name: String!
   avatarUrl: String!
+  joined: Room
 }
 
 # -------------------------------

@@ -65,6 +65,7 @@ func toGlobalUsers(gs []*domain.GlobalUser) []*model.GlobalUser {
 			ID:        g.UID,
 			Name:      g.Name,
 			AvatarURL: g.AvatarURL,
+			Joined:    nil, // TODO: ちゃんと返す
 		}
 	}
 
