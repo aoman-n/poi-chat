@@ -9,6 +9,7 @@ type PlaygroundContainerProps = {
   room: RoomFragment['room']
   userManager: UserManager
   handleMoreMessage: () => void
+  moreLoading: boolean
 }
 
 const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
@@ -16,6 +17,7 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   room,
   userManager,
   handleMoreMessage,
+  moreLoading,
 }) => {
   useSubscribeRoomUserEvent(roomId, userManager)
   const { handleMovePos } = useMove(roomId, userManager)
@@ -24,12 +26,14 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   return (
     <Playground
       messages={room.messages.nodes}
+      hasMoreMessage={room.messages.pageInfo.hasPreviousPage}
       handleSubmitMessage={handleSubmitMessage}
       rooomScreenProps={{
         userManager: userManager,
         handleMovePos: handleMovePos,
       }}
       handleMoreMessage={handleMoreMessage}
+      moreLoading={moreLoading}
     />
   )
 }

@@ -1,6 +1,5 @@
-import { UserManager } from '@/utils/painter'
 import { produce } from 'immer'
-
+import { UserManager } from '@/utils/painter'
 import {
   RoomPageDocument,
   RoomPageQuery,

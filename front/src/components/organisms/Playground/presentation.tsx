@@ -1,23 +1,33 @@
 import React, { useCallback, useState } from 'react'
-import { useScrollBottom } from '@/hooks'
+import { Waypoint } from 'react-waypoint'
+import { useScrollBottom, usePrevScroll } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
 import { RoomFragment } from '@/graphql'
 
 export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
+  hasMoreMessage: boolean
   handleSubmitMessage: (values: { body: string }) => void
   rooomScreenProps: RoomScreenProps
   handleMoreMessage: () => void
+  moreLoading: boolean
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
   messages,
+  hasMoreMessage,
   handleSubmitMessage,
   rooomScreenProps,
   handleMoreMessage,
+  moreLoading,
 }) => {
   const [inputMesage, setInputMessage] = useState('')
-  const { scrollAreaRef, endItemRef } = useScrollBottom(messages)
+  const { scrollAreaRef, endItemRef, isBottom } = useScrollBottom(messages)
+  const { setOldScrollHeight } = usePrevScroll(
+    scrollAreaRef,
+    messages,
+    !isBottom,
+  )
 
   const wrappedHandleSubmitMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,6 +42,13 @@ const Playground: React.FC<PlaygroundProps> = ({
     setInputMessage(e.target.value)
   }, [])
 
+  const wrappedHandleMoreMessage = useCallback(() => {
+    if (scrollAreaRef.current) {
+      setOldScrollHeight(scrollAreaRef.current.scrollHeight)
+    }
+    handleMoreMessage()
+  }, [handleMoreMessage, setOldScrollHeight, scrollAreaRef])
+
   return (
     <div>
       <div>
@@ -39,6 +56,7 @@ const Playground: React.FC<PlaygroundProps> = ({
       </div>
       {/* RoomScreenは一旦決め打ちサイズで */}
       <RoomScreen {...rooomScreenProps} />
+
       <div className={['mt-6'].join(' ')}>
         <h4 className={['mb-1', 'text-gray-900'].join(' ')}>コメント欄</h4>
         <ul
@@ -50,11 +68,15 @@ const Playground: React.FC<PlaygroundProps> = ({
             'border-gray-300',
             'bg-white',
             'h-52',
-            'overflow-y-scroll',
+            'overflow-y-auto',
             'text-sm',
             'space-y-2',
           ].join(' ')}
         >
+          {hasMoreMessage && !moreLoading && (
+            <Waypoint onEnter={wrappedHandleMoreMessage} />
+          )}
+          {moreLoading && <div>Now Loading...</div>}
           {messages.map((message) => (
             <li key={message.id} className="m-0" ref={endItemRef}>
               <span className="text-gray-400 font-medium pr-1.5">

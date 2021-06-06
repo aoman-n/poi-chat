@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { NextPage } from 'next'
 import { filter } from 'graphql-anywhere'
 import { useRequireLogin, useUserManager } from '@/hooks'
@@ -14,19 +14,25 @@ import {
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
 
-  const { data, fetchMore } = useRoomPageQuery({
+  const [moreLoading, setMoreLoading] = useState(false)
+  const { data, fetchMore, loading, networkStatus } = useRoomPageQuery({
     variables: { roomId },
+    notifyOnNetworkStatusChange: true,
   })
   const { userManager } = useUserManager(data?.room.users)
 
-  const handleMoreMessage = useCallback(() => {
-    fetchMore({
+  console.log({ loading, networkStatus, moreLoading })
+
+  const handleMoreMessage = useCallback(async () => {
+    setMoreLoading(true)
+    await fetchMore({
       query: MoreRoomMessagesDocument,
       variables: {
         roomId,
         before: data?.room.messages.pageInfo.startCursor,
       },
     })
+    setMoreLoading(false)
   }, [fetchMore, data, roomId])
 
   const room =
@@ -40,6 +46,7 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
       roomId={roomId}
       userManager={userManager}
       handleMoreMessage={handleMoreMessage}
+      moreLoading={moreLoading}
     />
   )
 }
