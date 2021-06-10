@@ -12,7 +12,8 @@
     "slint:fix": "stylelint \"**/*.scss\" --fix",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "codegen": "graphql-codegen --config codegen.yml"
+    "codegen": "graphql-codegen --config codegen.yml",
+    "test": "jest"
   },
   "dependencies": {
     "@apollo/client": "3.3.15",
@@ -41,6 +42,7 @@
     "@storybook/react": "^6.1.21",
     "@tailwindcss/postcss7-compat": "2.0.4",
     "@types/croppie": "2.6.0",
+    "@types/jest": "26.0.23",
     "@types/node": "14.14.31",
     "@types/react": "17.0.2",
     "@typescript-eslint/eslint-plugin": "4.15.1",
@@ -53,6 +55,7 @@
     "eslint-plugin-prettier": "3.3.1",
     "eslint-plugin-react": "7.22.0",
     "eslint-plugin-react-hooks": "4.2.0",
+    "jest": "27.0.4",
     "postcss": "^7",
     "prettier": "2.2.1",
     "sass-loader": "10.1.1",
@@ -62,6 +65,7 @@
     "stylelint-order": "4.1.0",
     "stylelint-scss": "3.19.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "ts-jest": "27.0.3",
     "typescript": "4.1.5"
   }
 }
