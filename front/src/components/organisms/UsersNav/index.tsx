@@ -3,16 +3,14 @@ import { useAuthContext } from '@/contexts/auth'
 import { useGlobalUsers } from '@/hooks'
 import UsersNav from './presentation'
 import { useActedGlobalUserEventSubscription } from '@/graphql'
+import withAuthcheckRequired from '@/components/molecules/withAuthcheckRequired'
 
 const UsersNavContainer: React.FC = () => {
   const { currentUser, isAuthChecking } = useAuthContext()
   const { onlineUsers, addOnlineUser, removeOnlineUser } = useGlobalUsers()
 
   useActedGlobalUserEventSubscription({
-    onSubscriptionComplete: () => {
-      console.log('start subscribe global user events')
-    },
-    onSubscriptionData: ({ client, subscriptionData }) => {
+    onSubscriptionData: async ({ subscriptionData }) => {
       console.log({ globalEventData: subscriptionData })
 
       if (!subscriptionData.data) return
@@ -49,4 +47,6 @@ const UsersNavContainer: React.FC = () => {
   return <UsersNav {...props} />
 }
 
-export default UsersNavContainer
+export default withAuthcheckRequired(UsersNavContainer, () => (
+  <div>checking!!!</div>
+))

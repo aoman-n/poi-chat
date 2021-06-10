@@ -49,8 +49,10 @@ export type GlobalUser = {
   id: Scalars['ID']
   name: Scalars['String']
   avatarUrl: Scalars['String']
+  joined?: Maybe<Room>
 }
 
+/** ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ */
 export type GlobalUserEvent = OnlinedPayload | OfflinedPayload
 
 export type JoinedPayload = {
@@ -159,7 +161,9 @@ export type Query = {
   node?: Maybe<Node>
   rooms: RoomConnection
   room: Room
+  /** ログイン中のユーザーが自身の情報を取得 */
   me: Me
+  /** 本アプリケーションにオンラインしているユーザー一覧を取得 */
   globalUsers: Array<GlobalUser>
 }
 
@@ -186,6 +190,7 @@ export type Room = Node & {
   bgUrl: Scalars['String']
   createdAt: Scalars['Time']
   messages: MessageConnection
+  /** ルーム内のユーザー一覧を取得 */
   users: Array<RoomUser>
 }
 
@@ -223,6 +228,7 @@ export type RoomUser = {
   lastMessage?: Maybe<Message>
 }
 
+/** ルーム内のユーザーの行動を取得するためのイベントタイプ */
 export type RoomUserEvent =
   | JoinedPayload
   | ExitedPayload
@@ -246,7 +252,15 @@ export type SentMassagePayload = {
 
 export type Subscription = {
   __typename?: 'Subscription'
+  /**
+   * ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
+   * このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
+   */
   actedGlobalUserEvent: GlobalUserEvent
+  /**
+   * ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
+   * このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
+   */
   actedRoomUserEvent: RoomUserEvent
 }
 
@@ -348,10 +362,7 @@ export type RoomListFragment = { __typename?: 'Query' } & {
     }
 }
 
-export type CommonQueryVariables = Exact<{ [key: string]: never }>
-
-export type CommonQuery = { __typename?: 'Query' } & {
-  me: { __typename?: 'Me' } & Pick<Me, 'id' | 'name' | 'avatarUrl'>
+export type GlobalUserListFragment = { __typename?: 'Query' } & {
   globalUsers: Array<{ __typename?: 'GlobalUser' } & GlobalUserFieldsFragment>
 }
 
@@ -373,6 +384,12 @@ export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
   GlobalUser,
   'id' | 'name' | 'avatarUrl'
 >
+
+export type CommonQueryVariables = Exact<{ [key: string]: never }>
+
+export type CommonQuery = { __typename?: 'Query' } & {
+  me: { __typename?: 'Me' } & Pick<Me, 'id' | 'name' | 'avatarUrl'>
+} & GlobalUserListFragment
 
 export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
 
@@ -463,6 +480,14 @@ export const GlobalUserFieldsFragmentDoc = gql`
     name
     avatarUrl
   }
+`
+export const GlobalUserListFragmentDoc = gql`
+  fragment GlobalUserList on Query {
+    globalUsers {
+      ...GlobalUserFields
+    }
+  }
+  ${GlobalUserFieldsFragmentDoc}
 `
 export const MoreRoomMessagesDocument = gql`
   query MoreRoomMessages($roomId: ID!, $before: String) {
@@ -686,59 +711,6 @@ export type ActedRoomUserEventSubscriptionHookResult = ReturnType<
   typeof useActedRoomUserEventSubscription
 >
 export type ActedRoomUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedRoomUserEventSubscription>
-export const CommonDocument = gql`
-  query Common {
-    me {
-      id
-      name
-      avatarUrl
-    }
-    globalUsers {
-      ...GlobalUserFields
-    }
-  }
-  ${GlobalUserFieldsFragmentDoc}
-`
-
-/**
- * __useCommonQuery__
- *
- * To run a query within a React component, call `useCommonQuery` and pass it any options that fit your needs.
- * When your component renders, `useCommonQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useCommonQuery({
- *   variables: {
- *   },
- * });
- */
-export function useCommonQuery(
-  baseOptions?: Apollo.QueryHookOptions<CommonQuery, CommonQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<CommonQuery, CommonQueryVariables>(
-    CommonDocument,
-    options,
-  )
-}
-export function useCommonLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<CommonQuery, CommonQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<CommonQuery, CommonQueryVariables>(
-    CommonDocument,
-    options,
-  )
-}
-export type CommonQueryHookResult = ReturnType<typeof useCommonQuery>
-export type CommonLazyQueryHookResult = ReturnType<typeof useCommonLazyQuery>
-export type CommonQueryResult = Apollo.QueryResult<
-  CommonQuery,
-  CommonQueryVariables
->
 export const ActedGlobalUserEventDocument = gql`
   subscription actedGlobalUserEvent {
     actedGlobalUserEvent {
@@ -787,6 +759,57 @@ export type ActedGlobalUserEventSubscriptionHookResult = ReturnType<
   typeof useActedGlobalUserEventSubscription
 >
 export type ActedGlobalUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedGlobalUserEventSubscription>
+export const CommonDocument = gql`
+  query Common {
+    me {
+      id
+      name
+      avatarUrl
+    }
+    ...GlobalUserList
+  }
+  ${GlobalUserListFragmentDoc}
+`
+
+/**
+ * __useCommonQuery__
+ *
+ * To run a query within a React component, call `useCommonQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommonQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommonQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCommonQuery(
+  baseOptions?: Apollo.QueryHookOptions<CommonQuery, CommonQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CommonQuery, CommonQueryVariables>(
+    CommonDocument,
+    options,
+  )
+}
+export function useCommonLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CommonQuery, CommonQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CommonQuery, CommonQueryVariables>(
+    CommonDocument,
+    options,
+  )
+}
+export type CommonQueryHookResult = ReturnType<typeof useCommonQuery>
+export type CommonLazyQueryHookResult = ReturnType<typeof useCommonLazyQuery>
+export type CommonQueryResult = Apollo.QueryResult<
+  CommonQuery,
+  CommonQueryVariables
+>
 export const IndexPageDocument = gql`
   query IndexPage {
     ...RoomList

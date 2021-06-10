@@ -1,54 +1,8 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState } from 'react'
 import cn from 'classnames'
-import { useRouter } from 'next/router'
 import CropIcon from '@/components/organisms/CropIcon'
-import config from '@/config'
-
-const useInputImage = (defaultImageUrl = '') => {
-  const [imageUrl, setImageUrl] = useState(defaultImageUrl)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const handleChangeFile = useCallback(() => {
-    if (fileRef.current && fileRef.current.files) {
-      const { createObjectURL } = window.URL || window.webkitURL
-      const imageUrl = createObjectURL(fileRef.current.files[0])
-      setImageUrl(imageUrl)
-    }
-  }, [fileRef])
-
-  return { fileRef, handleChangeFile, imageUrl }
-}
-
-type LoginByGuestParams = {
-  name: string
-  image: Blob
-}
-
-const loginByGuest = async ({ name, image }: LoginByGuestParams) => {
-  const formData = new FormData()
-
-  formData.append('name', name)
-  formData.append('image', image)
-
-  try {
-    const res = await fetch(`${config.apiBaseUrl}/guest-login`, {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (res.status >= 500) {
-      alert('サーバーエラー')
-      return
-    } else if (res.status >= 400) {
-      const resData = await res.json()
-      alert('リクエストエラー:' + resData.message)
-      console.log('OK!')
-      return
-    }
-  } catch (err) {
-    console.log(err)
-  }
-}
+import { useInputImage } from '@/hooks'
+import { loginByGuest } from '@/utils/api'
 
 export type GuestLoginFormProps = {
   noop?: string
@@ -56,7 +10,7 @@ export type GuestLoginFormProps = {
 
 // TODO: リファクタリング/imageのupdateに再レンダリングが多く走っている
 const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
-  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [username, setUsername] = useState('名無しさん')
   const [imageBlob, setImageBlob] = useState<Blob | null>(null)
   const { fileRef, handleChangeFile, imageUrl } = useInputImage(
@@ -70,8 +24,15 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (imageBlob && username) {
-      await loginByGuest({ name: username, image: imageBlob })
-      router.push('/')
+      setIsSubmitting(true)
+      try {
+        await loginByGuest({ name: username, image: imageBlob })
+        window.location.href = '/'
+      } catch (err) {
+        setIsSubmitting(false)
+        console.log(err)
+        alert('error')
+      }
     }
   }
 
@@ -135,6 +96,7 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
           </div>
           <div className="my-6">
             <button
+              disabled={isSubmitting}
               type="submit"
               className={cn(
                 'py-4',
@@ -165,10 +127,6 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
       </div>
     </div>
   )
-}
-
-const GuestLoginFormContainer: React.FC = () => {
-  return <GuestLoginForm />
 }
 
 export default GuestLoginForm

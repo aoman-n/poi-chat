@@ -26,7 +26,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   const { setOldScrollHeight } = usePrevScroll(
     scrollAreaRef,
     messages,
-    !isBottom,
+    isBottom,
   )
 
   const wrappedHandleSubmitMessage = useCallback(

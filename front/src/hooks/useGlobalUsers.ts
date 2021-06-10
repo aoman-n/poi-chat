@@ -1,50 +1,28 @@
 import { useCallback } from 'react'
-import { useApolloClient } from '@apollo/client'
-
-import { CommonQuery, CommonDocument } from '@/graphql'
+import { useApolloClient, useReactiveVar } from '@apollo/client'
+import { globalUsersVar } from '@/lib/users'
 import { GlobalUser } from '@/types/user'
 
+// TODO: cacheを利用する方法を考えたい
 export const useGlobalUsers = () => {
-  const client = useApolloClient()
+  const users = useReactiveVar(globalUsersVar)
 
-  const data = client.readQuery<CommonQuery>({
-    query: CommonDocument,
-  })
+  const addOnlineUser = useCallback(
+    (user: GlobalUser) => {
+      globalUsersVar([...users, user])
+    },
+    [users],
+  )
 
-  const addOnlineUser = useCallback((user: GlobalUser) => {
-    const data = client.readQuery<CommonQuery>({
-      query: CommonDocument,
-    })
-
-    if (!data) return
-
-    client.writeQuery<CommonQuery>({
-      query: CommonDocument,
-      data: {
-        ...data,
-        globalUsers: data.globalUsers.concat(user),
-      },
-    })
-  }, [])
-
-  const removeOnlineUser = useCallback((id: string) => {
-    const data = client.readQuery<CommonQuery>({
-      query: CommonDocument,
-    })
-
-    if (!data) return
-
-    client.writeQuery<CommonQuery>({
-      query: CommonDocument,
-      data: {
-        ...data,
-        globalUsers: data.globalUsers.filter((u) => u.id !== id),
-      },
-    })
-  }, [])
+  const removeOnlineUser = useCallback(
+    (id: string) => {
+      globalUsersVar(users.filter((u) => u.id !== id))
+    },
+    [users],
+  )
 
   return {
-    onlineUsers: data?.globalUsers || [],
+    onlineUsers: users,
     addOnlineUser,
     removeOnlineUser,
   }

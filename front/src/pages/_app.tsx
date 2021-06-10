@@ -2,7 +2,8 @@ import React, { useEffect } from 'react'
 import { AppPageProps } from 'next'
 import Head from 'next/head'
 import { ApolloProvider } from '@apollo/client'
-import { apolloClient } from '@/lib/apolloClient'
+import { createApolloClient } from '@/lib/apolloClient'
+import { globalUsersVar } from '@/lib/users'
 import { TotalProvider } from '@/contexts'
 import { useAuthContext } from '@/contexts/auth'
 import Main from '@/components/templates/Main'
@@ -12,33 +13,35 @@ import '../styles/globals.css'
 
 import { useCommonQuery } from '@/graphql'
 
-const Noop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <>{children}</>
-)
-
 const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { setCurrentUser, setOnlineUsers } = useAuthContext()
+  const { setCurrentUser } = useAuthContext()
   const { data, error } = useCommonQuery()
 
   useEffect(() => {
     if (data) {
       setCurrentUser(data.me)
-      setOnlineUsers(data.globalUsers)
+      globalUsersVar(data.globalUsers)
     }
 
     if (error) {
       setCurrentUser(null)
     }
-  }, [data, error, setCurrentUser, setOnlineUsers])
+  }, [data, error, setCurrentUser])
 
-  // TODO: エラーコンポーネントを表示する？
+  // MEMO: unauthorizedの場合もここでerrorが入るので素通りさせる
   // if (error) return <div>error</div>
 
   return <>{children}</>
 }
 
+const Noop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <>{children}</>
+)
+
+// TODO:
+// main以外のLayoutではwebsocketでアクセスしないようにする
 function MyApp({ Component, pageProps }: AppPageProps) {
   const getLayout = () => {
     switch (pageProps.layout) {
@@ -61,7 +64,7 @@ function MyApp({ Component, pageProps }: AppPageProps) {
         <title>{pageProps.title} | poi-chat</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <ApolloProvider client={apolloClient}>
+      <ApolloProvider client={createApolloClient()}>
         <TotalProvider>
           <WithCurrentUser>
             <Layout>

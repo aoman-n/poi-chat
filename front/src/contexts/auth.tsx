@@ -1,27 +1,16 @@
-import React, { createContext, useCallback, useContext, useState } from 'react'
-import { CommonQuery } from '@/graphql'
+import React, { createContext, useContext, useState } from 'react'
 import { GlobalUser as CurrentUser } from '@/types/user'
-
-type OnlineUser = CommonQuery['globalUsers'][0]
 
 type AuthContextValue = {
   // undefined : まだログイン確認が完了していない状態とする
   // null      : ログイン確認をした結果、ログインしていなかった状態とする
   currentUser: undefined | null | CurrentUser
   setCurrentUser: (user: CurrentUser | null) => void
-  onlineUsers: OnlineUser[]
-  setOnlineUsers: (users: OnlineUser[]) => void
-  addOnlineUser: (user: OnlineUser) => void
-  removeOnlineUser: (id: string) => void
 }
 
 const defaultContextValue: AuthContextValue = {
   currentUser: undefined,
   setCurrentUser: () => {},
-  onlineUsers: [],
-  setOnlineUsers: () => {},
-  addOnlineUser: () => {},
-  removeOnlineUser: () => {},
 }
 
 export const AuthContext = createContext<AuthContextValue>(defaultContextValue)
@@ -53,28 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentUser, setCurrentUser] = useState<
     undefined | null | CurrentUser
   >(undefined)
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([])
-
-  const handleAddOnlineUser = useCallback((user: OnlineUser) => {
-    setOnlineUsers((prev) => ({
-      ...prev,
-      user,
-    }))
-  }, [])
-
-  const handleRemoveOnlineUser = useCallback((id: string) => {
-    setOnlineUsers((prev) => {
-      return prev.filter((u) => u.id !== id)
-    })
-  }, [])
 
   const values: AuthContextValue = {
     currentUser,
     setCurrentUser,
-    onlineUsers,
-    setOnlineUsers,
-    addOnlineUser: handleAddOnlineUser,
-    removeOnlineUser: handleRemoveOnlineUser,
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

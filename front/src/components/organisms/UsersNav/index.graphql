@@ -1,0 +1,25 @@
+fragment GlobalUserList on Query {
+  globalUsers {
+    ... GlobalUserFields
+  }
+}
+
+subscription actedGlobalUserEvent {
+  actedGlobalUserEvent {
+    __typename
+    ... on OnlinedPayload {
+      globalUser {
+        ... GlobalUserFields
+      }
+    }
+    ... on OfflinedPayload {
+      userId
+    }
+  }
+}
+
+fragment GlobalUserFields on GlobalUser {
+  id
+  name
+  avatarUrl
+}

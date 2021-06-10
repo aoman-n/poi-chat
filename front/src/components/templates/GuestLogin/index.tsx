@@ -10,7 +10,7 @@ const GuestLogin: React.FC<GuestLoginProps> = ({ children }) => {
     <div className="h-screen bg-gray-100 flex flex-col">
       <header className="bg-white h-16 border-b border-gray-200">
         <div className="max-w-screen-xl mx-auto h-full">
-          <Header isLoggedIn={false} />
+          <Header />
         </div>
       </header>
       <main className="pt-24 mx-auto">{children}</main>
