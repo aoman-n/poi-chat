@@ -4,6 +4,7 @@ import {
   HttpLink,
   InMemoryCache,
   split,
+  Reference,
 } from '@apollo/client'
 import { WebSocketLink } from '@apollo/client/link/ws'
 import { getMainDefinition } from '@apollo/client/utilities'
@@ -46,20 +47,29 @@ const makeCache = () => {
               if (!incoming) return existing
               if (!existing) return incoming
               const { nodes, ...rest } = incoming
-
               const result = rest
 
-              const isWriteQuery =
-                nodes[0] &&
-                existing.nodes[0] &&
-                readField('id', nodes[0]) === readField('id', existing.nodes[0])
+              const merged: Reference[] = [...nodes, ...existing.nodes]
+              const filteredDup: Reference[] = Array.from(
+                merged
+                  .reduce(
+                    (map, current) =>
+                      map.set(readField('id', current), current),
+                    new Map(),
+                  )
+                  .values(),
+              )
+              const sorted = filteredDup.sort((a, b) => {
+                const aId = readField('id', a)
+                const bId = readField('id', b)
 
-              if (isWriteQuery) {
-                result.nodes = [...existing.nodes, nodes[nodes.length - 1]]
-              } else {
-                result.nodes = [...nodes, ...existing.nodes]
-              }
+                if (typeof aId === 'string' && typeof bId === 'string') {
+                  if (aId > bId) return 1
+                }
+                return -1
+              })
 
+              result.nodes = sorted
               return result
             },
           },
