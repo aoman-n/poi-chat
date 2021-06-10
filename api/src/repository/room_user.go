@@ -71,7 +71,6 @@ func (r *RoomUserRepo) Delete(ctx context.Context, ru *domain.RoomUser) error {
 	}
 	if err := r.redisClient.SRem(
 		ctx,
-		roomUserKey,
 		r.makeRoomUserIndexKey(ru.RoomID),
 		roomUserKey,
 	).Err(); err != nil {

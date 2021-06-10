@@ -30,7 +30,7 @@ func (r *mutationResolver) SendMessage(
 ) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		return nil, aerrors.Wrap(errUnauthorized)
 	}
 
 	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
@@ -78,7 +78,7 @@ func (r *roomResolver) Messages(
 ) (*model.MessageConnection, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, errUnauthorized)
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
 		return nil, nil
 	}
 

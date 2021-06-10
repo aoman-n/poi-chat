@@ -18,10 +18,6 @@ func NewSingleValidationErr(fieldName, msg string) error {
 	}
 }
 
-type Validation interface {
-	ValidateStruct(structPtr interface{}, fields ...*validation.FieldRules) error
-}
-
 func (v *ErrValidation) Error() string {
 	return v.msg
 }

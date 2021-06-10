@@ -33,9 +33,8 @@ func Authorize() func(http.Handler) http.Handler {
 				return
 			}
 
-			// logger := acontext.GetLogger(r.Context())
-
-			// logger.Debugf("authenticated user is %+v\n", user)
+			logger := acontext.GetLogger(r.Context())
+			logger.Debugf("authenticated user is %+v\n", user)
 
 			newCtx := acontext.SetUser(r.Context(), &domain.GlobalUser{
 				UID:       user.ID,

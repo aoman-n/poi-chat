@@ -35,7 +35,7 @@ func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, errUnauthorized)
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
 		return nil, nil
 	}
 
@@ -69,7 +69,8 @@ func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.Offline
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, errUnauthorized
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		return nil, nil
 	}
 
 	me := &model.Me{
@@ -84,7 +85,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, errUnauthorized)
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
 		return nil, nil
 	}
 
@@ -115,8 +116,10 @@ func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string,
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
+	fmt.Println("currentUser:", currentUser)
+
 	if currentUser == nil {
-		handleErr(ctx, errUnauthorized)
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
 		return nil, nil
 	}
 
@@ -150,7 +153,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 ) (<-chan model.RoomUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, errUnauthorized)
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
 		return nil, nil
 	}
 

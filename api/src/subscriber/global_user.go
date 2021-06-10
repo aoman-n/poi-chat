@@ -3,12 +3,12 @@ package subscriber
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
+	"github.com/laster18/poi/api/src/util/acontext"
 )
 
 // GlobalUserSubscriber: ユーザーのオンライン/オフライン状態の更新イベントを管理
@@ -35,6 +35,8 @@ func NewGlobalUserSubscriber(
 }
 
 func (s *GlobalUserSubscriber) start(ctx context.Context) {
+	logger := acontext.GetLogger(ctx)
+
 	subscribeCh := fmt.Sprintf("%s:%s:%s", redis.KeySpace, GlobalUserChannel, "*")
 	pubsub := s.client.PSubscribe(ctx, subscribeCh)
 	defer pubsub.Close()
@@ -43,12 +45,12 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 		msg := <-pubsub.Channel()
 
 		// debug log
-		log.Printf("subscribe globalUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
+		logger.Debugf("subscribe globalUser, channel: %s, payload: %s", msg.Channel, msg.Payload)
 
 		ch := removeKeyspacePrefix(msg.Channel)
 		userUID, err := destructGlobalUserKey(ch)
 		if err != nil {
-			log.Println("received invalid channel key from redis, err:", err)
+			logger.Infof("received invalid channel key from redis, err: %v", err)
 			continue
 		}
 
@@ -57,11 +59,11 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 			// onlineになった
 			globalUser, err := s.globalUserRepo.Get(ctx, userUID)
 			if err != nil {
-				log.Println("failed to get globa user, err:", err)
+				logger.Infof("failed to get global user, err: %v", err)
 				continue
 			}
 			if globalUser == nil {
-				log.Printf("global user uid=%q is not found", userUID)
+				logger.Infof("global user uid=%q is not found", userUID)
 				continue
 			}
 
@@ -79,13 +81,13 @@ func (s *GlobalUserSubscriber) start(ctx context.Context) {
 			// offlineになった
 			err := s.globalUserRepo.Delete(ctx, userUID)
 			if err != nil {
-				log.Printf("failed to delete global user, err: %v", err)
+				logger.Infof("failed to delete global user, err: %v", err)
 			}
 			s.deliver(&model.OfflinedPayload{
 				UserID: userUID,
 			})
 		default:
-			fmt.Println("received unknown event:", msg.Payload)
+			logger.Infof("received unknown event: %s", msg.Payload)
 		}
 	}
 }

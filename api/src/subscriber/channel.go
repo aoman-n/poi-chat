@@ -32,7 +32,7 @@ func MakeGlobalUserKey(userUID string) string {
 }
 
 // globalUser:11111
-var globalUserChannelReg = regexp.MustCompile(GlobalUserChannel + `:([a-zA-Z\d]+)`)
+var globalUserChannelReg = regexp.MustCompile(GlobalUserChannel + `:([a-zA-Z\d-]+)`)
 
 func destructGlobalUserKey(key string) (userUID string, err error) {
 	matches := globalUserChannelReg.FindStringSubmatch(key)

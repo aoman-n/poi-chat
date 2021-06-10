@@ -95,7 +95,14 @@ func (s *UserSession) SetUser(u *User) {
 }
 
 func (s *UserSession) Save(r *http.Request, w http.ResponseWriter) error {
-	// TODO: add cookie options
+	// TODO: add domain option
+	s.sess.Options.HttpOnly = true
+	// s.sess.Options.SameSite = http.SameSiteStrictMode
+	s.sess.Options.SameSite = http.SameSiteLaxMode
+	s.sess.Options.Path = "/"
+	if config.IsProd() {
+		s.sess.Options.Secure = true
+	}
 	return s.sess.Save(r, w)
 }
 
