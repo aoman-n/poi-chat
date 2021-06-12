@@ -1,62 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
+import { useObserver } from './useObserver'
 
+/* eslint react-hooks/exhaustive-deps: 0 */
 export const useScrollBottom = (list: unknown[]) => {
-  const mounted = useRef<boolean>(false)
-  const scrollAreaRef = useRef<HTMLUListElement>(null)
-  const endItemRef = useRef<HTMLLIElement>(null)
-  const [isBottom, setIsBottom] = useState(true)
-  const [initialized, setInitialized] = useState(false)
+  const [isBottom, scrollBottomRef] = useObserver()
 
-  const onScroll = useCallback(() => {
-    if (scrollAreaRef && scrollAreaRef.current) {
-      setIsBottom(
-        scrollAreaRef.current.scrollHeight - scrollAreaRef.current.scrollTop <=
-          // bottom付近にスクロール位置があったらbottom判定したいので+numしている
-          scrollAreaRef.current.clientHeight + 10,
-      )
-    }
-  }, [scrollAreaRef, setIsBottom])
+  // 初回レンダリング時にスクロールバーを最下部に設定する
+  useLayoutEffect(() => {
+    scrollBottomRef?.current?.scrollIntoView()
+  }, [])
 
+  // 新規アイテムが追加されたら最下部へ自動スクロール
   useEffect(() => {
-    if (scrollAreaRef && scrollAreaRef.current) {
-      scrollAreaRef.current.addEventListener('scroll', onScroll)
-      const copyScrollAreaRef = scrollAreaRef
-      return () => {
-        copyScrollAreaRef &&
-          copyScrollAreaRef.current &&
-          copyScrollAreaRef.current.removeEventListener('scroll', onScroll)
-      }
-    }
-  }, [scrollAreaRef, onScroll])
-
-  const scrollBottom = useCallback(
-    (behavior: ScrollBehavior = 'smooth') => {
-      if (!(scrollAreaRef && scrollAreaRef.current)) return
-      if (!(endItemRef && endItemRef.current)) return
-
-      const bottomPos =
-        scrollAreaRef.current.scrollHeight - endItemRef.current.scrollHeight
-      scrollAreaRef.current.scroll({
-        top: bottomPos,
-        behavior,
-      })
-    },
-    [scrollAreaRef, endItemRef],
-  )
-
-  /* eslint react-hooks/exhaustive-deps: 0 */
-  useEffect(() => {
-    if (!mounted.current) {
-      scrollBottom('auto')
-      mounted.current = true
-      setInitialized(true)
-      return
-    }
-
     if (isBottom) {
-      scrollBottom()
+      scrollBottomRef?.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [list.length, scrollBottom])
+  }, [list.length])
 
-  return { scrollAreaRef, endItemRef, isBottom, initialized }
+  return { scrollBottomRef }
 }

@@ -40,10 +40,16 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
         </a>
       </Link>
       <div className="ml-auto">
-        {isLoggedIn && (
+        {isLoggedIn ? (
           <Link href={`${config.apiBaseUrl}/logout`}>
             <a className="font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
               ログアウト
+            </a>
+          </Link>
+        ) : (
+          <Link href="/login">
+            <a className="font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
+              ログイン
             </a>
           </Link>
         )}

@@ -1,6 +1,5 @@
-import React, { useCallback, useState } from 'react'
-import { Waypoint } from 'react-waypoint'
-import { useScrollBottom, usePrevScroll } from '@/hooks'
+import React, { useCallback, useState, forwardRef } from 'react'
+import { useScrollBottom, useReverseFetchMore } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
 import { RoomFragment } from '@/graphql'
 
@@ -21,13 +20,13 @@ const Playground: React.FC<PlaygroundProps> = ({
   handleMoreMessage,
   moreLoading,
 }) => {
-  const [inputMesage, setInputMessage] = useState('')
-  const { scrollAreaRef, endItemRef, isBottom } = useScrollBottom(messages)
-  const { setOldScrollHeight } = usePrevScroll(
-    scrollAreaRef,
+  const { scrollBottomRef } = useScrollBottom(messages)
+  const { scrollTopRef, prevFirstItem, firstItemRef } = useReverseFetchMore(
     messages,
-    isBottom,
+    handleMoreMessage,
+    !moreLoading && hasMoreMessage,
   )
+  const [inputMesage, setInputMessage] = useState('')
 
   const wrappedHandleSubmitMessage = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,25 +41,14 @@ const Playground: React.FC<PlaygroundProps> = ({
     setInputMessage(e.target.value)
   }, [])
 
-  const wrappedHandleMoreMessage = useCallback(() => {
-    if (scrollAreaRef.current) {
-      setOldScrollHeight(scrollAreaRef.current.scrollHeight)
-    }
-    handleMoreMessage()
-  }, [handleMoreMessage, setOldScrollHeight, scrollAreaRef])
-
   return (
     <div>
-      <div>
-        <button onClick={handleMoreMessage}>more</button>
-      </div>
       {/* RoomScreenは一旦決め打ちサイズで */}
       <RoomScreen {...rooomScreenProps} />
 
       <div className={['mt-6'].join(' ')}>
         <h4 className={['mb-1', 'text-gray-900'].join(' ')}>コメント欄</h4>
         <ul
-          ref={scrollAreaRef}
           className={[
             'py-4',
             'px-4',
@@ -73,18 +61,22 @@ const Playground: React.FC<PlaygroundProps> = ({
             'space-y-2',
           ].join(' ')}
         >
-          {hasMoreMessage && !moreLoading && (
-            <Waypoint onEnter={wrappedHandleMoreMessage} />
-          )}
+          <div ref={scrollTopRef} />
           {moreLoading && <div>Now Loading...</div>}
-          {messages.map((message) => (
-            <li key={message.id} className="m-0" ref={endItemRef}>
-              <span className="text-gray-400 font-medium pr-1.5">
-                {message.userName}:
-              </span>
-              <span>{message.body}</span>
-            </li>
-          ))}
+          {messages.map((message) => {
+            if (prevFirstItem && prevFirstItem.id === message.id) {
+              return (
+                <Message
+                  key={message.id}
+                  message={message}
+                  ref={firstItemRef}
+                />
+              )
+            } else {
+              return <Message key={message.id} message={message} />
+            }
+          })}
+          <div ref={scrollBottomRef} />
         </ul>
       </div>
       <form
@@ -107,5 +99,20 @@ const Playground: React.FC<PlaygroundProps> = ({
     </div>
   )
 }
+
+type MessageProps = {
+  message: RoomFragment['room']['messages']['nodes'][0]
+}
+
+const Message = forwardRef<HTMLLIElement, MessageProps>(({ message }, ref) => {
+  return (
+    <li className="m-0" ref={ref}>
+      <span className="text-gray-400 font-medium pr-1.5">
+        {message.userName}:
+      </span>
+      <span>{message.body}</span>
+    </li>
+  )
+})
 
 export default Playground
