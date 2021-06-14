@@ -9,6 +9,11 @@ module.exports = {
     "@storybook/addon-links",
     "@storybook/addon-essentials"
   ],
+  // @see: https://github.com/storybookjs/storybook/issues/15067#issuecomment-851959296
+  // solution for typescript v4.3.2
+  "typescript": {
+    "reactDocgen": "none"
+  },
   "webpackFinal": async (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, '../src')
 

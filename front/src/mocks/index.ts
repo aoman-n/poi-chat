@@ -1,29 +1,62 @@
-import { UserInfo } from '@/utils/painter'
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
-import { Message } from '@/components/organisms/Playground/presentation'
+import { PlaygroundProps } from '@/components/organisms/Playground/presentation'
+import { RoomFragment } from '@/graphql'
 
-export const mockUsers: UserInfo[] = [
+export const mockUser = {
+  id: '1',
+  avatarUrl:
+    'https://pbs.twimg.com/profile_images/1130684542732230656/pW77OgPS_400x400.png',
+}
+
+export const mockUsers: RoomFragment['room']['users'] = [
   {
     id: '1',
+    name: 'ユーザー1',
     avatarUrl:
       'https://pbs.twimg.com/profile_images/685155144363737088/wJtJ2OlA_400x400.jpg',
-    currentX: 60,
-    currentY: 60,
+    x: 60,
+    y: 60,
+    lastMessage: {
+      id: '1',
+      userId: '1',
+      userName: '名無しさん',
+      userAvatarUrl: '',
+      body: 'こんにちは',
+      createdAt: '2020-09-07T15:31:07Z',
+    },
   },
   {
     id: '2',
+    name: 'ユーザー2',
     avatarUrl:
       'https://pbs.twimg.com/profile_images/1130684542732230656/pW77OgPS_400x400.png',
-    currentX: 100,
-    currentY: 100,
+    x: 300,
+    y: 300,
+    lastMessage: {
+      id: '2',
+      userId: '2',
+      userName: 'はるまきくん',
+      userAvatarUrl: '',
+      body: 'こんにちは2',
+      createdAt: '2020-09-07T15:31:07Z',
+    },
   },
   {
     id: '3',
+    name: 'ユーザー3',
     avatarUrl:
       'https://avatars.githubusercontent.com/u/16658556?s=400&u=d90077a02b620f83ac0876cfe0b15bd696c415ec&v=4',
-    currentX: 200,
-    currentY: 70,
+    x: 500,
+    y: 200,
+    lastMessage: {
+      id: '3',
+      userId: '3',
+      userName: 'からあげさん',
+      userAvatarUrl: '',
+      body: 'こんにちは3',
+      createdAt: '2020-09-07T15:31:07Z',
+    },
   },
 ]
 
@@ -81,7 +114,7 @@ export const mockRooms: Room[] = [
   },
 ]
 
-export const mockMessages: Message[] = [
+export const mockMessages: PlaygroundProps['messages'] = [
   {
     id: '1',
     userName: '名無しさん',

@@ -17,5 +17,6 @@ export const Default = Template.bind({})
 Default.args = {
   name: 'sample name',
   avatarUrl:
-    'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+    'https://pbs.twimg.com/profile_images/1130684542732230656/pW77OgPS_400x400.png',
+  // 'https://pbs.twimg.com/profile_images/1443747894/a_400x400.jpg',
 }

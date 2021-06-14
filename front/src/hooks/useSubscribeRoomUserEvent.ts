@@ -38,8 +38,12 @@ export const useSubscribeRoomUserEvent = (
           break
         }
         case 'SentMassagePayload': {
-          const { lastMessage } = actedRoomUserEvent.roomUser
+          const {
+            roomUser: { lastMessage, id },
+          } = actedRoomUserEvent
           if (!lastMessage) return
+
+          userManager.updateMessage(id, lastMessage.body)
 
           const pageQueryData = client.readQuery<
             RoomPageQuery,

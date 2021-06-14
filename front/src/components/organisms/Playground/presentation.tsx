@@ -2,6 +2,7 @@ import React, { useCallback, useState, forwardRef } from 'react'
 import { useScrollBottom, useReverseFetchMore } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
 import { RoomFragment } from '@/graphql'
+import { BalloonPosition, BALLOON_POSITIONS } from '@/utils/painter'
 
 export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
@@ -10,6 +11,7 @@ export type PlaygroundProps = {
   rooomScreenProps: RoomScreenProps
   handleMoreMessage: () => void
   moreLoading: boolean
+  handleChangeBalloonPos: (pos: BalloonPosition) => void
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
@@ -19,6 +21,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   rooomScreenProps,
   handleMoreMessage,
   moreLoading,
+  handleChangeBalloonPos,
 }) => {
   const { scrollBottomRef } = useScrollBottom(messages)
   const { scrollTopRef, prevFirstItem, firstItemRef } = useReverseFetchMore(
@@ -43,9 +46,34 @@ const Playground: React.FC<PlaygroundProps> = ({
 
   return (
     <div>
-      {/* RoomScreenは一旦決め打ちサイズで */}
+      {/* アバタースクリーン。一旦決め打ちサイズで */}
       <RoomScreen {...rooomScreenProps} />
 
+      {/* セッティングパネル */}
+      <div>
+        <button
+          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.TOP_LEFT)}
+        >
+          左上
+        </button>
+        <button
+          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.TOP_RIGHT)}
+        >
+          右上
+        </button>
+        <button
+          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.BOTTOM_LEFT)}
+        >
+          左下
+        </button>
+        <button
+          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.BOTTOM_RIGHT)}
+        >
+          右下
+        </button>
+      </div>
+
+      {/* コメント欄 */}
       <div className={['mt-6'].join(' ')}>
         <h4 className={['mb-1', 'text-gray-900'].join(' ')}>コメント欄</h4>
         <ul

@@ -25,6 +25,7 @@ const RoomScreen: React.FC<RoomScreenProps> = ({
 }) => {
   /* eslint react-hooks/exhaustive-deps: 0 */
   useEffect(() => {
+    // TODO: refを使う
     const canvas = document.getElementById('canvas') as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     mainLoop(ctx, userManager)

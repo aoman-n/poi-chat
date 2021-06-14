@@ -3,7 +3,6 @@ import { AppPageProps } from 'next'
 import Head from 'next/head'
 import { ApolloProvider } from '@apollo/client'
 import { createApolloClient } from '@/lib/apolloClient'
-import { globalUsersVar } from '@/lib/users'
 import { TotalProvider } from '@/contexts'
 import { useAuthContext } from '@/contexts/auth'
 import Main from '@/components/templates/Main'
@@ -22,7 +21,6 @@ const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (data) {
       setCurrentUser(data.me)
-      globalUsersVar(data.globalUsers)
     }
 
     if (error) {

@@ -6,9 +6,7 @@ import Playground, { PlaygroundProps } from './presentation'
 
 import { UserManager, User } from '@/utils/painter'
 
-export const mockUserManager = new UserManager(
-  mockUsers.map((u) => new User(u)),
-)
+const mockUserManager = new UserManager(mockUsers)
 
 export default {
   title: 'organisms/Playground',
@@ -24,7 +22,11 @@ const Template: Story<PlaygroundProps> = (args) => (
 export const Default = Template.bind({})
 Default.args = {
   messages: mockMessages,
-  // handleSubmitMessage: (e: React.FormEvent<HTMLFormElement>) =>
-  //   e.preventDefault(),
-  // userManager: mockUserManager,
+  hasMoreMessage: false,
+  rooomScreenProps: {
+    userManager: mockUserManager,
+    handleMovePos: () => {},
+  },
+  handleMoreMessage: () => {},
+  moreLoading: false,
 }
