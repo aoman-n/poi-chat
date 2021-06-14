@@ -6,5 +6,8 @@
   },
   "tailwindCSS.includeLanguages": {
     "plaintext": "javascript"
-  }
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["classnames\\(([^)]*)\\)", "'([^']*)'"]
+  ]
 }
