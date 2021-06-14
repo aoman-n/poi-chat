@@ -185,6 +185,94 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	return ch, nil
 }
 
+func (r *Resolver) RemoveLastMessage(
+	ctx context.Context,
+	input model.RemoveLastMessageInput,
+) (*model.RemoveLastMessagePayload, error) {
+	logger := acontext.GetLogger(ctx)
+
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		return nil, nil
+	}
+
+	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	if err != nil {
+		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		return nil, nil
+	}
+
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
+	if err != nil {
+		logger.Infof("failed to get roomUser err: %v", err)
+	}
+	if roomUser == nil {
+		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
+	}
+	roomUser.LastMessage = nil
+	roomUser.LastEvent = domain.RemoveLastMessageEvent
+
+	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+		return nil, nil
+	}
+
+	return toRemoveLastMessagePayload(roomUser), nil
+}
+
+func (r *Resolver) ChangeBalloonPosition(
+	ctx context.Context,
+	input model.ChangeBalloonPositionInput,
+) (*model.ChangeBalloonPositionPayload, error) {
+	logger := acontext.GetLogger(ctx)
+
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
+		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		return nil, nil
+	}
+
+	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	if err != nil {
+		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		return nil, nil
+	}
+
+	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
+	if err != nil {
+		logger.Infof("failed to get roomUser err: %v", err)
+	}
+	if roomUser == nil {
+		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
+	}
+	roomUser.LastEvent = domain.ChangeBalloonPositionEvent
+
+	var domainBalloonPos domain.BalloonPosition
+	switch input.BalloonPosition {
+	case model.BalloonPositionTopRight:
+		domainBalloonPos = domain.TopRight
+	case model.BalloonPositionTopLeft:
+		domainBalloonPos = domain.TopLeft
+	case model.BalloonPositionBottomRight:
+		domainBalloonPos = domain.BottomRight
+	case model.BalloonPositionBottomLeft:
+		domainBalloonPos = domain.BottomLeft
+	default:
+		m := fmt.Sprintf("%s is unknown balloon position", string(input.BalloonPosition))
+		handleErr(ctx, aerrors.New(m).SetCode(aerrors.CodeBadParams).Message(m))
+	}
+
+	roomUser.BalloonPosition = domainBalloonPos
+
+	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
+		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+		return nil, nil
+	}
+
+	return toChangeBalloonPositionPayload(roomUser), nil
+}
+
 // ExitedPayload returns generated.ExitedPayloadResolver implementation.
 func (r *Resolver) ExitedPayload() generated.ExitedPayloadResolver { return &exitedPayloadResolver{r} }
 

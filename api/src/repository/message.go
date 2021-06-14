@@ -54,9 +54,9 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 		messages[i], messages[len(messages)-i-1] = messages[len(messages)-i-1], messages[i]
 	}
 
-	if len(messages) >= req.Limit {
+	if len(messages) > req.Limit {
 		return &domain.MessageListResp{
-			List:            messages[:req.Limit],
+			List:            messages[1:],
 			HasPreviousPage: true,
 		}, nil
 	}

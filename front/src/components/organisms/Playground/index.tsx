@@ -1,7 +1,12 @@
-import React from 'react'
-import { UserManager, BalloonPosition } from '@/utils/painter'
+import React, { useCallback } from 'react'
+import { UserManager } from '@/utils/painter'
 import Playground from './presentation'
-import { RoomFragment } from '@/graphql'
+import {
+  RoomFragment,
+  useRemoveBalloonMutation,
+  useChangeBalloonPositionMutation,
+  BalloonPosition,
+} from '@/graphql'
 import { useSubscribeRoomUserEvent, useSendMessage, useMove } from '@/hooks'
 import { useCurrentUser } from '@/contexts/auth'
 
@@ -13,22 +18,41 @@ type PlaygroundContainerProps = {
   moreLoading: boolean
 }
 
-const useBalloonPos = (userManager: UserManager) => {
+const useChangeBalloonPos = (userManager: UserManager, roomId: string) => {
   const { currentUser } = useCurrentUser()
+  const [changeBalloonPos] = useChangeBalloonPositionMutation()
 
-  const handleChangeBalloonPos = (pos: BalloonPosition) => {
+  const handleChangeBalloonPos = (balloonPosition: BalloonPosition) => {
     if (currentUser) {
-      console.log({ currentUser, pos })
+      // TODO: 自身の情報はここで更新するようにする
       // TODO: globalUserとroomUserのidを同じにする
       // roomStatus/onlineStatusで管理する
       // 一旦はidを変換
-      const ids = currentUser.id.split(':')
+      // const ids = currentUser.id.split(':')
+      // userManager.chanageBalloonPos('RoomUser:' + ids[1], pos)
 
-      userManager.chanageBalloonPos('RoomUser:' + ids[1], pos)
+      changeBalloonPos({
+        variables: {
+          roomId,
+          balloonPosition,
+        },
+      })
     }
   }
 
   return { handleChangeBalloonPos }
+}
+
+const useRemoveBalloon = (roomId: string) => {
+  const [removeBalloon] = useRemoveBalloonMutation()
+
+  const handleRemoveBalloon = useCallback(() => {
+    removeBalloon({
+      variables: { roomId },
+    })
+  }, [removeBalloon, roomId])
+
+  return { handleRemoveBalloon }
 }
 
 const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
@@ -41,7 +65,8 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   useSubscribeRoomUserEvent(roomId, userManager)
   const { handleMovePos } = useMove(roomId, userManager)
   const { handleSubmitMessage } = useSendMessage(roomId)
-  const { handleChangeBalloonPos } = useBalloonPos(userManager)
+  const { handleChangeBalloonPos } = useChangeBalloonPos(userManager, roomId)
+  const { handleRemoveBalloon } = useRemoveBalloon(roomId)
 
   return (
     <Playground
@@ -55,6 +80,7 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
       handleMoreMessage={handleMoreMessage}
       moreLoading={moreLoading}
       handleChangeBalloonPos={handleChangeBalloonPos}
+      handleRemoveBalloon={handleRemoveBalloon}
     />
   )
 }

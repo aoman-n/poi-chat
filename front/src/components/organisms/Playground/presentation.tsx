@@ -1,8 +1,7 @@
 import React, { useCallback, useState, forwardRef } from 'react'
 import { useScrollBottom, useReverseFetchMore } from '@/hooks'
 import RoomScreen, { RoomScreenProps } from '@/components/organisms/RoomScreen'
-import { RoomFragment } from '@/graphql'
-import { BalloonPosition, BALLOON_POSITIONS } from '@/utils/painter'
+import { RoomFragment, BalloonPosition } from '@/graphql'
 
 export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
@@ -12,6 +11,7 @@ export type PlaygroundProps = {
   handleMoreMessage: () => void
   moreLoading: boolean
   handleChangeBalloonPos: (pos: BalloonPosition) => void
+  handleRemoveBalloon: () => void
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
@@ -22,6 +22,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   handleMoreMessage,
   moreLoading,
   handleChangeBalloonPos,
+  handleRemoveBalloon,
 }) => {
   const { scrollBottomRef } = useScrollBottom(messages)
   const { scrollTopRef, prevFirstItem, firstItemRef } = useReverseFetchMore(
@@ -50,27 +51,48 @@ const Playground: React.FC<PlaygroundProps> = ({
       <RoomScreen {...rooomScreenProps} />
 
       {/* セッティングパネル */}
-      <div>
-        <button
-          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.TOP_LEFT)}
-        >
-          左上
-        </button>
-        <button
-          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.TOP_RIGHT)}
-        >
-          右上
-        </button>
-        <button
-          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.BOTTOM_LEFT)}
-        >
-          左下
-        </button>
-        <button
-          onClick={() => handleChangeBalloonPos(BALLOON_POSITIONS.BOTTOM_RIGHT)}
-        >
-          右下
-        </button>
+      <div className="pt-4 flex">
+        <div>
+          <h4 className="mb-2">吹き出し位置変更</h4>
+          <div className="space-x-4 pb-4">
+            <button
+              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              onClick={() => handleChangeBalloonPos(BalloonPosition.TopLeft)}
+            >
+              ↖左上
+            </button>
+            <button
+              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              onClick={() => handleChangeBalloonPos(BalloonPosition.TopRight)}
+            >
+              右上↗
+            </button>
+          </div>
+          <div className="space-x-4">
+            <button
+              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              onClick={() => handleChangeBalloonPos(BalloonPosition.BottomLeft)}
+            >
+              ↙左下
+            </button>
+            <button
+              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              onClick={() =>
+                handleChangeBalloonPos(BalloonPosition.BottomRight)
+              }
+            >
+              右下↘
+            </button>
+          </div>
+        </div>
+        <div className="ml-auto">
+          <button
+            className="duration-75 bg-red-500 text-white py-2 px-6 rounded hover:bg-red-600"
+            onClick={handleRemoveBalloon}
+          >
+            吹き出しを消す
+          </button>
+        </div>
       </div>
 
       {/* コメント欄 */}

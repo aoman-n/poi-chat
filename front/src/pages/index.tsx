@@ -11,7 +11,7 @@ import {
 import RoomList from '@/components/organisms/RoomList'
 
 const IndexRoomsPage: NextPage = () => {
-  const { data } = useIndexPageQuery()
+  const { data } = useIndexPageQuery({ fetchPolicy: 'network-only' })
 
   const rooms =
     data && filter<RoomListFragment>(RoomListFragmentDoc, data).rooms.nodes

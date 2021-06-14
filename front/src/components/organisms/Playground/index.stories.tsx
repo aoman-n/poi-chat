@@ -3,8 +3,7 @@ import { Story, Meta } from '@storybook/react'
 import { ROOM_SIZE } from '@/constants'
 import { mockMessages, mockUsers } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
-
-import { UserManager, User } from '@/utils/painter'
+import { UserManager } from '@/utils/painter'
 
 const mockUserManager = new UserManager(mockUsers)
 
@@ -29,4 +28,5 @@ Default.args = {
   },
   handleMoreMessage: () => {},
   moreLoading: false,
+  handleRemoveBalloon: () => {},
 }

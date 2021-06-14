@@ -19,6 +19,28 @@ export type Scalars = {
   Time: string
 }
 
+export enum BalloonPosition {
+  TopLeft = 'TOP_LEFT',
+  TopRight = 'TOP_RIGHT',
+  BottomLeft = 'BOTTOM_LEFT',
+  BottomRight = 'BOTTOM_RIGHT',
+}
+
+export type ChangeBalloonPositionInput = {
+  roomId: Scalars['ID']
+  balloonPosition: BalloonPosition
+}
+
+export type ChangeBalloonPositionPayload = {
+  __typename?: 'ChangeBalloonPositionPayload'
+  roomUser?: Maybe<RoomUser>
+}
+
+export type ChangedBalloonPositionPayload = {
+  __typename?: 'ChangedBalloonPositionPayload'
+  roomUser: RoomUser
+}
+
 export type Connection = {
   pageInfo: PageInfo
   edges: Array<Maybe<Edge>>
@@ -112,7 +134,12 @@ export type Mutation = {
   __typename?: 'Mutation'
   sendMessage: SendMassagePaylaod
   createRoom: CreateRoomPayload
+  /** ルーム内ユーザーのポジション移動 */
   move: MovePayload
+  /** ルーム内ユーザーの吹き出し削除 */
+  removeLastMessage: RemoveLastMessagePayload
+  /** ルーム内ユーザーの吹き出し位置変更 */
+  changeBalloonPosition: ChangeBalloonPositionPayload
 }
 
 export type MutationSendMessageArgs = {
@@ -125,6 +152,14 @@ export type MutationCreateRoomArgs = {
 
 export type MutationMoveArgs = {
   input: MoveInput
+}
+
+export type MutationRemoveLastMessageArgs = {
+  input: RemoveLastMessageInput
+}
+
+export type MutationChangeBalloonPositionArgs = {
+  input: ChangeBalloonPositionInput
 }
 
 export type Node = {
@@ -181,6 +216,20 @@ export type QueryRoomArgs = {
   id: Scalars['ID']
 }
 
+export type RemoveLastMessageInput = {
+  roomId: Scalars['ID']
+}
+
+export type RemoveLastMessagePayload = {
+  __typename?: 'RemoveLastMessagePayload'
+  roomUser?: Maybe<RoomUser>
+}
+
+export type RemovedLastMessagePayload = {
+  __typename?: 'RemovedLastMessagePayload'
+  roomUser: RoomUser
+}
+
 export type Room = Node & {
   __typename?: 'Room'
   id: Scalars['ID']
@@ -226,6 +275,7 @@ export type RoomUser = {
   x: Scalars['Int']
   y: Scalars['Int']
   lastMessage?: Maybe<Message>
+  balloonPosition: BalloonPosition
 }
 
 /** ルーム内のユーザーの行動を取得するためのイベントタイプ */
@@ -234,6 +284,8 @@ export type RoomUserEvent =
   | ExitedPayload
   | MovedPayload
   | SentMassagePayload
+  | RemovedLastMessagePayload
+  | ChangedBalloonPositionPayload
 
 export type SendMassagePaylaod = {
   __typename?: 'SendMassagePaylaod'
@@ -256,12 +308,12 @@ export type Subscription = {
    * ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
    * このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
    */
-  actedGlobalUserEvent: GlobalUserEvent
+  actedGlobalUserEvent?: Maybe<GlobalUserEvent>
   /**
    * ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
    * このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
    */
-  actedRoomUserEvent: RoomUserEvent
+  actedRoomUserEvent?: Maybe<RoomUserEvent>
 }
 
 export type SubscriptionActedRoomUserEventArgs = {
@@ -316,12 +368,33 @@ export type MoveMutation = { __typename?: 'Mutation' } & {
   }
 }
 
+export type RemoveBalloonMutationVariables = Exact<{
+  roomId: Scalars['ID']
+}>
+
+export type RemoveBalloonMutation = { __typename?: 'Mutation' } & {
+  removeLastMessage: { __typename?: 'RemoveLastMessagePayload' } & {
+    roomUser?: Maybe<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
+  }
+}
+
+export type ChangeBalloonPositionMutationVariables = Exact<{
+  roomId: Scalars['ID']
+  balloonPosition: BalloonPosition
+}>
+
+export type ChangeBalloonPositionMutation = { __typename?: 'Mutation' } & {
+  changeBalloonPosition: { __typename?: 'ChangeBalloonPositionPayload' } & {
+    roomUser?: Maybe<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
+  }
+}
+
 export type ActedRoomUserEventSubscriptionVariables = Exact<{
   roomId: Scalars['ID']
 }>
 
 export type ActedRoomUserEventSubscription = { __typename?: 'Subscription' } & {
-  actedRoomUserEvent:
+  actedRoomUserEvent?: Maybe<
     | ({ __typename: 'JoinedPayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
@@ -332,6 +405,13 @@ export type ActedRoomUserEventSubscription = { __typename?: 'Subscription' } & {
     | ({ __typename: 'SentMassagePayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
+    | ({ __typename: 'RemovedLastMessagePayload' } & {
+        roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
+      })
+    | ({ __typename: 'ChangedBalloonPositionPayload' } & {
+        roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
+      })
+  >
 }
 
 export type MessageFieldsFragment = { __typename?: 'Message' } & Pick<
@@ -341,7 +421,7 @@ export type MessageFieldsFragment = { __typename?: 'Message' } & Pick<
 
 export type RoomUserFieldsFragment = { __typename?: 'RoomUser' } & Pick<
   RoomUser,
-  'id' | 'name' | 'avatarUrl' | 'x' | 'y'
+  'id' | 'name' | 'avatarUrl' | 'x' | 'y' | 'balloonPosition'
 > & { lastMessage?: Maybe<{ __typename?: 'Message' } & MessageFieldsFragment> }
 
 export type RoomListFragment = { __typename?: 'Query' } & {
@@ -373,11 +453,12 @@ export type ActedGlobalUserEventSubscriptionVariables = Exact<{
 export type ActedGlobalUserEventSubscription = {
   __typename?: 'Subscription'
 } & {
-  actedGlobalUserEvent:
+  actedGlobalUserEvent?: Maybe<
     | ({ __typename: 'OnlinedPayload' } & {
         globalUser: { __typename?: 'GlobalUser' } & GlobalUserFieldsFragment
       })
     | ({ __typename: 'OfflinedPayload' } & Pick<OfflinedPayload, 'userId'>)
+  >
 }
 
 export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
@@ -422,6 +503,7 @@ export const RoomUserFieldsFragmentDoc = gql`
     lastMessage {
       ...MessageFields
     }
+    balloonPosition
   }
   ${MessageFieldsFragmentDoc}
 `
@@ -652,6 +734,116 @@ export type MoveMutationOptions = Apollo.BaseMutationOptions<
   MoveMutation,
   MoveMutationVariables
 >
+export const RemoveBalloonDocument = gql`
+  mutation RemoveBalloon($roomId: ID!) {
+    removeLastMessage(input: { roomId: $roomId }) {
+      roomUser {
+        ...RoomUserFields
+      }
+    }
+  }
+  ${RoomUserFieldsFragmentDoc}
+`
+export type RemoveBalloonMutationFn = Apollo.MutationFunction<
+  RemoveBalloonMutation,
+  RemoveBalloonMutationVariables
+>
+
+/**
+ * __useRemoveBalloonMutation__
+ *
+ * To run a mutation, you first call `useRemoveBalloonMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveBalloonMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeBalloonMutation, { data, loading, error }] = useRemoveBalloonMutation({
+ *   variables: {
+ *      roomId: // value for 'roomId'
+ *   },
+ * });
+ */
+export function useRemoveBalloonMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveBalloonMutation,
+    RemoveBalloonMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<
+    RemoveBalloonMutation,
+    RemoveBalloonMutationVariables
+  >(RemoveBalloonDocument, options)
+}
+export type RemoveBalloonMutationHookResult = ReturnType<
+  typeof useRemoveBalloonMutation
+>
+export type RemoveBalloonMutationResult = Apollo.MutationResult<RemoveBalloonMutation>
+export type RemoveBalloonMutationOptions = Apollo.BaseMutationOptions<
+  RemoveBalloonMutation,
+  RemoveBalloonMutationVariables
+>
+export const ChangeBalloonPositionDocument = gql`
+  mutation ChangeBalloonPosition(
+    $roomId: ID!
+    $balloonPosition: BalloonPosition!
+  ) {
+    changeBalloonPosition(
+      input: { roomId: $roomId, balloonPosition: $balloonPosition }
+    ) {
+      roomUser {
+        ...RoomUserFields
+      }
+    }
+  }
+  ${RoomUserFieldsFragmentDoc}
+`
+export type ChangeBalloonPositionMutationFn = Apollo.MutationFunction<
+  ChangeBalloonPositionMutation,
+  ChangeBalloonPositionMutationVariables
+>
+
+/**
+ * __useChangeBalloonPositionMutation__
+ *
+ * To run a mutation, you first call `useChangeBalloonPositionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useChangeBalloonPositionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [changeBalloonPositionMutation, { data, loading, error }] = useChangeBalloonPositionMutation({
+ *   variables: {
+ *      roomId: // value for 'roomId'
+ *      balloonPosition: // value for 'balloonPosition'
+ *   },
+ * });
+ */
+export function useChangeBalloonPositionMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ChangeBalloonPositionMutation,
+    ChangeBalloonPositionMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<
+    ChangeBalloonPositionMutation,
+    ChangeBalloonPositionMutationVariables
+  >(ChangeBalloonPositionDocument, options)
+}
+export type ChangeBalloonPositionMutationHookResult = ReturnType<
+  typeof useChangeBalloonPositionMutation
+>
+export type ChangeBalloonPositionMutationResult = Apollo.MutationResult<ChangeBalloonPositionMutation>
+export type ChangeBalloonPositionMutationOptions = Apollo.BaseMutationOptions<
+  ChangeBalloonPositionMutation,
+  ChangeBalloonPositionMutationVariables
+>
 export const ActedRoomUserEventDocument = gql`
   subscription actedRoomUserEvent($roomId: ID!) {
     actedRoomUserEvent(roomId: $roomId) {
@@ -670,6 +862,16 @@ export const ActedRoomUserEventDocument = gql`
         }
       }
       ... on SentMassagePayload {
+        roomUser {
+          ...RoomUserFields
+        }
+      }
+      ... on RemovedLastMessagePayload {
+        roomUser {
+          ...RoomUserFields
+        }
+      }
+      ... on ChangedBalloonPositionPayload {
         roomUser {
           ...RoomUserFields
         }

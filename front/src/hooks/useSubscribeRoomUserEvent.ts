@@ -1,10 +1,11 @@
 import { produce } from 'immer'
-import { UserManager } from '@/utils/painter'
+import { UserManager, BALLOON_POSITIONS } from '@/utils/painter'
 import {
   RoomPageDocument,
   RoomPageQuery,
   RoomPageQueryVariables,
   useActedRoomUserEventSubscription,
+  BalloonPosition as GraphBalloonPosition,
 } from '@/graphql'
 
 export const useSubscribeRoomUserEvent = (
@@ -13,14 +14,11 @@ export const useSubscribeRoomUserEvent = (
 ) => {
   useActedRoomUserEventSubscription({
     variables: { roomId },
-    onSubscriptionComplete: () => {
-      console.log('start subscribe actedRoomUserEvent')
-    },
     onSubscriptionData: ({ subscriptionData, client }) => {
       console.log({ roomUserEvent: subscriptionData })
 
-      if (!subscriptionData.data) return
-
+      if (!subscriptionData.data || !subscriptionData.data.actedRoomUserEvent)
+        return
       const { actedRoomUserEvent } = subscriptionData.data
 
       switch (actedRoomUserEvent.__typename) {
@@ -67,7 +65,35 @@ export const useSubscribeRoomUserEvent = (
           })
           break
         }
+        case 'RemovedLastMessagePayload': {
+          const { roomUser } = actedRoomUserEvent
+          userManager.updateMessage(roomUser.id, '')
+          break
+        }
+        case 'ChangedBalloonPositionPayload': {
+          const { roomUser } = actedRoomUserEvent
+          userManager.chanageBalloonPos(
+            roomUser.id,
+            convertBalloonPos(roomUser.balloonPosition),
+          )
+          break
+        }
       }
     },
   })
+}
+
+const convertBalloonPos = (graphPosision: GraphBalloonPosition) => {
+  switch (graphPosision) {
+    case GraphBalloonPosition.TopRight:
+      return BALLOON_POSITIONS.TOP_RIGHT
+    case GraphBalloonPosition.TopLeft:
+      return BALLOON_POSITIONS.TOP_LEFT
+    case GraphBalloonPosition.BottomRight:
+      return BALLOON_POSITIONS.BOTTOM_RIGHT
+    case GraphBalloonPosition.BottomLeft:
+      return BALLOON_POSITIONS.BOTTOM_LEFT
+    default:
+      return BALLOON_POSITIONS.TOP_RIGHT
+  }
 }

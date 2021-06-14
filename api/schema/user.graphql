@@ -18,7 +18,20 @@ extend type Query {
 }
 
 extend type Mutation {
+  """
+  ルーム内ユーザーのポジション移動
+  """
   move(input: MoveInput!): MovePayload!
+
+  """
+  ルーム内ユーザーの吹き出し削除
+  """
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload!
+
+  """
+  ルーム内ユーザーの吹き出し位置変更
+  """
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload!
 }
 
 extend type Subscription {
@@ -26,19 +39,36 @@ extend type Subscription {
   ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
   このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
   """
-  actedGlobalUserEvent: GlobalUserEvent!
+  actedGlobalUserEvent: GlobalUserEvent
 
   """
   ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
   このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
   """
-  actedRoomUserEvent(roomId: ID!): RoomUserEvent!
+  actedRoomUserEvent(roomId: ID!): RoomUserEvent
 }
 
 input MoveInput {
   roomId: ID!
   x: Int!
   y: Int!
+}
+
+input RemoveLastMessageInput {
+  roomId: ID!
+}
+
+type RemoveLastMessagePayload {
+  roomUser: RoomUser
+}
+
+input ChangeBalloonPositionInput {
+  roomId: ID!
+  balloonPosition: BalloonPosition!
+}
+
+type ChangeBalloonPositionPayload {
+  roomUser: RoomUser
 }
 
 type MovePayload {
@@ -58,6 +88,14 @@ type RoomUser {
   x: Int!
   y: Int!
   lastMessage: Message
+  balloonPosition: BalloonPosition!
+}
+
+enum BalloonPosition {
+  TOP_LEFT
+  TOP_RIGHT
+  BOTTOM_LEFT
+  BOTTOM_RIGHT
 }
 
 type GlobalUser {
@@ -82,7 +120,14 @@ type OfflinedPayload {
 """
 ルーム内のユーザーの行動を取得するためのイベントタイプ
 """
-union RoomUserEvent = JoinedPayload | ExitedPayload | MovedPayload | SentMassagePayload
+union RoomUserEvent =
+  JoinedPayload |
+  ExitedPayload |
+  MovedPayload |
+  SentMassagePayload |
+  RemovedLastMessagePayload |
+  ChangedBalloonPositionPayload
+
 type JoinedPayload {
   roomUser: RoomUser!
 }
@@ -93,5 +138,11 @@ type MovedPayload {
   roomUser: RoomUser!
 }
 type SentMassagePayload {
+  roomUser: RoomUser!
+}
+type RemovedLastMessagePayload {
+  roomUser: RoomUser!
+}
+type ChangedBalloonPositionPayload {
   roomUser: RoomUser!
 }

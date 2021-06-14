@@ -58,6 +58,25 @@ mutation Move($roomId: ID!, $x: Int!, $y: Int!) {
   }
 }
 
+mutation RemoveBalloon($roomId: ID!) {
+  removeLastMessage(input: { roomId: $roomId }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
+mutation ChangeBalloonPosition($roomId: ID!, $balloonPosition: BalloonPosition!) {
+  changeBalloonPosition(input: {
+    roomId: $roomId,
+    balloonPosition: $balloonPosition
+  }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
 # -----------------------------------
 # subscriptions
 subscription actedRoomUserEvent($roomId: ID!) {
@@ -77,7 +96,17 @@ subscription actedRoomUserEvent($roomId: ID!) {
       }
     }
     ... on SentMassagePayload {
-       roomUser {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on RemovedLastMessagePayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on ChangedBalloonPositionPayload {
+      roomUser {
         ... RoomUserFields
       }
     }
@@ -104,4 +133,5 @@ fragment RoomUserFields on RoomUser {
   lastMessage {
     ... MessageFields
   }
+  balloonPosition
 }

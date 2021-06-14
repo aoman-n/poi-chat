@@ -26,6 +26,18 @@ func toMovePayload(ru *domain.RoomUser) *model.MovePayload {
 	}
 }
 
+func toRemoveLastMessagePayload(ru *domain.RoomUser) *model.RemoveLastMessagePayload {
+	return &model.RemoveLastMessagePayload{
+		RoomUser: toRoomUser(ru),
+	}
+}
+
+func toChangeBalloonPositionPayload(ru *domain.RoomUser) *model.ChangeBalloonPositionPayload {
+	return &model.ChangeBalloonPositionPayload{
+		RoomUser: toRoomUser(ru),
+	}
+}
+
 func toRoomUser(ru *domain.RoomUser) *model.RoomUser {
 	return &model.RoomUser{
 		ID:          ru.UID,
@@ -76,11 +88,12 @@ func toRoomUsers(rus []*domain.RoomUser) []*model.RoomUser {
 	roomUsers := make([]*model.RoomUser, len(rus))
 	for i, r := range rus {
 		roomUser := &model.RoomUser{
-			ID:        r.UID,
-			Name:      r.Name,
-			AvatarURL: r.AvatarURL,
-			X:         r.X,
-			Y:         r.Y,
+			ID:              r.UID,
+			Name:            r.Name,
+			AvatarURL:       r.AvatarURL,
+			X:               r.X,
+			Y:               r.Y,
+			BalloonPosition: convertBalloonPosition(r.BalloonPosition),
 		}
 		if r.LastMessage != nil {
 			roomUser.LastMessage = &model.Message{
@@ -170,5 +183,20 @@ func toRoomConnection(after *string, resp *domain.RoomListResp, total int) *mode
 		Nodes:     nodes,
 		Edges:     edges,
 		RoomCount: total,
+	}
+}
+
+func convertBalloonPosition(p domain.BalloonPosition) model.BalloonPosition {
+	switch p {
+	case domain.TopRight:
+		return model.BalloonPositionTopRight
+	case domain.TopLeft:
+		return model.BalloonPositionTopLeft
+	case domain.BottomRight:
+		return model.BalloonPositionBottomRight
+	case domain.BottomLeft:
+		return model.BalloonPositionBottomLeft
+	default:
+		return model.BalloonPositionTopRight
 	}
 }

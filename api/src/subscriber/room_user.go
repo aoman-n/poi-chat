@@ -68,7 +68,7 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 				continue
 			}
 
-			d, err := s.makeDataFromSet(&roomUser, roomID, userUID)
+			d, err := s.makePublishDataFromSetEvent(&roomUser, roomID, userUID)
 			if err != nil {
 				log.Println(err)
 			}
@@ -124,7 +124,7 @@ func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
 	delete(userChannels, userUID)
 }
 
-func (s *RoomUserSubscriber) makeDataFromSet(
+func (s *RoomUserSubscriber) makePublishDataFromSetEvent(
 	ru *domain.RoomUser,
 	roomID int,
 	userUID string,
@@ -150,7 +150,7 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 				Y:         ru.Y,
 			},
 		}, nil
-	case domain.MessageEvent:
+	case domain.AddMessageEvent:
 		if ru.LastMessage == nil {
 			return nil, errors.New("not found roomUser.LastMessage")
 		}
@@ -172,7 +172,54 @@ func (s *RoomUserSubscriber) makeDataFromSet(
 				},
 			},
 		}, nil
+	case domain.RemoveLastMessageEvent:
+		return &model.RemovedLastMessagePayload{
+			RoomUser: &model.RoomUser{
+				ID:              userUID,
+				Name:            ru.Name,
+				AvatarURL:       ru.AvatarURL,
+				X:               ru.X,
+				Y:               ru.Y,
+				LastMessage:     nil,
+				BalloonPosition: convertBalloonPosition(ru.BalloonPosition),
+			},
+		}, nil
+	case domain.ChangeBalloonPositionEvent:
+		return &model.ChangedBalloonPositionPayload{
+			RoomUser: &model.RoomUser{
+				ID:        userUID,
+				Name:      ru.Name,
+				AvatarURL: ru.AvatarURL,
+				X:         ru.X,
+				Y:         ru.Y,
+				LastMessage: &model.Message{
+					ID:            strconv.Itoa(ru.LastMessage.ID),
+					UserID:        ru.LastMessage.UserUID,
+					UserName:      ru.LastMessage.UserName,
+					UserAvatarURL: ru.LastMessage.UserAvatarURL,
+					Body:          ru.LastMessage.Body,
+					CreatedAt:     ru.LastMessage.CreatedAt,
+				},
+				BalloonPosition: convertBalloonPosition(ru.BalloonPosition),
+			},
+		}, nil
 	default:
 		return nil, errors.New("getted unknown roomUser event")
+	}
+}
+
+// TODO: 削除
+func convertBalloonPosition(p domain.BalloonPosition) model.BalloonPosition {
+	switch p {
+	case domain.TopRight:
+		return model.BalloonPositionTopRight
+	case domain.TopLeft:
+		return model.BalloonPositionTopLeft
+	case domain.BottomRight:
+		return model.BalloonPositionBottomRight
+	case domain.BottomLeft:
+		return model.BalloonPositionBottomLeft
+	default:
+		return model.BalloonPositionTopRight
 	}
 }
