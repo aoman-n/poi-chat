@@ -56,13 +56,13 @@ const Playground: React.FC<PlaygroundProps> = ({
           <h4 className="mb-2">吹き出し位置変更</h4>
           <div className="space-x-4 pb-4">
             <button
-              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              className="outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
               onClick={() => handleChangeBalloonPos(BalloonPosition.TopLeft)}
             >
               ↖左上
             </button>
             <button
-              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
               onClick={() => handleChangeBalloonPos(BalloonPosition.TopRight)}
             >
               右上↗
@@ -70,13 +70,13 @@ const Playground: React.FC<PlaygroundProps> = ({
           </div>
           <div className="space-x-4">
             <button
-              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
               onClick={() => handleChangeBalloonPos(BalloonPosition.BottomLeft)}
             >
               ↙左下
             </button>
             <button
-              className="bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
               onClick={() =>
                 handleChangeBalloonPos(BalloonPosition.BottomRight)
               }
@@ -87,7 +87,7 @@ const Playground: React.FC<PlaygroundProps> = ({
         </div>
         <div className="ml-auto">
           <button
-            className="duration-75 bg-red-500 text-white py-2 px-6 rounded hover:bg-red-600"
+            className="focus:outline-none duration-75 bg-red-500 text-white py-2 px-6 rounded hover:bg-red-600"
             onClick={handleRemoveBalloon}
           >
             吹き出しを消す

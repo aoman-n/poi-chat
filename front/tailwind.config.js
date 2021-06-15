@@ -8,10 +8,10 @@ module.exports = {
     extend: {},
   },
   variants: {
-    extend: {},
+    extend: {
+      transitionDuration: ['hover', 'focus'],
+    },
+    outline: ['responsive', 'focus', 'hover', 'active'],
   },
   plugins: [],
-  corePlugins: {
-    outline: false,
-  },
 }

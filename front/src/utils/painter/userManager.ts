@@ -2,10 +2,10 @@ import { User, BalloonPosition } from './user'
 import { RoomFragment } from '@/graphql'
 
 export class UserManager {
-  private _users: User[]
+  #users: User[]
 
   constructor(roomUsers: RoomFragment['room']['users']) {
-    this._users = roomUsers.map(
+    this.#users = roomUsers.map(
       (u) =>
         new User({
           id: u.id,
@@ -19,20 +19,20 @@ export class UserManager {
   }
 
   update() {
-    for (const user of this._users) user.update()
+    for (const user of this.#users) user.update()
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    for (const user of this._users) user.draw(ctx)
+    for (const user of this.#users) user.draw(ctx)
   }
 
   changePos(id: string, targetX: number, targetY: number) {
-    const user = this._users.find((u) => u.equalId(id))
+    const user = this.#users.find((u) => u.equalId(id))
     user?.changePos(targetX, targetY)
   }
 
   addUser(roomUser: RoomFragment['room']['users'][0]) {
-    this._users.push(
+    this.#users.push(
       new User({
         id: roomUser.id,
         name: roomUser.name,
@@ -44,7 +44,7 @@ export class UserManager {
   }
 
   deleteUser(userId: string) {
-    this._users = this._users.filter((u) => !u.equalId(userId))
+    this.#users = this.#users.filter((u) => !u.equalId(userId))
   }
 
   chanageBalloonPos(userId: string, pos: BalloonPosition) {
@@ -58,6 +58,6 @@ export class UserManager {
   }
 
   #findUserById(id: string) {
-    return this._users.find((u) => u.equalId(id))
+    return this.#users.find((u) => u.equalId(id))
   }
 }

@@ -8,8 +8,6 @@ export type HeaderProps = {
 }
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
-  console.log('render header')
-
   return (
     <div
       className={[

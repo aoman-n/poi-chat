@@ -15,13 +15,11 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
 
   const [moreLoading, setMoreLoading] = useState(false)
-  const { data, fetchMore, loading, networkStatus } = useRoomPageQuery({
+  const { data, fetchMore } = useRoomPageQuery({
     variables: { roomId },
     notifyOnNetworkStatusChange: true,
   })
   const { userManager } = useUserManager(data?.room.users)
-
-  console.log({ loading, networkStatus, moreLoading })
 
   const handleMoreMessage = useCallback(async () => {
     setMoreLoading(true)
