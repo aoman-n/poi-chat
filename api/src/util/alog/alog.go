@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/rs/zerolog"
 )
@@ -21,94 +20,75 @@ type Logger interface {
 	Debugf(format string, v ...interface{})
 }
 
-var DefaultLogger Logger
-
-func init() {
-	DefaultLogger = Default()
-}
+var DefaultLogger = New()
 
 type Log struct {
 	zerolog zerolog.Logger
 }
 
-type User struct {
-	ID   string
-	Name string
-}
+func New(options ...Option) *Log {
+	cfg := newDefaultConfig()
 
-type Conf struct {
-	RequestID string
-	User      *User
-	IP        string
-	IsJSON    bool
-	IsCaller  bool
-	// Level: "info" or "debug", default is "info"
-	Level string
-}
+	for _, option := range options {
+		option.Apply(cfg)
+	}
 
-func create(c *Conf) *Log {
 	var output io.Writer
 	output = os.Stdout
-	if !c.IsJSON {
+	if !cfg.WithJSON {
 		output = zerolog.ConsoleWriter{Out: os.Stdout}
 	}
+
 	zerolog.ErrorStackMarshaler = marshalStack
-
 	lc := zerolog.New(output).With().Timestamp()
-	lc = lc.Str("requestId", c.RequestID)
 
-	if c.User != nil {
-		uname := c.User.Name
+	if cfg.RequestID != "" {
+		lc = lc.Str("requestId", cfg.RequestID)
+	}
+
+	if cfg.IP != "" {
+		lc = lc.Str("ip", cfg.IP)
+	}
+
+	if cfg.User != nil {
+		uname := cfg.User.Name
 		if uname == "" {
 			uname = "unknown"
 		}
 		lc = lc.Str("userName", uname)
 
-		uid := c.User.ID
+		uid := cfg.User.ID
 		if uid == "" {
 			uid = "unknown"
 		}
 		lc = lc.Str("userId", uid)
 	}
 
-	if c.IP != "" {
-		lc = lc.Str("ip", c.IP)
-	}
-
-	if c.IsCaller {
+	if cfg.WithCaller {
 		lc = lc.CallerWithSkipFrameCount(3)
 	}
 
-	logger := lc.Logger().Level(level(c.Level))
+	logger := lc.Logger().Level(level(cfg.Level))
 
 	return &Log{logger}
 }
 
-func New(c *Conf) *Log {
-	return create(c)
-}
-
-func Default() *Log {
-	return create(&Conf{
-		IsJSON:    !config.IsDev(),
-		RequestID: "Unknown",
-		User:      nil,
-		IsCaller:  false,
-		Level:     config.Conf.LogLevel,
-	})
-}
-
-func level(l string) zerolog.Level {
-	switch l {
-	case "info":
-		return zerolog.InfoLevel
-	case "debug":
-		return zerolog.DebugLevel
-	default:
-		return zerolog.InfoLevel
-	}
-}
-
+// marshalStack エラースタックトレースログ出力をカスタマイズするための関数
+//
+// 下記パラメータを出力するようにカスタマイズしている
+// msg: エラーメッセージ
+// func: エラーが発生した関数名
+// line: エラーが発生した行番号
+//
+// 出力例:
+// "stack": [
+// 	  {
+// 		"message": "errorです！",
+// 		"func": "github.com/laster18/poi/api/src/delivery/graphql.(*queryResolver).Rooms",
+// 		"line": "/app/src/delivery/graphql/room.resolver.go:52"
+//    },
+//    ...
+// ]
 func marshalStack(err error) interface{} {
 	aerr, ok := err.(*aerrors.ErrApp)
 	if !ok {

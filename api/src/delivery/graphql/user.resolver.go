@@ -116,7 +116,6 @@ func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string,
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
-	fmt.Println("currentUser:", currentUser)
 
 	if currentUser == nil {
 		handleErr(ctx, aerrors.Wrap(errUnauthorized))

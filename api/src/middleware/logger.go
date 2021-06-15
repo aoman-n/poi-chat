@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/alog"
 )
@@ -23,14 +22,11 @@ func Logger() func(http.Handler) http.Handler {
 				}
 			}
 
-			logger := alog.New(&alog.Conf{
-				RequestID: reqID,
-				User:      u,
-				IP:        ip,
-				IsJSON:    config.IsProd(),
-				IsCaller:  config.IsDev(),
-				Level:     config.Conf.LogLevel,
-			})
+			logger := alog.New(
+				alog.WithRequetID(reqID),
+				alog.WithIP(ip),
+				u,
+			)
 
 			newCtx := acontext.SetLogger(r.Context(), logger)
 
