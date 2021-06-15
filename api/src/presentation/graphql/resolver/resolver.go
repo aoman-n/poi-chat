@@ -1,9 +1,9 @@
-package graphql
+package resolver
 
 import (
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
 	"github.com/laster18/poi/api/src/repository"
-	"github.com/laster18/poi/api/src/subscriber"
 	"gorm.io/gorm"
 
 	"github.com/go-redis/redis/v8"
@@ -13,7 +13,7 @@ import (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-func NewResolver(
+func New(
 	db *gorm.DB,
 	redis *redis.Client,
 	roomUserSubscriber *subscriber.RoomUserSubscriber,

@@ -1,4 +1,4 @@
-package graphql
+package resolver
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
@@ -12,16 +12,18 @@ import (
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/presentation/graphql"
+	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
 func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {
-	return encodeIDStr(roomUserPrefix, obj.UserID), nil
+	return graphql.RoomUserIDStr(obj.UserID), nil
 }
 
 func (r *globalUserResolver) ID(ctx context.Context, obj *model.GlobalUser) (string, error) {
-	return encodeIDStr(globalUserPrefix, obj.ID), nil
+	return graphql.GlobalUserIDStr(obj.ID), nil
 }
 
 func (r *globalUserResolver) Joined(ctx context.Context, obj *model.GlobalUser) (*model.Room, error) {
@@ -29,19 +31,20 @@ func (r *globalUserResolver) Joined(ctx context.Context, obj *model.GlobalUser) 
 }
 
 func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
-	return encodeIDStr(globalUserPrefix, obj.ID), nil
+	// return encodeIDStr(globalUserPrefix, obj.ID), nil
+	return graphql.GlobalUserIDStr(obj.ID), nil
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
-	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err))
+		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil
 	}
 
@@ -54,22 +57,22 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	}
 	roomUser.SetPosition(input.X, input.Y)
 
-	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+	if err := r.roomUserRepo.Save(ctx, roomUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
 
-	return toMovePayload(roomUser), nil
+	return presenter.ToMovePayload(roomUser), nil
 }
 
 func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error) {
-	return encodeIDStr(globalUserPrefix, obj.UserID), nil
+	return graphql.GlobalUserIDStr(obj.UserID), nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
@@ -85,17 +88,17 @@ func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
 func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
 	users, err := r.globalUserRepo.GetAll(ctx)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err))
+		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil
 	}
 
-	return toGlobalUsers(users), nil
+	return presenter.ToGlobalUsers(users), nil
 }
 
 func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error) {
@@ -103,22 +106,22 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 
 	users, err := r.roomUserRepo.GetByRoomID(ctx, roomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.GetByRoomID"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.GetByRoomID"))
 		return nil, nil
 	}
 
-	return toRoomUsers(users), nil
+	return presenter.ToRoomUsers(users), nil
 }
 
 func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string, error) {
-	return encodeIDStr(roomUserPrefix, obj.ID), nil
+	return graphql.RoomUserIDStr(obj.ID), nil
 }
 
 func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
@@ -130,8 +133,8 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 		Name:      currentUser.Name,
 		AvatarURL: currentUser.AvatarURL,
 	}
-	if err := r.globalUserRepo.Insert(ctx, newGlobalUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err))
+	if err := r.globalUserRepo.Save(ctx, newGlobalUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil
 	}
 
@@ -152,13 +155,13 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 ) (<-chan model.RoomUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
-	domainRoomID, err := decodeID(roomPrefix, roomID)
+	domainRoomID, err := graphql.DecodeRoomID(roomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
 		return nil, nil
 	}
 
@@ -168,8 +171,8 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	newRoomUser := domain.NewDefaultRoomUser(domainRoomID, currentUser)
-	if err := r.roomUserRepo.Insert(ctx, newRoomUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+	if err := r.roomUserRepo.Save(ctx, newRoomUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
 
@@ -192,13 +195,13 @@ func (r *Resolver) RemoveLastMessage(
 
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
-	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
 		return nil, nil
 	}
 
@@ -212,12 +215,12 @@ func (r *Resolver) RemoveLastMessage(
 	roomUser.LastMessage = nil
 	roomUser.LastEvent = domain.RemoveLastMessageEvent
 
-	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+	if err := r.roomUserRepo.Save(ctx, roomUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
 
-	return toRemoveLastMessagePayload(roomUser), nil
+	return presenter.ToRemoveLastMessagePayload(roomUser), nil
 }
 
 func (r *Resolver) ChangeBalloonPosition(
@@ -228,13 +231,13 @@ func (r *Resolver) ChangeBalloonPosition(
 
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
-	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
 		return nil, nil
 	}
 
@@ -259,17 +262,17 @@ func (r *Resolver) ChangeBalloonPosition(
 		domainBalloonPos = domain.BottomLeft
 	default:
 		m := fmt.Sprintf("%s is unknown balloon position", string(input.BalloonPosition))
-		handleErr(ctx, aerrors.New(m).SetCode(aerrors.CodeBadParams).Message(m))
+		graphql.HandleErr(ctx, aerrors.New(m).SetCode(aerrors.CodeBadParams).Message(m))
 	}
 
 	roomUser.BalloonPosition = domainBalloonPos
 
-	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+	if err := r.roomUserRepo.Save(ctx, roomUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
 
-	return toChangeBalloonPositionPayload(roomUser), nil
+	return presenter.ToChangeBalloonPositionPayload(roomUser), nil
 }
 
 // ExitedPayload returns generated.ExitedPayloadResolver implementation.

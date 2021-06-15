@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/laster18/poi/api/src/dataloader"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/presentation/graphql/dataloader"
 	"github.com/laster18/poi/api/src/util/acontext"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
-	"github.com/laster18/poi/api/src/subscriber"
+	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
@@ -23,7 +23,7 @@ func NewGlobalUserRepo(redis *redis.Client) *GlobalUserRepo {
 	return &GlobalUserRepo{redis}
 }
 
-func (r *GlobalUserRepo) Insert(ctx context.Context, u *domain.GlobalUser) error {
+func (r *GlobalUserRepo) Save(ctx context.Context, u *domain.GlobalUser) error {
 	uJSON, err := json.Marshal(u)
 	if err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)

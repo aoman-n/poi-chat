@@ -1,27 +1,29 @@
-package graphql
+package resolver
 
 // This file will be automatically regenerated based on the schema, any resolver implementations
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/presentation/graphql"
+	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"github.com/laster18/poi/api/src/util/clock"
 )
 
 func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, error) {
-	return fmt.Sprintf(messageIDFormat, obj.ID), nil
+	return graphql.MessageIDStr(obj.ID), nil
 }
 
 func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (string, error) {
-	return encodeIDStr(roomUserPrefix, obj.UserID), nil
+	// return encodeIDStr(roomUserPrefix, obj.UserID), nil
+	return graphql.RoomUserIDStr(obj.UserID), nil
 }
 
 func (r *mutationResolver) SendMessage(
@@ -30,10 +32,10 @@ func (r *mutationResolver) SendMessage(
 ) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, aerrors.Wrap(errUnauthorized)
+		return nil, aerrors.Wrap(graphql.ErrUnauthorized)
 	}
 
-	domainRoomID, err := decodeID(roomPrefix, input.RoomID)
+	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
 		return nil, aerrors.Wrap(err)
 	}
@@ -48,13 +50,13 @@ func (r *mutationResolver) SendMessage(
 	}
 
 	if err := r.messageRepo.Create(ctx, msg); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Create"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Create"))
 		return nil, nil
 	}
 
 	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Get"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Get"))
 		return nil, nil
 	}
 	if roomUser == nil {
@@ -62,12 +64,12 @@ func (r *mutationResolver) SendMessage(
 	}
 	roomUser.SetMessage(msg)
 
-	if err := r.roomUserRepo.Insert(ctx, roomUser); err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Insert"))
+	if err := r.roomUserRepo.Save(ctx, roomUser); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
 
-	return toSendMessagePayload(msg), nil
+	return presenter.ToSendMessagePayload(msg), nil
 }
 
 func (r *roomResolver) Messages(
@@ -78,13 +80,13 @@ func (r *roomResolver) Messages(
 ) (*model.MessageConnection, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		handleErr(ctx, aerrors.Wrap(errUnauthorized))
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
 	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err))
+		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil
 	}
 
@@ -96,9 +98,9 @@ func (r *roomResolver) Messages(
 		messageListReq.Limit = *last
 	}
 	if before != nil {
-		id, unix, err := decodeCursor(messagePrefix, before)
+		id, unix, err := graphql.DecodeMessageCursor(before)
 		if err != nil {
-			handleErr(ctx, aerrors.Wrap(err))
+			graphql.HandleErr(ctx, aerrors.Wrap(err))
 			return nil, nil
 		}
 
@@ -108,17 +110,17 @@ func (r *roomResolver) Messages(
 
 	messageListResp, err := r.messageRepo.List(ctx, messageListReq)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.List"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.List"))
 		return nil, nil
 	}
 
 	totalCount, err := r.messageRepo.Count(ctx, roomID)
 	if err != nil {
-		handleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Count"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Count"))
 		return nil, nil
 	}
 
-	return toMessageConnection(before, messageListResp, totalCount), nil
+	return presenter.ToMessageConnection(before, messageListResp, totalCount), nil
 }
 
 // Message returns generated.MessageResolver implementation.

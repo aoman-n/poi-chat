@@ -100,7 +100,7 @@ func (r BalloonPosition) String() string {
 }
 
 type IRoomUserRepo interface {
-	Insert(ctx context.Context, u *RoomUser) error
+	Save(ctx context.Context, u *RoomUser) error
 	Delete(ctx context.Context, u *RoomUser) error
 	Get(ctx context.Context, roomID int, uID string) (*RoomUser, error)
 	GetByRoomID(ctx context.Context, roomID int) ([]*RoomUser, error)

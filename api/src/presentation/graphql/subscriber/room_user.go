@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"sync"
 
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
+	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
 )
 
@@ -68,9 +68,10 @@ func (s *RoomUserSubscriber) start(ctx context.Context) {
 				continue
 			}
 
-			d, err := s.makePublishDataFromSetEvent(&roomUser, roomID, userUID)
+			d, err := s.makePublishDataFromSetEvent(&roomUser)
 			if err != nil {
 				log.Println(err)
+				continue
 			}
 
 			s.deliver(roomID, d)
@@ -124,102 +125,19 @@ func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
 	delete(userChannels, userUID)
 }
 
-func (s *RoomUserSubscriber) makePublishDataFromSetEvent(
-	ru *domain.RoomUser,
-	roomID int,
-	userUID string,
-) (model.RoomUserEvent, error) {
+func (s *RoomUserSubscriber) makePublishDataFromSetEvent(ru *domain.RoomUser) (model.RoomUserEvent, error) {
 	switch ru.LastEvent {
 	case domain.JoinEvent:
-		return &model.JoinedPayload{
-			RoomUser: &model.RoomUser{
-				ID:        userUID,
-				Name:      ru.Name,
-				AvatarURL: ru.AvatarURL,
-				X:         ru.X,
-				Y:         ru.Y,
-			},
-		}, nil
+		return presenter.ToJoinedPayload(ru), nil
 	case domain.MoveEvent:
-		return &model.MovedPayload{
-			RoomUser: &model.RoomUser{
-				ID:        userUID,
-				Name:      ru.Name,
-				AvatarURL: ru.AvatarURL,
-				X:         ru.X,
-				Y:         ru.Y,
-			},
-		}, nil
+		return presenter.ToMovedPayload(ru), nil
 	case domain.AddMessageEvent:
-		if ru.LastMessage == nil {
-			return nil, errors.New("not found roomUser.LastMessage")
-		}
-
-		return &model.SentMassagePayload{
-			RoomUser: &model.RoomUser{
-				ID:        userUID,
-				Name:      ru.Name,
-				AvatarURL: ru.AvatarURL,
-				X:         ru.X,
-				Y:         ru.Y,
-				LastMessage: &model.Message{
-					ID:            strconv.Itoa(ru.LastMessage.ID),
-					UserID:        ru.LastMessage.UserUID,
-					UserName:      ru.LastMessage.UserName,
-					UserAvatarURL: ru.LastMessage.UserAvatarURL,
-					Body:          ru.LastMessage.Body,
-					CreatedAt:     ru.LastMessage.CreatedAt,
-				},
-			},
-		}, nil
+		return presenter.ToSentMassagePayload(ru), nil
 	case domain.RemoveLastMessageEvent:
-		return &model.RemovedLastMessagePayload{
-			RoomUser: &model.RoomUser{
-				ID:              userUID,
-				Name:            ru.Name,
-				AvatarURL:       ru.AvatarURL,
-				X:               ru.X,
-				Y:               ru.Y,
-				LastMessage:     nil,
-				BalloonPosition: convertBalloonPosition(ru.BalloonPosition),
-			},
-		}, nil
+		return presenter.ToRemovedLastMessagePayload(ru), nil
 	case domain.ChangeBalloonPositionEvent:
-		return &model.ChangedBalloonPositionPayload{
-			RoomUser: &model.RoomUser{
-				ID:        userUID,
-				Name:      ru.Name,
-				AvatarURL: ru.AvatarURL,
-				X:         ru.X,
-				Y:         ru.Y,
-				LastMessage: &model.Message{
-					ID:            strconv.Itoa(ru.LastMessage.ID),
-					UserID:        ru.LastMessage.UserUID,
-					UserName:      ru.LastMessage.UserName,
-					UserAvatarURL: ru.LastMessage.UserAvatarURL,
-					Body:          ru.LastMessage.Body,
-					CreatedAt:     ru.LastMessage.CreatedAt,
-				},
-				BalloonPosition: convertBalloonPosition(ru.BalloonPosition),
-			},
-		}, nil
+		return presenter.ToChangedBalloonPositionPayload(ru), nil
 	default:
 		return nil, errors.New("getted unknown roomUser event")
-	}
-}
-
-// TODO: 削除
-func convertBalloonPosition(p domain.BalloonPosition) model.BalloonPosition {
-	switch p {
-	case domain.TopRight:
-		return model.BalloonPositionTopRight
-	case domain.TopLeft:
-		return model.BalloonPositionTopLeft
-	case domain.BottomRight:
-		return model.BalloonPositionBottomRight
-	case domain.BottomLeft:
-		return model.BalloonPositionBottomLeft
-	default:
-		return model.BalloonPositionTopRight
 	}
 }

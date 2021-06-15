@@ -11,10 +11,6 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
-var (
-	invalidIDMsg = "invalid id format: %s"
-)
-
 // GraphErrCode: GraphQLのerrorレスポンスのextensionsフィールドに入れるエラーコード
 type GraphErrCode string
 
@@ -25,7 +21,7 @@ const (
 	codeNotFound     GraphErrCode = "NOT_FOUND_ERROR"
 )
 
-func addErr(ctx context.Context, message string, code GraphErrCode) {
+func AddErr(ctx context.Context, message string, code GraphErrCode) {
 	graphql.AddError(ctx, &gqlerror.Error{
 		Message:    message,
 		Path:       graphql.GetPath(ctx),
@@ -33,7 +29,7 @@ func addErr(ctx context.Context, message string, code GraphErrCode) {
 	})
 }
 
-func addValidationErr(ctx context.Context, vErr *validator.ErrValidation) {
+func AddValidationErr(ctx context.Context, vErr *validator.ErrValidation) {
 	for fieldName, errString := range vErr.GetErrFields() {
 		graphql.AddError(ctx, &gqlerror.Error{
 			Message: errString,
@@ -54,15 +50,15 @@ const (
 	internalErrMsg    = "internal server error"
 )
 
-var errUnauthorized = aerrors.New("unauthorized").SetCode(aerrors.CodeUnauthorized)
+var ErrUnauthorized = aerrors.New("unauthorized").SetCode(aerrors.CodeUnauthorized)
 
-func handleErr(ctx context.Context, err error) {
+func HandleErr(ctx context.Context, err error) {
 	logger := acontext.GetLogger(ctx)
 
 	e := aerrors.AsErrApp(err)
 	if e == nil {
 		// TODO: unexpected error handling
-		addErr(ctx, "server errror", codeInternal)
+		AddErr(ctx, "server errror", codeInternal)
 		return
 	}
 
@@ -70,17 +66,17 @@ func handleErr(ctx context.Context, err error) {
 
 	switch e.Code() {
 	case aerrors.CodeNotFound:
-		addErr(ctx, getInfoMsg(e), codeNotFound)
+		AddErr(ctx, getInfoMsg(e), codeNotFound)
 	case aerrors.CodeUnauthorized:
-		addErr(ctx, getInfoMsg(e), codeUnauthorized)
+		AddErr(ctx, getInfoMsg(e), codeUnauthorized)
 	case aerrors.CodeBadParams, aerrors.CodeDuplicated:
-		addErr(ctx, getInfoMsg(e), codeUserInput)
+		AddErr(ctx, getInfoMsg(e), codeUserInput)
 	case aerrors.CodeDatabase, aerrors.CodeRedis, aerrors.CodeInternal:
-		addErr(ctx, getInfoMsg(e), codeInternal)
+		AddErr(ctx, getInfoMsg(e), codeInternal)
 	case aerrors.CodeUnknown:
 		fallthrough
 	default:
-		addErr(ctx, getInfoMsg(e), codeInternal)
+		AddErr(ctx, getInfoMsg(e), codeInternal)
 	}
 
 	return

@@ -9,7 +9,7 @@ import (
 
 	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/infra/redis"
-	"github.com/laster18/poi/api/src/subscriber"
+	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"gorm.io/gorm"
 )
@@ -31,7 +31,7 @@ func NewRoomUserRepo(tx *gorm.DB, redisClient *redis.Client) *RoomUserRepo {
 	return &RoomUserRepo{tx, redisClient}
 }
 
-func (r *RoomUserRepo) Insert(ctx context.Context, ru *domain.RoomUser) error {
+func (r *RoomUserRepo) Save(ctx context.Context, ru *domain.RoomUser) error {
 	ruJSON, err := json.Marshal(ru)
 	if err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)

@@ -16,17 +16,17 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/config"
-	"github.com/laster18/poi/api/src/delivery/graphql"
-	"github.com/laster18/poi/api/src/delivery/rest"
 	"github.com/laster18/poi/api/src/infra/db"
 	"github.com/laster18/poi/api/src/infra/redis"
-	customMiddleware "github.com/laster18/poi/api/src/middleware"
+	customMiddleware "github.com/laster18/poi/api/src/presentation/graphql/middleware"
+	"github.com/laster18/poi/api/src/presentation/graphql/resolver"
+	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
+	"github.com/laster18/poi/api/src/presentation/rest"
 	"github.com/laster18/poi/api/src/repository"
-	"github.com/laster18/poi/api/src/subscriber"
 	"github.com/rs/cors"
 )
 
-func Init() {
+func Start() {
 	ctx := context.Background()
 	db := db.NewDb()
 	redisClient := redis.New(config.Conf.Redis)
@@ -39,7 +39,7 @@ func Init() {
 	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, globalUserRepo)
 
 	router := chi.NewRouter()
-	resolver := graphql.NewResolver(db, redisClient, roomUserSubscriber, globalUserSubscriber)
+	resolver := resolver.New(db, redisClient, roomUserSubscriber, globalUserSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
 	// set middlewares
