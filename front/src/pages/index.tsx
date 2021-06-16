@@ -1,28 +1,10 @@
 import React from 'react'
 import { NextPage } from 'next'
-import { filter } from 'graphql-anywhere'
-
+import IndexPageComponent from '@/components/pages/IndexPage'
 import { AppGetStaticProps } from '@/types'
-import {
-  useIndexPageQuery,
-  RoomListFragment,
-  RoomListFragmentDoc,
-} from '@/graphql'
-import RoomList from '@/components/organisms/RoomList'
 
-const IndexRoomsPage: NextPage = () => {
-  const { data } = useIndexPageQuery({ fetchPolicy: 'network-only' })
-
-  const rooms =
-    data && filter<RoomListFragment>(RoomListFragmentDoc, data).rooms.nodes
-
-  if (!rooms) return <div>スケルトン表示</div>
-
-  return (
-    <div>
-      <RoomList rooms={rooms} />
-    </div>
-  )
+const IndexPage: NextPage = () => {
+  return <IndexPageComponent />
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {
@@ -34,4 +16,4 @@ export const getStaticProps: AppGetStaticProps = async () => {
   }
 }
 
-export default IndexRoomsPage
+export default IndexPage

@@ -1,12 +1,12 @@
 import React from 'react'
 import { AppGetStaticProps } from '@/types'
-import LoginForm from '@/components/organisms/LoginForm'
+import LoginPageComponent from '@/components/pages/LoginPage'
 import { useRequireNotLogin } from '@/hooks'
 
-const Login = () => {
+const LoginPage = () => {
   useRequireNotLogin()
 
-  return <LoginForm />
+  return <LoginPageComponent />
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {
@@ -18,4 +18,4 @@ export const getStaticProps: AppGetStaticProps = async () => {
   }
 }
 
-export default Login
+export default LoginPage

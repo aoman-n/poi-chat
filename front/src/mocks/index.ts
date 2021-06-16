@@ -1,6 +1,6 @@
-import { OnlineUser } from '@/components/organisms/OnlineUserList'
-import { Room } from '@/components/organisms/RoomList'
-import { PlaygroundProps } from '@/components/organisms/Playground/presentation'
+import { OnlineUser } from '@/components/domainParts/OnlineUserList'
+import { Room } from '@/components/pages/IndexPage/RoomList'
+import { PlaygroundProps } from '@/components/pages/RoomPage/Playground/presentation'
 import { RoomFragment, BalloonPosition } from '@/graphql'
 
 export const mockUser = {

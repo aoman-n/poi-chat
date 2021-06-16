@@ -1,8 +1,8 @@
 import { AppGetStaticProps } from '@/types'
-import GuestLoginForm from '@/components/organisms/GuestLoginForm'
+import GuestLoginPageComponent from '@/components/pages/GuestLoginPage'
 
-const Login = () => {
-  return <GuestLoginForm />
+const GuesLoginPage = () => {
+  return <GuestLoginPageComponent />
 }
 
 export const getStaticProps: AppGetStaticProps = async () => {
@@ -14,4 +14,4 @@ export const getStaticProps: AppGetStaticProps = async () => {
   }
 }
 
-export default Login
+export default GuesLoginPage
