@@ -29,10 +29,11 @@ import (
 func Start() {
 	ctx := context.Background()
 	db := db.NewDb()
-	redisClient := redis.New(config.Conf.Redis)
+	redisClient := redis.New()
 
 	globalUserRepo := repository.NewGlobalUserRepo(redisClient)
 	roomUserRepo := repository.NewRoomUserRepo(db, redisClient)
+	messageRepo := repository.NewMessageRepo(db)
 
 	// TODO: subscriberにredisClientを渡さないようにする
 	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
@@ -67,6 +68,7 @@ func Start() {
 	router.Use(customMiddleware.Logger())
 	router.Use(customMiddleware.Authorize())
 	router.Use(customMiddleware.RoomUserCountLoader(roomUserRepo))
+	router.Use(customMiddleware.RoomMessageCountLoader(messageRepo))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))
 

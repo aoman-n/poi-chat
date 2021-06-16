@@ -13,7 +13,6 @@ func ToCreateRoomPayload(r *domain.Room) *model.CreateRoomPayload {
 		Room: &model.Room{
 			ID:        strconv.Itoa(r.ID),
 			Name:      r.Name,
-			UserCount: r.UserCount,
 			BgColor:   r.BackgroundColor,
 			BgURL:     r.BackgroundURL,
 			CreatedAt: r.CreatedAt,
@@ -42,7 +41,6 @@ func ToRoomConnection(after *string, resp *domain.RoomListResp, total int) *mode
 		nodes[i] = &model.Room{
 			ID:        strconv.Itoa(int(room.ID)),
 			Name:      room.Name,
-			UserCount: 0,
 			BgColor:   room.BackgroundColor,
 			BgURL:     room.BackgroundURL,
 			CreatedAt: room.CreatedAt,

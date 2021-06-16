@@ -12,11 +12,11 @@ type Client = redis.Client
 
 var Nil = redis.Nil
 
-func New(conf config.Redis) *redis.Client {
+func New() *redis.Client {
 	client := redis.NewClient(&redis.Options{
-		Addr:     conf.URL,
-		Password: conf.Passowrd,
-		DB:       conf.Db,
+		Addr:     config.Conf.Redis.URL,
+		Password: config.Conf.Redis.Passowrd,
+		DB:       config.Conf.Redis.Db,
 	})
 
 	context := context.Background()

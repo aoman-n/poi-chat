@@ -10,10 +10,11 @@ extend type Mutation {
 type Room implements Node {
   id: ID!
   name: String!
-  userCount: Int!
   bgColor: String!
   bgUrl: String!
   createdAt: Time!
+  totalUserCount: Int!
+  totalMessageCount: Int!
 }
 
 type RoomEdge implements Edge {

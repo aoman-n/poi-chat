@@ -13,4 +13,8 @@ lint:
 	golangci-lint run --tests
 
 test:
-	go test -v ./...
+	GO_ENV=test \
+	DB_NAME=poi_test \
+	REDIS_DB=1 \
+	LOG_LEVEL=info \
+	go test -v ./src/repository/...

@@ -106,7 +106,7 @@ func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) 
 	return graphql.RoomIDStr(obj.ID), nil
 }
 
-func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, error) {
+func (r *roomResolver) TotalUserCount(ctx context.Context, obj *model.Room) (int, error) {
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err))
@@ -116,6 +116,22 @@ func (r *roomResolver) UserCount(ctx context.Context, obj *model.Room) (int, err
 	count, err := acontext.GetRoomUserCountLoader(ctx).Load(id)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserCountLoader.Load"))
+		return 0, nil
+	}
+
+	return count, nil
+}
+
+func (r *roomResolver) TotalMessageCount(ctx context.Context, obj *model.Room) (int, error) {
+	id, err := strconv.Atoi(obj.ID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err))
+		return 0, nil
+	}
+
+	count, err := acontext.GetRoomMessageCountLoader(ctx).Load(id)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomMessageCountLoader.Load"))
 		return 0, nil
 	}
 

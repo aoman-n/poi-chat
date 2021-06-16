@@ -12,9 +12,10 @@ import (
 type key string
 
 const (
-	userKey                key = "user"
-	roomUserCountLoaderKey key = "roomUserCountLoader"
-	loggerKey              key = "logger"
+	userKey                   key = "user"
+	roomUserCountLoaderKey    key = "roomUserCountLoader"
+	roomMessageCountLoaderKey key = "roomMessageCountLoader"
+	loggerKey                 key = "logger"
 )
 
 func SetUser(c context.Context, u *domain.GlobalUser) context.Context {
@@ -45,12 +46,30 @@ func GetRoomUserCountLoader(c context.Context) *generated.RoomUserCountLoader {
 		panic("must inject roomUserCountLoader")
 	}
 
-	if loader, ok := l.(*generated.RoomUserCountLoader); ok {
-		return loader
+	loader, ok := l.(*generated.RoomUserCountLoader)
+	if !ok {
+		return nil
 	}
 
-	// TODO: return error
-	panic("roomUserCountLoeader is different type on context")
+	return loader
+}
+
+func SetRoomMessageCountLoader(c context.Context, l *generated.RoomMessageCountLoader) context.Context {
+	return context.WithValue(c, roomMessageCountLoaderKey, l)
+}
+
+func GetRoomMessageCountLoader(c context.Context) *generated.RoomMessageCountLoader {
+	l := c.Value(roomMessageCountLoaderKey)
+	if l == nil {
+		return nil
+	}
+
+	loader, ok := l.(*generated.RoomMessageCountLoader)
+	if !ok {
+		return nil
+	}
+
+	return loader
 }
 
 func GetRequestID(c context.Context) string {

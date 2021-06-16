@@ -28,11 +28,13 @@ models:
     fields:
       id:
         resolver: true
-      userCount:
-        resolver: true
       messages:
         resolver: true
       users:
+        resolver: true
+      totalUserCount:
+        resolver: true
+      totalMessageCount:
         resolver: true
   Message:
     fields:

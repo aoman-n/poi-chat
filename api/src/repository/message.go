@@ -85,3 +85,33 @@ func (r *MessageRepo) Count(ctx context.Context, roomID int) (int, error) {
 
 	return int(count), nil
 }
+
+type messageCount struct {
+	RoomID int
+	Count  int
+}
+
+func (r *MessageRepo) CountByRoomIDs(ctx context.Context, roomIDs []int) ([]int, error) {
+	var messageCounts []messageCount
+
+	if err := r.db.Table("messages").
+		Select("room_id, count(room_id) as count").
+		Where("room_id IN ?", roomIDs).
+		Group("room_id").
+		Find(&messageCounts).
+		Error; err != nil {
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+
+	// 渡されたroomID順に詰めて返す
+	var counts []int
+	for _, roomID := range roomIDs {
+		for _, c := range messageCounts {
+			if roomID == c.RoomID {
+				counts = append(counts, c.Count)
+			}
+		}
+	}
+
+	return counts, nil
+}

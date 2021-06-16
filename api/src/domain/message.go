@@ -41,4 +41,5 @@ type IMessageRepo interface {
 	List(ctx context.Context, req *MessageListReq) (*MessageListResp, error)
 	Create(ctx context.Context, message *Message) error
 	Count(ctx context.Context, roomID int) (int, error)
+	CountByRoomIDs(ctx context.Context, roomIDs []int) ([]int, error)
 }
