@@ -9,8 +9,9 @@ fragment RoomList on Query {
     nodes {
       id
       name
-      userCount
       createdAt
+      totalUserCount
+      totalMessageCount
     }
     roomCount
   }

@@ -287,8 +287,6 @@ export class User {
     h: number,
   ) {
     const r = 10
-    const bl = 16
-    const br = 36
     const bh = 16
 
     // 描画情報
@@ -307,8 +305,8 @@ export class User {
           w,
           h,
           r,
-          bl,
-          br,
+          0,
+          10,
           bh,
         )
         break
@@ -320,16 +318,16 @@ export class User {
           w,
           h,
           r,
-          bl,
-          br,
+          10,
+          20,
           bh,
         )
         break
       case 'TOP_LEFT':
-        this.#createTopLeftBalloonRoundRectPath(ctx, x, y, w, h, r, bl, br, bh)
+        this.#createTopLeftBalloonRoundRectPath(ctx, x, y, w, h, r, 0, 10, bh)
         break
       case 'TOP_RIGHT':
-        this.#createTopRightBalloonRoundRectPath(ctx, x, y, w, h, r, bl, br, bh)
+        this.#createTopRightBalloonRoundRectPath(ctx, x, y, w, h, r, 10, 20, bh)
         break
     }
 
@@ -337,6 +335,17 @@ export class User {
     ctx.stroke()
   }
 
+  /**
+   * @param  {CanvasRenderingContext2D} ctx コンテキスト
+   * @param  {Number} x   左上隅のX座標
+   * @param  {Number} y   左上隅のY座標
+   * @param  {Number} w   幅
+   * @param  {Number} h   高さ
+   * @param  {Number} r   半径
+   * @param  {Number} bl  三角形の左上隅のX座標
+   * @param  {Number} br  三角形の右上隅のX座標
+   * @param  {Number} bh  三角形の高さ
+   */
   #createTopLeftBalloonRoundRectPath(
     ctx: CanvasRenderingContext2D,
     x: number,

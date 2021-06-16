@@ -234,10 +234,11 @@ export type Room = Node & {
   __typename?: 'Room'
   id: Scalars['ID']
   name: Scalars['String']
-  userCount: Scalars['Int']
   bgColor: Scalars['String']
   bgUrl: Scalars['String']
   createdAt: Scalars['Time']
+  totalUserCount: Scalars['Int']
+  totalMessageCount: Scalars['Int']
   messages: MessageConnection
   /** ルーム内のユーザー一覧を取得 */
   users: Array<RoomUser>
@@ -436,7 +437,7 @@ export type RoomListFragment = { __typename?: 'Query' } & {
       nodes: Array<
         { __typename?: 'Room' } & Pick<
           Room,
-          'id' | 'name' | 'userCount' | 'createdAt'
+          'id' | 'name' | 'createdAt' | 'totalUserCount' | 'totalMessageCount'
         >
       >
     }
@@ -549,8 +550,9 @@ export const RoomListFragmentDoc = gql`
       nodes {
         id
         name
-        userCount
         createdAt
+        totalUserCount
+        totalMessageCount
       }
       roomCount
     }

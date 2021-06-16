@@ -1,7 +1,7 @@
 import { OnlineUser } from '@/components/organisms/OnlineUserList'
 import { Room } from '@/components/organisms/RoomList'
 import { PlaygroundProps } from '@/components/organisms/Playground/presentation'
-import { RoomFragment } from '@/graphql'
+import { RoomFragment, BalloonPosition } from '@/graphql'
 
 export const mockUser = {
   id: '1',
@@ -25,6 +25,7 @@ export const mockUsers: RoomFragment['room']['users'] = [
       body: 'こんにちは',
       createdAt: '2020-09-07T15:31:07Z',
     },
+    balloonPosition: BalloonPosition.BottomLeft,
   },
   {
     id: '2',
@@ -41,6 +42,7 @@ export const mockUsers: RoomFragment['room']['users'] = [
       body: 'こんにちは2',
       createdAt: '2020-09-07T15:31:07Z',
     },
+    balloonPosition: BalloonPosition.BottomRight,
   },
   {
     id: '3',
@@ -57,6 +59,7 @@ export const mockUsers: RoomFragment['room']['users'] = [
       body: 'こんにちは3',
       createdAt: '2020-09-07T15:31:07Z',
     },
+    balloonPosition: BalloonPosition.TopLeft,
   },
 ]
 
@@ -91,26 +94,31 @@ export const mockRooms: Room[] = [
   {
     id: 'Room:1',
     name: 'サンプルチャットルーム1',
-    userCount: 8,
     createdAt: '',
+    totalUserCount: 8,
+    totalMessageCount: 100,
   },
   {
     id: 'Room:2',
     name: 'サンプルチャットルーム2',
-    userCount: 10,
     createdAt: '',
+    totalUserCount: 10,
+    totalMessageCount: 100,
   },
   {
     id: 'Room:3',
     name: 'サンプルチャットルーム3',
-    userCount: 3,
     createdAt: '',
+    totalUserCount: 3,
+    totalMessageCount: 100,
   },
   {
     id: 'Room:4',
-    name: 'サンプルチャットルーム4',
-    userCount: 60,
+    name:
+      'サンプルチャットルーム4サンプルチャットルーム4サンプルチャットルーム4サンプルチャットルーム4',
     createdAt: '',
+    totalUserCount: 60,
+    totalMessageCount: 100,
   },
 ]
 
