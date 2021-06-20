@@ -82,6 +82,10 @@ export class User {
     }
   }
 
+  get name(): string {
+    return this.#name
+  }
+
   // target位置を更新する
   changePos(targetX: number, targetY: number) {
     this.#targetX = targetX

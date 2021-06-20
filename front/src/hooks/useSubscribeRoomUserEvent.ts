@@ -1,4 +1,5 @@
 import { produce } from 'immer'
+import { useSnackbar } from 'notistack'
 import { UserManager, BALLOON_POSITIONS } from '@/utils/painter'
 import {
   RoomPageDocument,
@@ -12,6 +13,8 @@ export const useSubscribeRoomUserEvent = (
   roomId: string,
   userManager: UserManager,
 ) => {
+  const { enqueueSnackbar } = useSnackbar()
+
   useActedRoomUserEventSubscription({
     variables: { roomId },
     onSubscriptionData: ({ subscriptionData, client }) => {
@@ -24,12 +27,16 @@ export const useSubscribeRoomUserEvent = (
       switch (actedRoomUserEvent.__typename) {
         case 'JoinedPayload': {
           const { roomUser } = actedRoomUserEvent
+          enqueueSnackbar(`${roomUser.name} さんが入室しました`)
           userManager.addUser(roomUser)
           break
         }
-        case 'ExitedPayload':
+        case 'ExitedPayload': {
+          const exitedUser = userManager.findUserById(actedRoomUserEvent.userId)
+          enqueueSnackbar(`${exitedUser?.name || 'XXX'} さんが退出しました`)
           userManager.deleteUser(actedRoomUserEvent.userId)
           break
+        }
         case 'MovedPayload': {
           const { roomUser } = actedRoomUserEvent
           userManager.changePos(roomUser.id, roomUser.x, roomUser.y)

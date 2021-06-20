@@ -28,9 +28,6 @@ const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [data, error, setCurrentUser])
 
-  // MEMO: unauthorizedの場合もここでerrorが入るので素通りさせる
-  // if (error) return <div>error</div>
-
   return <>{children}</>
 }
 

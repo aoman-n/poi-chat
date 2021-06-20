@@ -42,10 +42,6 @@ models:
         resolver: true
       userId:
         resolver: true
-  MovePayload:
-    fields:
-      userId:
-        resolver: true
   Me:
     fields:
       id:

@@ -84,10 +84,9 @@ export type JoinedPayload = {
 
 export type Me = {
   __typename?: 'Me'
-  avatarUrl: Scalars['String']
   id: Scalars['ID']
-  isMen: Scalars['Boolean']
   name: Scalars['String']
+  avatarUrl: Scalars['String']
 }
 
 export type Message = Node & {
@@ -321,6 +320,52 @@ export type SubscriptionActedRoomUserEventArgs = {
   roomId: Scalars['ID']
 }
 
+export type GlobalUserListFragment = { __typename?: 'Query' } & {
+  globalUsers: Array<{ __typename?: 'GlobalUser' } & GlobalUserFieldsFragment>
+}
+
+export type ActedGlobalUserEventSubscriptionVariables = Exact<{
+  [key: string]: never
+}>
+
+export type ActedGlobalUserEventSubscription = {
+  __typename?: 'Subscription'
+} & {
+  actedGlobalUserEvent?: Maybe<
+    | ({ __typename: 'OnlinedPayload' } & {
+        globalUser: { __typename?: 'GlobalUser' } & GlobalUserFieldsFragment
+      })
+    | ({ __typename: 'OfflinedPayload' } & Pick<OfflinedPayload, 'userId'>)
+  >
+}
+
+export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
+  GlobalUser,
+  'id' | 'name' | 'avatarUrl'
+>
+
+export type RoomListFragment = { __typename?: 'Query' } & {
+  rooms: { __typename?: 'RoomConnection' } & Pick<
+    RoomConnection,
+    'roomCount'
+  > & {
+      pageInfo: { __typename?: 'PageInfo' } & Pick<
+        PageInfo,
+        'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
+      >
+      nodes: Array<
+        { __typename?: 'Room' } & Pick<
+          Room,
+          'id' | 'name' | 'createdAt' | 'totalUserCount' | 'totalMessageCount'
+        >
+      >
+    }
+}
+
+export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
+
+export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
+
 export type RoomFragment = { __typename?: 'Query' } & {
   room: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'> & {
       users: Array<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
@@ -425,58 +470,6 @@ export type RoomUserFieldsFragment = { __typename?: 'RoomUser' } & Pick<
   'id' | 'name' | 'avatarUrl' | 'x' | 'y' | 'balloonPosition'
 > & { lastMessage?: Maybe<{ __typename?: 'Message' } & MessageFieldsFragment> }
 
-export type RoomListFragment = { __typename?: 'Query' } & {
-  rooms: { __typename?: 'RoomConnection' } & Pick<
-    RoomConnection,
-    'roomCount'
-  > & {
-      pageInfo: { __typename?: 'PageInfo' } & Pick<
-        PageInfo,
-        'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
-      >
-      nodes: Array<
-        { __typename?: 'Room' } & Pick<
-          Room,
-          'id' | 'name' | 'createdAt' | 'totalUserCount' | 'totalMessageCount'
-        >
-      >
-    }
-}
-
-export type GlobalUserListFragment = { __typename?: 'Query' } & {
-  globalUsers: Array<{ __typename?: 'GlobalUser' } & GlobalUserFieldsFragment>
-}
-
-export type ActedGlobalUserEventSubscriptionVariables = Exact<{
-  [key: string]: never
-}>
-
-export type ActedGlobalUserEventSubscription = {
-  __typename?: 'Subscription'
-} & {
-  actedGlobalUserEvent?: Maybe<
-    | ({ __typename: 'OnlinedPayload' } & {
-        globalUser: { __typename?: 'GlobalUser' } & GlobalUserFieldsFragment
-      })
-    | ({ __typename: 'OfflinedPayload' } & Pick<OfflinedPayload, 'userId'>)
-  >
-}
-
-export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
-  GlobalUser,
-  'id' | 'name' | 'avatarUrl'
->
-
-export type CommonQueryVariables = Exact<{ [key: string]: never }>
-
-export type CommonQuery = { __typename?: 'Query' } & {
-  me: { __typename?: 'Me' } & Pick<Me, 'id' | 'name' | 'avatarUrl'>
-} & GlobalUserListFragment
-
-export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
-
-export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
-
 export type RoomPageQueryVariables = Exact<{
   roomId: Scalars['ID']
   before?: Maybe<Scalars['String']>
@@ -484,6 +477,47 @@ export type RoomPageQueryVariables = Exact<{
 
 export type RoomPageQuery = { __typename?: 'Query' } & RoomFragment
 
+export type CommonQueryVariables = Exact<{ [key: string]: never }>
+
+export type CommonQuery = { __typename?: 'Query' } & {
+  me: { __typename?: 'Me' } & Pick<Me, 'id' | 'name' | 'avatarUrl'>
+} & GlobalUserListFragment
+
+export const GlobalUserFieldsFragmentDoc = gql`
+  fragment GlobalUserFields on GlobalUser {
+    id
+    name
+    avatarUrl
+  }
+`
+export const GlobalUserListFragmentDoc = gql`
+  fragment GlobalUserList on Query {
+    globalUsers {
+      ...GlobalUserFields
+    }
+  }
+  ${GlobalUserFieldsFragmentDoc}
+`
+export const RoomListFragmentDoc = gql`
+  fragment RoomList on Query {
+    rooms {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        id
+        name
+        createdAt
+        totalUserCount
+        totalMessageCount
+      }
+      roomCount
+    }
+  }
+`
 export const MessageFieldsFragmentDoc = gql`
   fragment MessageFields on Message {
     id
@@ -538,41 +572,108 @@ export const RoomFragmentDoc = gql`
   ${RoomUserFieldsFragmentDoc}
   ${PageMessagesFieldFragmentDoc}
 `
-export const RoomListFragmentDoc = gql`
-  fragment RoomList on Query {
-    rooms {
-      pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
+export const ActedGlobalUserEventDocument = gql`
+  subscription actedGlobalUserEvent {
+    actedGlobalUserEvent {
+      __typename
+      ... on OnlinedPayload {
+        globalUser {
+          ...GlobalUserFields
+        }
       }
-      nodes {
-        id
-        name
-        createdAt
-        totalUserCount
-        totalMessageCount
+      ... on OfflinedPayload {
+        userId
       }
-      roomCount
-    }
-  }
-`
-export const GlobalUserFieldsFragmentDoc = gql`
-  fragment GlobalUserFields on GlobalUser {
-    id
-    name
-    avatarUrl
-  }
-`
-export const GlobalUserListFragmentDoc = gql`
-  fragment GlobalUserList on Query {
-    globalUsers {
-      ...GlobalUserFields
     }
   }
   ${GlobalUserFieldsFragmentDoc}
 `
+
+/**
+ * __useActedGlobalUserEventSubscription__
+ *
+ * To run a query within a React component, call `useActedGlobalUserEventSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useActedGlobalUserEventSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useActedGlobalUserEventSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useActedGlobalUserEventSubscription(
+  baseOptions?: Apollo.SubscriptionHookOptions<
+    ActedGlobalUserEventSubscription,
+    ActedGlobalUserEventSubscriptionVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useSubscription<
+    ActedGlobalUserEventSubscription,
+    ActedGlobalUserEventSubscriptionVariables
+  >(ActedGlobalUserEventDocument, options)
+}
+export type ActedGlobalUserEventSubscriptionHookResult = ReturnType<
+  typeof useActedGlobalUserEventSubscription
+>
+export type ActedGlobalUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedGlobalUserEventSubscription>
+export const IndexPageDocument = gql`
+  query IndexPage {
+    ...RoomList
+  }
+  ${RoomListFragmentDoc}
+`
+
+/**
+ * __useIndexPageQuery__
+ *
+ * To run a query within a React component, call `useIndexPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useIndexPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useIndexPageQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useIndexPageQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    IndexPageQuery,
+    IndexPageQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<IndexPageQuery, IndexPageQueryVariables>(
+    IndexPageDocument,
+    options,
+  )
+}
+export function useIndexPageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    IndexPageQuery,
+    IndexPageQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<IndexPageQuery, IndexPageQueryVariables>(
+    IndexPageDocument,
+    options,
+  )
+}
+export type IndexPageQueryHookResult = ReturnType<typeof useIndexPageQuery>
+export type IndexPageLazyQueryHookResult = ReturnType<
+  typeof useIndexPageLazyQuery
+>
+export type IndexPageQueryResult = Apollo.QueryResult<
+  IndexPageQuery,
+  IndexPageQueryVariables
+>
 export const MoreRoomMessagesDocument = gql`
   query MoreRoomMessages($roomId: ID!, $before: String) {
     room(id: $roomId) {
@@ -915,159 +1016,6 @@ export type ActedRoomUserEventSubscriptionHookResult = ReturnType<
   typeof useActedRoomUserEventSubscription
 >
 export type ActedRoomUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedRoomUserEventSubscription>
-export const ActedGlobalUserEventDocument = gql`
-  subscription actedGlobalUserEvent {
-    actedGlobalUserEvent {
-      __typename
-      ... on OnlinedPayload {
-        globalUser {
-          ...GlobalUserFields
-        }
-      }
-      ... on OfflinedPayload {
-        userId
-      }
-    }
-  }
-  ${GlobalUserFieldsFragmentDoc}
-`
-
-/**
- * __useActedGlobalUserEventSubscription__
- *
- * To run a query within a React component, call `useActedGlobalUserEventSubscription` and pass it any options that fit your needs.
- * When your component renders, `useActedGlobalUserEventSubscription` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useActedGlobalUserEventSubscription({
- *   variables: {
- *   },
- * });
- */
-export function useActedGlobalUserEventSubscription(
-  baseOptions?: Apollo.SubscriptionHookOptions<
-    ActedGlobalUserEventSubscription,
-    ActedGlobalUserEventSubscriptionVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useSubscription<
-    ActedGlobalUserEventSubscription,
-    ActedGlobalUserEventSubscriptionVariables
-  >(ActedGlobalUserEventDocument, options)
-}
-export type ActedGlobalUserEventSubscriptionHookResult = ReturnType<
-  typeof useActedGlobalUserEventSubscription
->
-export type ActedGlobalUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedGlobalUserEventSubscription>
-export const CommonDocument = gql`
-  query Common {
-    me {
-      id
-      name
-      avatarUrl
-    }
-    ...GlobalUserList
-  }
-  ${GlobalUserListFragmentDoc}
-`
-
-/**
- * __useCommonQuery__
- *
- * To run a query within a React component, call `useCommonQuery` and pass it any options that fit your needs.
- * When your component renders, `useCommonQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useCommonQuery({
- *   variables: {
- *   },
- * });
- */
-export function useCommonQuery(
-  baseOptions?: Apollo.QueryHookOptions<CommonQuery, CommonQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<CommonQuery, CommonQueryVariables>(
-    CommonDocument,
-    options,
-  )
-}
-export function useCommonLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<CommonQuery, CommonQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<CommonQuery, CommonQueryVariables>(
-    CommonDocument,
-    options,
-  )
-}
-export type CommonQueryHookResult = ReturnType<typeof useCommonQuery>
-export type CommonLazyQueryHookResult = ReturnType<typeof useCommonLazyQuery>
-export type CommonQueryResult = Apollo.QueryResult<
-  CommonQuery,
-  CommonQueryVariables
->
-export const IndexPageDocument = gql`
-  query IndexPage {
-    ...RoomList
-  }
-  ${RoomListFragmentDoc}
-`
-
-/**
- * __useIndexPageQuery__
- *
- * To run a query within a React component, call `useIndexPageQuery` and pass it any options that fit your needs.
- * When your component renders, `useIndexPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useIndexPageQuery({
- *   variables: {
- *   },
- * });
- */
-export function useIndexPageQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    IndexPageQuery,
-    IndexPageQueryVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<IndexPageQuery, IndexPageQueryVariables>(
-    IndexPageDocument,
-    options,
-  )
-}
-export function useIndexPageLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    IndexPageQuery,
-    IndexPageQueryVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<IndexPageQuery, IndexPageQueryVariables>(
-    IndexPageDocument,
-    options,
-  )
-}
-export type IndexPageQueryHookResult = ReturnType<typeof useIndexPageQuery>
-export type IndexPageLazyQueryHookResult = ReturnType<
-  typeof useIndexPageLazyQuery
->
-export type IndexPageQueryResult = Apollo.QueryResult<
-  IndexPageQuery,
-  IndexPageQueryVariables
->
 export const RoomPageDocument = gql`
   query RoomPage($roomId: ID!, $before: String) {
     ...Room
@@ -1120,4 +1068,55 @@ export type RoomPageLazyQueryHookResult = ReturnType<
 export type RoomPageQueryResult = Apollo.QueryResult<
   RoomPageQuery,
   RoomPageQueryVariables
+>
+export const CommonDocument = gql`
+  query Common {
+    me {
+      id
+      name
+      avatarUrl
+    }
+    ...GlobalUserList
+  }
+  ${GlobalUserListFragmentDoc}
+`
+
+/**
+ * __useCommonQuery__
+ *
+ * To run a query within a React component, call `useCommonQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommonQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommonQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCommonQuery(
+  baseOptions?: Apollo.QueryHookOptions<CommonQuery, CommonQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CommonQuery, CommonQueryVariables>(
+    CommonDocument,
+    options,
+  )
+}
+export function useCommonLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CommonQuery, CommonQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CommonQuery, CommonQueryVariables>(
+    CommonDocument,
+    options,
+  )
+}
+export type CommonQueryHookResult = ReturnType<typeof useCommonQuery>
+export type CommonLazyQueryHookResult = ReturnType<typeof useCommonLazyQuery>
+export type CommonQueryResult = Apollo.QueryResult<
+  CommonQuery,
+  CommonQueryVariables
 >

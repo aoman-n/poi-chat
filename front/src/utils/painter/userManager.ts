@@ -48,16 +48,16 @@ export class UserManager {
   }
 
   chanageBalloonPos(userId: string, pos: BalloonPosition) {
-    const targetUser = this.#findUserById(userId)
+    const targetUser = this.findUserById(userId)
     targetUser?.changeBalloonPos(pos)
   }
 
   updateMessage(userId: string, message: string) {
-    const targetUser = this.#findUserById(userId)
+    const targetUser = this.findUserById(userId)
     targetUser?.updateMessage(message)
   }
 
-  #findUserById(id: string) {
+  findUserById(id: string) {
     return this.#users.find((u) => u.equalId(id))
   }
 }
