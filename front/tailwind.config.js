@@ -12,6 +12,7 @@ module.exports = {
       transitionDuration: ['hover', 'focus'],
     },
     outline: ['responsive', 'focus', 'hover', 'active'],
+    visibility: ['responsive', 'hover', 'focus', 'group-hover'],
   },
   plugins: [],
 }

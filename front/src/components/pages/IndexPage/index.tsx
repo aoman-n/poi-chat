@@ -6,6 +6,7 @@ import {
   RoomListFragmentDoc,
 } from '@/graphql'
 import RoomList from '@/components/pages/IndexPage/RoomList'
+import CreateRoomModal from '@/components/domainParts/CreateRoomModal'
 
 const IndexPage: React.VFC = () => {
   const { data } = useIndexPageQuery({ fetchPolicy: 'network-only' })
@@ -18,6 +19,7 @@ const IndexPage: React.VFC = () => {
   return (
     <div>
       <RoomList rooms={rooms} />
+      <CreateRoomModal />
     </div>
   )
 }
