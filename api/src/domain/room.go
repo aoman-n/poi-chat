@@ -19,12 +19,27 @@ type Room struct {
 	CreatedAt       time.Time
 }
 
-func NewRoom(name, bg string) *Room {
+const (
+	DefaultBgColor = "#20b2aa"
+	DefaultBgURL   = "https://poi-chat.s3.ap-northeast-1.amazonaws.com/roomBg1.jpg"
+)
+
+func NewRoom(name string, bgColor, bgURL *string) *Room {
+	color := DefaultBgColor
+	if bgColor != nil {
+		color = *bgColor
+	}
+
+	url := DefaultBgURL
+	if bgURL != nil {
+		url = *bgURL
+	}
+
 	return &Room{
 		ID:              0,
 		Name:            name,
-		BackgroundURL:   "",
-		BackgroundColor: bg,
+		BackgroundURL:   url,
+		BackgroundColor: color,
 		UserCount:       0,
 		CreatedAt:       clock.Now(),
 	}
@@ -44,6 +59,7 @@ func (r *Room) Validate() error {
 	return validator.ValidateStruct(r,
 		val.Field(&r.Name, val.Required, val.RuneLength(2, 20)),
 		val.Field(&r.BackgroundColor, val.Required, is.HexColor),
+		val.Field(&r.BackgroundURL, val.Required, is.URL),
 	)
 }
 

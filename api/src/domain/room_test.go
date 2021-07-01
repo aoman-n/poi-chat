@@ -112,4 +112,49 @@ func TestRoom_Validate(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("#BackgroundURL", func(t *testing.T) {
+		cases := map[string]struct {
+			room      *domain.Room
+			fieldName string
+			expectMsg string
+		}{
+			"[異常系] 空文字だとエラーになること": {
+				room: &domain.Room{
+					BackgroundURL: "",
+				},
+				fieldName: "BackgroundURL",
+				expectMsg: "cannot be blank",
+			},
+			"[異常系] 不正なURLだとエラーになること": {
+				room: &domain.Room{
+					BackgroundURL: "https?://hoge.com",
+				},
+				fieldName: "BackgroundURL",
+				expectMsg: "must be a valid URL",
+			},
+			"[正常系] 有効なURLだとエラーにならないこと": {
+				room: &domain.Room{
+					BackgroundURL: "https://example.com/bg.png",
+				},
+				fieldName: "BackgroundURL",
+				expectMsg: "",
+			},
+		}
+
+		for k, tt := range cases {
+			tt := tt
+			t.Run(k, func(t *testing.T) {
+				t.Parallel()
+
+				err := tt.room.Validate()
+
+				if tt.expectMsg == "" {
+					testutil.AssertNoValidationErr(t, err, tt.fieldName)
+				} else {
+					testutil.AssertValidationErr(t, err, tt.fieldName, tt.expectMsg)
+				}
+			})
+		}
+	})
 }

@@ -1,0 +1,11 @@
+mutation CreateRoom($name: String!, $bgUrl: String!) {
+  createRoom(input: {
+    name: $name,
+    bgUrl: $bgUrl
+  }) {
+    room {
+      id
+      name
+    }
+  }
+}

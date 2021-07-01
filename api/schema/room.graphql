@@ -31,6 +31,8 @@ type RoomConnection implements Connection {
 
 input CreateRoomInput {
   name: String!
+  bgUrl: String
+  bgColor: String
 }
 
 enum RoomOrderField {

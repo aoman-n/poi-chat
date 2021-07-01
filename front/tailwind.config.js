@@ -10,6 +10,7 @@ module.exports = {
   variants: {
     extend: {
       transitionDuration: ['hover', 'focus'],
+      opacity: ['disabled'],
     },
     outline: ['responsive', 'focus', 'hover', 'active'],
     visibility: ['responsive', 'hover', 'focus', 'group-hover'],

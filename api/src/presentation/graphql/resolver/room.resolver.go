@@ -21,6 +21,12 @@ func (r *mutationResolver) CreateRoom(
 	ctx context.Context,
 	input *model.CreateRoomInput,
 ) (*model.CreateRoomPayload, error) {
+	currentUser := acontext.GetUser(ctx)
+	if currentUser == nil {
+		graphql.HandleErr(ctx, graphql.ErrUnauthorized)
+		return nil, nil
+	}
+
 	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByName"))
@@ -32,7 +38,7 @@ func (r *mutationResolver) CreateRoom(
 		return nil, nil
 	}
 
-	newRoom := domain.NewRoom(input.Name, "#20b2aa")
+	newRoom := domain.NewRoom(input.Name, input.BgColor, input.BgURL)
 	if err := newRoom.Validate(); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil

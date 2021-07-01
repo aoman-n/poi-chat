@@ -1,27 +1,39 @@
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import { filter } from 'graphql-anywhere'
 import {
   useIndexPageQuery,
   RoomListFragment,
   RoomListFragmentDoc,
 } from '@/graphql'
-import RoomList from '@/components/pages/IndexPage/RoomList'
-import CreateRoomModal from '@/components/domainParts/CreateRoomModal'
+import Component, { IndexPagePresenterProps } from './presenter'
 
-const IndexPage: React.VFC = () => {
+const IndexPageContainer: React.VFC = () => {
+  const [openModal, setOpenModal] = useState(false)
   const { data } = useIndexPageQuery({ fetchPolicy: 'network-only' })
+
+  const handleOpenModal = useCallback(() => {
+    setOpenModal(true)
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setOpenModal(false)
+  }, [])
 
   const rooms =
     data && filter<RoomListFragment>(RoomListFragmentDoc, data).rooms.nodes
 
   if (!rooms) return <div>スケルトン表示</div>
 
-  return (
-    <div>
-      <RoomList rooms={rooms} />
-      <CreateRoomModal />
-    </div>
-  )
+  const passProps: IndexPagePresenterProps = {
+    navigationProps: { handleOpenModal },
+    roomListProps: { rooms },
+    createRoomModalProps: {
+      open: openModal,
+      handleClose: handleCloseModal,
+    },
+  }
+
+  return <Component {...passProps} />
 }
 
-export default IndexPage
+export default IndexPageContainer

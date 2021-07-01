@@ -49,6 +49,8 @@ export type Connection = {
 
 export type CreateRoomInput = {
   name: Scalars['String']
+  bgUrl?: Maybe<Scalars['String']>
+  bgColor?: Maybe<Scalars['String']>
 }
 
 export type CreateRoomPayload = {
@@ -320,6 +322,17 @@ export type SubscriptionActedRoomUserEventArgs = {
   roomId: Scalars['ID']
 }
 
+export type CreateRoomMutationVariables = Exact<{
+  name: Scalars['String']
+  bgUrl: Scalars['String']
+}>
+
+export type CreateRoomMutation = { __typename?: 'Mutation' } & {
+  createRoom: { __typename?: 'CreateRoomPayload' } & {
+    room: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'>
+  }
+}
+
 export type GlobalUserListFragment = { __typename?: 'Query' } & {
   globalUsers: Array<{ __typename?: 'GlobalUser' } & GlobalUserFieldsFragment>
 }
@@ -572,6 +585,59 @@ export const RoomFragmentDoc = gql`
   ${RoomUserFieldsFragmentDoc}
   ${PageMessagesFieldFragmentDoc}
 `
+export const CreateRoomDocument = gql`
+  mutation CreateRoom($name: String!, $bgUrl: String!) {
+    createRoom(input: { name: $name, bgUrl: $bgUrl }) {
+      room {
+        id
+        name
+      }
+    }
+  }
+`
+export type CreateRoomMutationFn = Apollo.MutationFunction<
+  CreateRoomMutation,
+  CreateRoomMutationVariables
+>
+
+/**
+ * __useCreateRoomMutation__
+ *
+ * To run a mutation, you first call `useCreateRoomMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateRoomMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createRoomMutation, { data, loading, error }] = useCreateRoomMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *      bgUrl: // value for 'bgUrl'
+ *   },
+ * });
+ */
+export function useCreateRoomMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateRoomMutation,
+    CreateRoomMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreateRoomMutation, CreateRoomMutationVariables>(
+    CreateRoomDocument,
+    options,
+  )
+}
+export type CreateRoomMutationHookResult = ReturnType<
+  typeof useCreateRoomMutation
+>
+export type CreateRoomMutationResult = Apollo.MutationResult<CreateRoomMutation>
+export type CreateRoomMutationOptions = Apollo.BaseMutationOptions<
+  CreateRoomMutation,
+  CreateRoomMutationVariables
+>
 export const ActedGlobalUserEventDocument = gql`
   subscription actedGlobalUserEvent {
     actedGlobalUserEvent {
