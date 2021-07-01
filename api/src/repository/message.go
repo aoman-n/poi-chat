@@ -104,11 +104,11 @@ func (r *MessageRepo) CountByRoomIDs(ctx context.Context, roomIDs []int) ([]int,
 	}
 
 	// 渡されたroomID順に詰めて返す
-	var counts []int
-	for _, roomID := range roomIDs {
+	counts := make([]int, len(roomIDs))
+	for i, roomID := range roomIDs {
 		for _, c := range messageCounts {
 			if roomID == c.RoomID {
-				counts = append(counts, c.Count)
+				counts[i] = c.Count
 			}
 		}
 	}
