@@ -1,34 +1,41 @@
 import React, { useEffect } from 'react'
 import { RoomScreenPainter, UserManager } from '@/utils/painter'
-import { ROOM_SIZE } from '@/constants'
+import { ROOM_SCREEN_SIZE } from '@/constants'
 
-const mainLoop = (ctx: CanvasRenderingContext2D, userManager: UserManager) => {
-  const roomScrenPainter = new RoomScreenPainter()
-
+const mainLoop = (
+  ctx: CanvasRenderingContext2D,
+  userManager: UserManager,
+  roomScreenPainter: RoomScreenPainter,
+) => {
   setInterval(() => {
-    roomScrenPainter.draw(ctx)
+    roomScreenPainter.draw(ctx)
     userManager.update()
-    userManager.draw(ctx)
+    if (roomScreenPainter.isInitialized) {
+      userManager.draw(ctx)
+    }
   }, 1000 / 30)
 }
 
 export type RoomScreenProps = {
   userManager: UserManager
-  handleMovePos?: (x: number, y: number) => void
+  handleMovePos: (x: number, y: number) => void
+  bgColor: string
+  bgUrl: string
 }
 
 const RoomScreen: React.FC<RoomScreenProps> = ({
   userManager,
-  handleMovePos = (x: number, y: number) => {
-    console.log({ x, y })
-  },
+  handleMovePos,
+  bgColor,
+  bgUrl,
 }) => {
   /* eslint react-hooks/exhaustive-deps: 0 */
   useEffect(() => {
     // TODO: refを使う
     const canvas = document.getElementById('canvas') as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    mainLoop(ctx, userManager)
+    const roomScreenPainter = new RoomScreenPainter({ bgColor, bgUrl })
+    mainLoop(ctx, userManager, roomScreenPainter)
 
     const clickHandler = (e: MouseEvent) => {
       const x = e.offsetX
@@ -45,7 +52,11 @@ const RoomScreen: React.FC<RoomScreenProps> = ({
   }, [])
 
   return (
-    <canvas id="canvas" width={ROOM_SIZE.WIDTH} height={ROOM_SIZE.HEIGHT} />
+    <canvas
+      id="canvas"
+      width={ROOM_SCREEN_SIZE.WIDTH}
+      height={ROOM_SCREEN_SIZE.HEIGHT}
+    />
   )
 }
 

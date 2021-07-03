@@ -1,24 +1,11 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useForm, FormProvider } from 'react-hook-form'
 import { useCreateRoomMutation } from '@/graphql'
 import { getRoomIdParam } from '@/utils/ids'
-import Component, { BgImage, FormData } from './presentation'
-
-const images: BgImage[] = [
-  {
-    id: '1',
-    url: 'https://poi-chat.s3.ap-northeast-1.amazonaws.com/roomBg1.jpg',
-  },
-  {
-    id: '2',
-    url: 'https://poi-chat.s3.ap-northeast-1.amazonaws.com/roomBg2.png',
-  },
-  {
-    id: '3',
-    url: 'https://poi-chat.s3.ap-northeast-1.amazonaws.com/roomBg3.jpg',
-  },
-]
+import { ROOM_BG_IMAGES } from '@/constants'
+import { getCreateRoomErrorMsg } from './errors'
+import Component, { FormData } from './presentation'
 
 const defaultFormValues: FormData = {
   name: '',
@@ -47,13 +34,18 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = (props) => {
     [createRoom],
   )
 
+  useEffect(() => {
+    methods.reset()
+  }, [])
+
   return (
     <FormProvider {...methods}>
       <Component
         {...props}
-        bgImages={images}
+        bgImages={ROOM_BG_IMAGES}
         handleOnSubmit={handleSubmit}
         loading={loading}
+        errorMsgs={getCreateRoomErrorMsg(error)}
       />
     </FormProvider>
   )

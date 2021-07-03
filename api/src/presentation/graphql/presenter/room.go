@@ -8,15 +8,19 @@ import (
 	"github.com/laster18/poi/api/src/presentation/graphql"
 )
 
+func ToRoom(r *domain.Room) *model.Room {
+	return &model.Room{
+		ID:        strconv.Itoa(r.ID),
+		Name:      r.Name,
+		BgColor:   r.BackgroundColor,
+		BgURL:     r.BackgroundURL,
+		CreatedAt: r.CreatedAt,
+	}
+}
+
 func ToCreateRoomPayload(r *domain.Room) *model.CreateRoomPayload {
 	return &model.CreateRoomPayload{
-		Room: &model.Room{
-			ID:        strconv.Itoa(r.ID),
-			Name:      r.Name,
-			BgColor:   r.BackgroundColor,
-			BgURL:     r.BackgroundURL,
-			CreatedAt: r.CreatedAt,
-		},
+		Room: ToRoom(r),
 	}
 }
 
@@ -38,13 +42,7 @@ func ToRoomConnection(after *string, resp *domain.RoomListResp, total int) *mode
 	nodes := make([]*model.Room, len(resp.List))
 	edges := make([]*model.RoomEdge, len(resp.List))
 	for i, room := range resp.List {
-		nodes[i] = &model.Room{
-			ID:        strconv.Itoa(int(room.ID)),
-			Name:      room.Name,
-			BgColor:   room.BackgroundColor,
-			BgURL:     room.BackgroundURL,
-			CreatedAt: room.CreatedAt,
-		}
+		nodes[i] = ToRoom(room)
 		edges[i] = &model.RoomEdge{
 			Cursor: *graphql.RoomCursor(room.ID, int(room.CreatedAt.Unix())),
 			Node:   nodes[i],

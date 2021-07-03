@@ -1,5 +1,5 @@
 import React from 'react'
-import { ROOM_SIZE } from '@/constants'
+import { ROOM_SCREEN_SIZE } from '@/constants'
 import Header from '@/components/domainParts/Header'
 import UsersNav from '@/components/domainParts/UsersNav'
 
@@ -20,7 +20,7 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
           <UsersNav />
         </aside>
         {/* Canvasのレスポンシブは考慮する点が多いので一旦決め打ちのサイズで */}
-        <div style={{ width: `${ROOM_SIZE.WIDTH}px` }}>{children}</div>
+        <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>{children}</div>
       </main>
     </div>
   )

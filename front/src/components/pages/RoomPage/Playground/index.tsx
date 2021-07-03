@@ -76,6 +76,8 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
       rooomScreenProps={{
         userManager: userManager,
         handleMovePos: handleMovePos,
+        bgColor: room.bgColor,
+        bgUrl: room.bgUrl,
       }}
       handleMoreMessage={handleMoreMessage}
       moreLoading={moreLoading}

@@ -4,6 +4,8 @@ fragment Room on Query {
   room(id: $roomId) {
     id
     name
+    bgColor
+    bgUrl
     users {
       ... RoomUserFields
     }

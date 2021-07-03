@@ -34,7 +34,7 @@ func (r *mutationResolver) CreateRoom(
 	}
 	if dupRoom != nil {
 		msg := fmt.Sprintf("%q is already exists", input.Name)
-		graphql.HandleErr(ctx, aerrors.New(msg).Message(msg))
+		graphql.HandleErr(ctx, aerrors.New(msg).Message("already exists room name"))
 		return nil, nil
 	}
 
@@ -102,10 +102,7 @@ func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error
 		return nil, nil
 	}
 
-	return &model.Room{
-		ID:   strconv.Itoa(room.ID),
-		Name: room.Name,
-	}, nil
+	return presenter.ToRoom(room), nil
 }
 
 func (r *roomResolver) ID(ctx context.Context, obj *model.Room) (string, error) {

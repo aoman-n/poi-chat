@@ -1,6 +1,6 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
-import { ROOM_SIZE } from '@/constants'
+import { ROOM_SCREEN_SIZE } from '@/constants'
 import { mockMessages, mockUsers } from '@/mocks'
 import Playground, { PlaygroundProps } from './presentation'
 import { UserManager } from '@/utils/painter'
@@ -13,7 +13,7 @@ export default {
 } as Meta
 
 const Template: Story<PlaygroundProps> = (args) => (
-  <div style={{ width: `${ROOM_SIZE.WIDTH}px` }}>
+  <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>
     <Playground {...args} />
   </div>
 )

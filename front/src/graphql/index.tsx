@@ -380,7 +380,10 @@ export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
 export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
 
 export type RoomFragment = { __typename?: 'Query' } & {
-  room: { __typename?: 'Room' } & Pick<Room, 'id' | 'name'> & {
+  room: { __typename?: 'Room' } & Pick<
+    Room,
+    'id' | 'name' | 'bgColor' | 'bgUrl'
+  > & {
       users: Array<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
     } & PageMessagesFieldFragment
 }
@@ -576,6 +579,8 @@ export const RoomFragmentDoc = gql`
     room(id: $roomId) {
       id
       name
+      bgColor
+      bgUrl
       users {
         ...RoomUserFields
       }

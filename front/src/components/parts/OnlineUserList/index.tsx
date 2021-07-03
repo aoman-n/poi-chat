@@ -21,7 +21,12 @@ const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
             className="flex items-center mb-0 space-x-3 text-gray-700 justify-center"
           >
             <div className="w-12 border border-gray-200 rounded-full overflow-hidden">
-              <img src={user.avatarUrl} alt={user.name + ' avatar'} />
+              <img
+                src={user.avatarUrl}
+                alt={user.name + ' avatar'}
+                height="100"
+                width="100"
+              />
             </div>
             <div>{user.name}</div>
             <div>
