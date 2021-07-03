@@ -1,6 +1,6 @@
-import { OnlineUser } from '@/components/domainParts/OnlineUserList'
+import { OnlineUser } from '@/components/parts/OnlineUserList'
 import { Room } from '@/components/pages/IndexPage/RoomList'
-import { PlaygroundProps } from '@/components/pages/RoomPage/Playground/presentation'
+import { PlaygroundProps } from '@/components/pages/RoomPage/Playground/presenter'
 import { RoomFragment, BalloonPosition } from '@/graphql'
 
 export const mockUser = {
@@ -63,32 +63,12 @@ export const mockUsers: RoomFragment['room']['users'] = [
   },
 ]
 
-export const mockOnlineUsers: OnlineUser[] = [
-  {
-    id: '1',
-    name: 'サンプルユーザー1',
-    avatarUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-  },
-  {
-    id: '2',
-    name: 'サンプルユーザー2',
-    avatarUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-  },
-  {
-    id: '3',
-    name: 'サンプルユーザー3',
-    avatarUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-  },
-  {
-    id: '4',
-    name: 'サンプルユーザー4',
-    avatarUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
-  },
-]
+export const mockOnlineUsers: OnlineUser[] = [...Array(20)].map((_, i) => ({
+  id: String(i),
+  name: `サンプルユーザー${'あ'.repeat(i)}`,
+  avatarUrl:
+    'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+}))
 
 export const mockRooms: Room[] = [
   {

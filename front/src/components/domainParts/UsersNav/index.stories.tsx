@@ -1,7 +1,7 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
 import { mockOnlineUsers } from '@/mocks'
-import UsersNav, { UsersNavProps } from './presentation'
+import UsersNav, { UsersNavProps } from './presenter'
 
 export default {
   title: 'domainParts/UsersNav',

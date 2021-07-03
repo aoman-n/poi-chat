@@ -9,7 +9,7 @@ export default {
 } as Meta
 
 const Template: Story<OnlineUserListProps> = (args) => (
-  <div className="w-72">
+  <div style={{ width: '400px' }}>
     <OnlineUserList {...args} />
   </div>
 )

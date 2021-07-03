@@ -21,7 +21,7 @@ const IndexPagePresenter: React.VFC<IndexPagePresenterProps> = ({
     <div>
       <div className="flex justify-end">
         <button
-          className="py-3 px-8 text-white rounded-sm tracking-wide bg-gray-800 duration-200 hover:opacity-90 focus:outline-none"
+          className="py-2 px-6 text-white tracking-wide bg-gray-800 duration-200 hover:opacity-90 focus:outline-none text-sm rounded-sm"
           onClick={navigationProps.handleOpenModal}
         >
           ルーム作成

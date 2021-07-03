@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuthContext } from '@/contexts/auth'
 import { useGlobalUsers } from '@/hooks'
-import UsersNav from './presentation'
+import UsersNav from './presenter'
 import { useActedGlobalUserEventSubscription } from '@/graphql'
 import withAuthcheckRequired from '@/components/domainParts/withAuthcheckRequired'
 

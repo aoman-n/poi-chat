@@ -1,6 +1,6 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
-import Header, { HeaderProps } from './presentation'
+import Header, { HeaderProps } from './presenter'
 
 export default {
   title: 'domainParts/Header',

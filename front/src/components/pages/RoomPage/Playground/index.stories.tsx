@@ -2,7 +2,7 @@ import React from 'react'
 import { Story, Meta } from '@storybook/react'
 import { ROOM_SCREEN_SIZE } from '@/constants'
 import { mockMessages, mockUsers } from '@/mocks'
-import Playground, { PlaygroundProps } from './presentation'
+import Playground, { PlaygroundProps } from './presenter'
 import { UserManager } from '@/utils/painter'
 
 const mockUserManager = new UserManager(mockUsers)

@@ -1,56 +1,37 @@
 import React, { useState } from 'react'
+import { useForm, FormProvider } from 'react-hook-form'
 import { Story, Meta } from '@storybook/react'
-import CraeteRooomModal, { CreateRoomModalProps } from './presentation'
+import { ROOM_BG_IMAGES } from '@/constants'
+import CraeteRooomModal, { CreateRoomModalProps } from './presenter'
 
 export default {
   title: 'domainParts/CreateRoomModal',
   component: CraeteRooomModal,
 } as Meta
 
-const Template: Story<CreateRoomModalProps> = (args) => (
-  <div>
-    <CraeteRooomModal {...args} />
-  </div>
-)
+const Template: Story<CreateRoomModalProps> = (args) => {
+  const methods = useForm()
+
+  return (
+    <FormProvider {...methods}>
+      <CraeteRooomModal {...args} />
+    </FormProvider>
+  )
+}
 
 export const Default = Template.bind({})
 Default.args = {
   open: true,
   handleClose: () => {},
-  bgImages: [
-    {
-      id: '1',
-      url: 'roomBg1.jpg',
-    },
-    {
-      id: '2',
-      url: 'roomBg2.png',
-    },
-    {
-      id: '3',
-      url: 'roomBg3.jpg',
-    },
-  ],
-  handleSubmit: () => {},
+  bgImages: ROOM_BG_IMAGES,
+  handleOnSubmit: () => {},
+  loading: false,
+  errorMsgs: [],
 }
 
 const Template2: Story<CreateRoomModalProps> = () => {
+  const methods = useForm()
   const [open, setOpen] = useState(false)
-
-  const images = [
-    {
-      id: '1',
-      url: 'roomBg1.jpg',
-    },
-    {
-      id: '2',
-      url: 'roomBg2.png',
-    },
-    {
-      id: '3',
-      url: 'roomBg3.jpg',
-    },
-  ]
 
   const handleOpen = () => {
     setOpen(true)
@@ -61,15 +42,17 @@ const Template2: Story<CreateRoomModalProps> = () => {
   }
 
   return (
-    <div>
+    <FormProvider {...methods}>
       <button onClick={handleOpen}>open</button>
       <CraeteRooomModal
-        bgImages={images}
+        bgImages={ROOM_BG_IMAGES}
         open={open}
         handleClose={handleClose}
-        handleSubmit={() => {}}
+        handleOnSubmit={() => {}}
+        loading={false}
+        errorMsgs={[]}
       />
-    </div>
+    </FormProvider>
   )
 }
 

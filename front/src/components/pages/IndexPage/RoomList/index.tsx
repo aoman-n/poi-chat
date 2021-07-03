@@ -12,10 +12,10 @@ export type RoomListProps = {
 const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
   return (
     <div>
-      <h2 className="text-gray-900 font-medium title-font text-2xl mb-4">
+      <h2 className="text-gray-900 font-medium title-font text-xl mb-4">
         チャットルーム一覧
       </h2>
-      <p className="leading-relaxed text-base mb-8">
+      <p className="leading-relaxed text-sm mb-8 text-gray-700">
         一覧からルームをクリックすると入室することができます。
       </p>
       <div>

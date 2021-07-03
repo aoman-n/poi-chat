@@ -5,7 +5,7 @@ import { useCreateRoomMutation } from '@/graphql'
 import { getRoomIdParam } from '@/utils/ids'
 import { ROOM_BG_IMAGES } from '@/constants'
 import { getCreateRoomErrorMsg } from './errors'
-import Component, { FormData } from './presentation'
+import Component, { FormData } from './presenter'
 
 const defaultFormValues: FormData = {
   name: '',

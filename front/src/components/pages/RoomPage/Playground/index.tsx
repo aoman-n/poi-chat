@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { UserManager } from '@/utils/painter'
-import Playground from './presentation'
+import Playground from './presenter'
 import {
   RoomFragment,
   useRemoveBalloonMutation,
