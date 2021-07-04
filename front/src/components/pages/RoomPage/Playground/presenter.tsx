@@ -4,7 +4,13 @@ import RoomScreen, {
   RoomScreenProps,
 } from '@/components/pages/RoomPage/RoomScreen'
 import Button from '@/components/parts/Button'
-import { RoomFragment, BalloonPosition } from '@/graphql'
+import { BalloonPosition } from '@/constants'
+import { RoomFragment } from '@/graphql'
+
+export type BalloonState = {
+  hasBalloon: boolean
+  position: BalloonPosition | null
+}
 
 export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
@@ -15,6 +21,7 @@ export type PlaygroundProps = {
   moreLoading: boolean
   handleChangeBalloonPos: (pos: BalloonPosition) => void
   handleRemoveBalloon: () => void
+  balloonState: BalloonState
 }
 
 const Playground: React.FC<PlaygroundProps> = ({
@@ -26,6 +33,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   moreLoading,
   handleChangeBalloonPos,
   handleRemoveBalloon,
+  balloonState,
 }) => {
   const { scrollBottomRef } = useScrollBottom(messages)
   const { scrollTopRef, prevFirstItem, firstItemRef } = useReverseFetchMore(
@@ -59,33 +67,39 @@ const Playground: React.FC<PlaygroundProps> = ({
           <h4 className="mb-2">吹き出し位置変更</h4>
           <div className="space-x-2 pb-2">
             <Button
-              onClick={() => handleChangeBalloonPos(BalloonPosition.TopLeft)}
+              onClick={() => handleChangeBalloonPos('TOP_LEFT')}
+              disabled={disabledBalloonPosButton(balloonState, 'TOP_LEFT')}
             >
               ↖左上
             </Button>
             <Button
-              onClick={() => handleChangeBalloonPos(BalloonPosition.TopRight)}
+              onClick={() => handleChangeBalloonPos('TOP_RIGHT')}
+              disabled={disabledBalloonPosButton(balloonState, 'TOP_RIGHT')}
             >
               右上↗
             </Button>
           </div>
           <div className="space-x-2">
             <Button
-              onClick={() => handleChangeBalloonPos(BalloonPosition.BottomLeft)}
+              onClick={() => handleChangeBalloonPos('BOTTOM_LEFT')}
+              disabled={disabledBalloonPosButton(balloonState, 'BOTTOM_LEFT')}
             >
               ↙左下
             </Button>
             <Button
-              onClick={() =>
-                handleChangeBalloonPos(BalloonPosition.BottomRight)
-              }
+              onClick={() => handleChangeBalloonPos('BOTTOM_RIGHT')}
+              disabled={disabledBalloonPosButton(balloonState, 'BOTTOM_RIGHT')}
             >
               右下↘
             </Button>
           </div>
         </div>
         <div className="ml-auto">
-          <Button onClick={handleRemoveBalloon} color="red">
+          <Button
+            onClick={handleRemoveBalloon}
+            color="red"
+            disabled={!balloonState.hasBalloon}
+          >
             吹き出しを消す
           </Button>
         </div>
@@ -145,6 +159,13 @@ const Playground: React.FC<PlaygroundProps> = ({
       </form>
     </div>
   )
+}
+
+const disabledBalloonPosButton = (
+  balloonState: BalloonState,
+  buttonType: BalloonPosition,
+) => {
+  return !balloonState.hasBalloon || balloonState.position === buttonType
 }
 
 type MessageProps = {

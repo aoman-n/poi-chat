@@ -1,4 +1,4 @@
-import { valueOf } from '@/utils/types'
+import { BalloonPosition, BALLOON_POSITIONS } from '@/constants'
 
 type UserOpts = {
   id: string
@@ -6,18 +6,9 @@ type UserOpts = {
   avatarUrl: string
   currentX: number
   currentY: number
-  balloonPos?: valueOf<typeof BALLOON_POSITIONS>
+  balloonPos?: BalloonPosition
   lastMessage?: string
 }
-
-export const BALLOON_POSITIONS = {
-  TOP_RIGHT: 'TOP_RIGHT',
-  TOP_LEFT: 'TOP_LEFT',
-  BOTTOM_RIGHT: 'BOTTOM_RIGHT',
-  BOTTOM_LEFT: 'BOTTOM_LEFT',
-} as const
-
-export type BalloonPosition = valueOf<typeof BALLOON_POSITIONS>
 
 export class User {
   #avatarSize = 54

@@ -1,14 +1,14 @@
-import React, { useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { UserManager } from '@/utils/painter'
-import Playground from './presenter'
 import {
   RoomFragment,
   useRemoveBalloonMutation,
   useChangeBalloonPositionMutation,
-  BalloonPosition,
 } from '@/graphql'
 import { useSubscribeRoomUserEvent, useSendMessage, useMovePos } from '@/hooks'
 import { useCurrentUser } from '@/contexts/auth'
+import { BalloonPosition, convertToGraphBalloonPos } from '@/constants'
+import Playground, { BalloonState } from './presenter'
 
 type PlaygroundContainerProps = {
   roomId: string
@@ -18,9 +18,23 @@ type PlaygroundContainerProps = {
   moreLoading: boolean
 }
 
-const useChangeBalloonPos = (userManager: UserManager, roomId: string) => {
+const initialBalloonState: BalloonState = {
+  hasBalloon: false,
+  position: null,
+}
+
+const defaultBalloonState: BalloonState = {
+  hasBalloon: true,
+  position: 'TOP_RIGHT',
+}
+
+const useBalloon = (userManager: UserManager, roomId: string) => {
   const { currentUser } = useCurrentUser()
+  const [balloonState, setBalloonState] = useState<BalloonState>(
+    initialBalloonState,
+  )
   const [changeBalloonPos] = useChangeBalloonPositionMutation()
+  const [removeBalloon] = useRemoveBalloonMutation()
 
   const handleChangeBalloonPos = (balloonPosition: BalloonPosition) => {
     if (currentUser) {
@@ -34,25 +48,33 @@ const useChangeBalloonPos = (userManager: UserManager, roomId: string) => {
       changeBalloonPos({
         variables: {
           roomId,
-          balloonPosition,
+          balloonPosition: convertToGraphBalloonPos(balloonPosition),
         },
       })
+      setBalloonState((prev) => ({
+        ...prev,
+        position: balloonPosition,
+      }))
     }
   }
-
-  return { handleChangeBalloonPos }
-}
-
-const useRemoveBalloon = (roomId: string) => {
-  const [removeBalloon] = useRemoveBalloonMutation()
 
   const handleRemoveBalloon = useCallback(() => {
     removeBalloon({
       variables: { roomId },
     })
+    setBalloonState(initialBalloonState)
   }, [removeBalloon, roomId])
 
-  return { handleRemoveBalloon }
+  const handleSetDefaultBalloonState = useCallback(() => {
+    setBalloonState(defaultBalloonState)
+  }, [])
+
+  return {
+    handleChangeBalloonPos,
+    handleRemoveBalloon,
+    handleSetDefaultBalloonState,
+    balloonState,
+  }
 }
 
 const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
@@ -64,9 +86,16 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
 }) => {
   useSubscribeRoomUserEvent(roomId, userManager)
   const { handleMovePos } = useMovePos(roomId, userManager)
-  const { handleSubmitMessage } = useSendMessage(roomId)
-  const { handleChangeBalloonPos } = useChangeBalloonPos(userManager, roomId)
-  const { handleRemoveBalloon } = useRemoveBalloon(roomId)
+  const {
+    handleChangeBalloonPos,
+    handleRemoveBalloon,
+    handleSetDefaultBalloonState,
+    balloonState,
+  } = useBalloon(userManager, roomId)
+  const { handleSubmitMessage } = useSendMessage(
+    roomId,
+    handleSetDefaultBalloonState,
+  )
 
   return (
     <Playground
@@ -83,6 +112,7 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
       moreLoading={moreLoading}
       handleChangeBalloonPos={handleChangeBalloonPos}
       handleRemoveBalloon={handleRemoveBalloon}
+      balloonState={balloonState}
     />
   )
 }

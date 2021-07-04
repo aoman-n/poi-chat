@@ -17,11 +17,11 @@ const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
         <span className="inline-block bg-green-500 w-2 h-2 rounded-full" />
         <p>ログイン中のユーザー</p>
       </div>
-      <ul className="overflow-y-auto bg-white" style={{ height: '400px' }}>
+      <ul className="overflow-y-auto bg-white py-2" style={{ height: '400px' }}>
         {users.map((user) => (
           <li
             key={user.id}
-            className="flex items-center px-4 py-3 hover:bg-gray-50"
+            className="flex items-center px-4 py-2 hover:bg-gray-50"
           >
             <div
               className="border border-gray-200 rounded-full overflow-hidden mr-3"

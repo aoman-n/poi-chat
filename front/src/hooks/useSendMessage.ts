@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSendMessageMutation } from '@/graphql'
 
-export const useSendMessage = (roomId: string) => {
+export const useSendMessage = (roomId: string, callback: () => void) => {
   const [sendMessage] = useSendMessageMutation()
 
   const handleSubmitMessage = useCallback(
@@ -14,8 +14,9 @@ export const useSendMessage = (roomId: string) => {
           body: values.body,
         },
       })
+      callback()
     },
-    [roomId, sendMessage],
+    [roomId, sendMessage, callback],
   )
 
   return { handleSubmitMessage }
