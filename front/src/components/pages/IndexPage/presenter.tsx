@@ -3,6 +3,7 @@ import RoomList, { RoomListProps } from '@/components/pages/IndexPage/RoomList'
 import CreateRoomModal, {
   CreateRoomModalProps,
 } from '@/components/domainParts/CreateRoomModal'
+import Button from '@/components/parts/Button'
 
 export type IndexPagePresenterProps = {
   navigationProps: {
@@ -20,12 +21,7 @@ const IndexPagePresenter: React.VFC<IndexPagePresenterProps> = ({
   return (
     <div>
       <div className="flex justify-end">
-        <button
-          className="py-2 px-6 text-white tracking-wide bg-gray-800 duration-200 hover:opacity-90 focus:outline-none text-sm rounded-sm"
-          onClick={navigationProps.handleOpenModal}
-        >
-          ルーム作成
-        </button>
+        <Button onClick={navigationProps.handleOpenModal}>ルーム作成</Button>
       </div>
       <RoomList {...roomListProps} />
       <CreateRoomModal {...createRoomModalProps} />

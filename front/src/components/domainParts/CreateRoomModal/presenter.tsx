@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form'
 import Modal from '@/components/parts/Modal'
 import Icon from '@/components/parts/Icon'
 import CircleArrowButton from '@/components/parts/CircleArrowButton'
+import Button from '@/components/parts/Button'
 import { isExistsRef } from '@/utils/elements'
 import { RoomBgImage } from '@/constants'
 import 'swiper/swiper.min.css'
@@ -71,7 +72,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           handleOnSubmit({ ...data, bgUrl: selectedBgUrl }),
         )}
       >
-        <h3 className="py-6 text-center border-b border-gray-200 text-xl text-gray-800">
+        <h3 className="py-4 text-center border-b border-gray-200 text-gray-800 text-base">
           チャットルーム作成
         </h3>
         <div className="border-b border-gray-200 py-8 px-12">
@@ -84,20 +85,20 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               ))}
             </div>
           )}
-          <div className="mb-8 text-lg">
-            <label htmlFor="name" className="block mb-3 text-gray-700">
+          <div className="mb-6">
+            <label htmlFor="name" className="block mb-3 text-gray-800">
               ルーム名
             </label>
             <input
               id="name"
               type="text"
-              className="rounded-sm px-4 py-3 bg-gray-100 w-full focus:outline-none text-gray-700"
+              className="rounded-sm px-4 py-3 bg-gray-100 w-full focus:outline-none text-gray-700 text-sm"
               placeholder="ルーム名を入力"
               {...register('name', { required: true })}
             />
           </div>
-          <div className="mb-5 text-lg">
-            <label htmlFor="username" className="block mb-3 text-gray-700">
+          <div className="mb-6">
+            <label htmlFor="username" className="block mb-3 text-gray-800">
               壁紙選択
             </label>
             <div className="relative">
@@ -150,20 +151,16 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex justify-end py-4 px-8 bg-gray-50 space-x-4">
-          <button
-            onClick={handleClose}
-            className="focus:outline-none py-2 px-7 text-gray-700 font-bold rounded-sm bg-gray-50 duration-50 hover:opacity-90 border border-gray-300 hover:border-gray-600"
-          >
+        <div className="flex justify-end py-3 px-4 bg-gray-50 space-x-4">
+          <Button onClick={handleClose} outline>
             キャンセル
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="focus:outline-none py-2 px-7 text-white font-semibold rounded-sm bg-gray-800 duration-50 hover:opacity-90 disabled:opacity-50"
             disabled={!formState.isDirty || formState.isSubmitting || loading}
           >
             作成
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

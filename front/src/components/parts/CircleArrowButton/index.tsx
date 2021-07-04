@@ -1,7 +1,7 @@
 import React from 'react'
 import Icon from '@/components/parts/Icon'
 
-type CircleArrowButtonProps = {
+export type CircleArrowButtonProps = {
   arrowType: 'left' | 'right'
   onClick: () => void
   classNames: string

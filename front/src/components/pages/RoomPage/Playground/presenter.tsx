@@ -1,8 +1,9 @@
-import React, { useCallback, useState, forwardRef } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useScrollBottom, useReverseFetchMore } from '@/hooks'
 import RoomScreen, {
   RoomScreenProps,
 } from '@/components/pages/RoomPage/RoomScreen'
+import Button from '@/components/parts/Button'
 import { RoomFragment, BalloonPosition } from '@/graphql'
 
 export type PlaygroundProps = {
@@ -56,44 +57,37 @@ const Playground: React.FC<PlaygroundProps> = ({
       <div className="pt-4 flex">
         <div>
           <h4 className="mb-2">吹き出し位置変更</h4>
-          <div className="space-x-4 pb-4">
-            <button
-              className="outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+          <div className="space-x-2 pb-2">
+            <Button
               onClick={() => handleChangeBalloonPos(BalloonPosition.TopLeft)}
             >
               ↖左上
-            </button>
-            <button
-              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+            </Button>
+            <Button
               onClick={() => handleChangeBalloonPos(BalloonPosition.TopRight)}
             >
               右上↗
-            </button>
+            </Button>
           </div>
-          <div className="space-x-4">
-            <button
-              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+          <div className="space-x-2">
+            <Button
               onClick={() => handleChangeBalloonPos(BalloonPosition.BottomLeft)}
             >
               ↙左下
-            </button>
-            <button
-              className="focus:outline-none bg-transparent duration-75 hover:bg-gray-500 hover:text-white text-gray-800 py-1 w-20 border border-gray-500 hover:border-transparent rounded"
+            </Button>
+            <Button
               onClick={() =>
                 handleChangeBalloonPos(BalloonPosition.BottomRight)
               }
             >
               右下↘
-            </button>
+            </Button>
           </div>
         </div>
         <div className="ml-auto">
-          <button
-            className="focus:outline-none duration-75 bg-red-500 text-white py-2 px-6 rounded hover:bg-red-600"
-            onClick={handleRemoveBalloon}
-          >
+          <Button onClick={handleRemoveBalloon} color="red">
             吹き出しを消す
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -110,7 +104,6 @@ const Playground: React.FC<PlaygroundProps> = ({
             'h-52',
             'overflow-y-auto',
             'text-sm',
-            'space-y-2',
           ].join(' ')}
         >
           <div ref={scrollTopRef} />
@@ -118,14 +111,16 @@ const Playground: React.FC<PlaygroundProps> = ({
           {messages.map((message) => {
             if (prevFirstItem && prevFirstItem.id === message.id) {
               return (
-                <Message
-                  key={message.id}
-                  message={message}
-                  ref={firstItemRef}
-                />
+                <li key={message.id} ref={firstItemRef}>
+                  <Message message={message} />
+                </li>
               )
             } else {
-              return <Message key={message.id} message={message} />
+              return (
+                <li key={message.id} className="mt-2">
+                  <Message message={message} />
+                </li>
+              )
             }
           })}
           <div ref={scrollBottomRef} />
@@ -156,15 +151,15 @@ type MessageProps = {
   message: RoomFragment['room']['messages']['nodes'][0]
 }
 
-const Message = forwardRef<HTMLLIElement, MessageProps>(({ message }, ref) => {
+const Message: React.FC<MessageProps> = ({ message }) => {
   return (
-    <li className="m-0" ref={ref}>
+    <div className="m-0">
       <span className="text-gray-400 font-medium pr-1.5">
         {message.userName}:
       </span>
       <span>{message.body}</span>
-    </li>
+    </div>
   )
-})
+}
 
 export default Playground
