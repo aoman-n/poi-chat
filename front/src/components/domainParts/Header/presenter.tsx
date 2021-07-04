@@ -40,13 +40,13 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
       <div className="ml-auto">
         {isLoggedIn ? (
           <Link href={`${config.apiBaseUrl}/logout`}>
-            <a className="font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
+            <a className="text-sm font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
               ログアウト
             </a>
           </Link>
         ) : (
           <Link href="/login">
-            <a className="font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
+            <a className="text-sm font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
               ログイン
             </a>
           </Link>

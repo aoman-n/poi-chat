@@ -13,17 +13,17 @@
 }
 
 .backdropEnter {
-  opacity: 0;
+  opacity: 0.4;
 
   & .modal {
-    transform: scale(0.8, 0.8);
+    // transform: scale(0.8, 0.8);
   }
 }
 .backdropEnterActive {
   opacity: 1;
 
   & .modal {
-    transform: scale(1, 1);
+    // transform: scale(1, 1);
   }
 }
 .backdropExit {
@@ -31,7 +31,7 @@
 }
 
 .backdropExitActive {
-  opacity: 0;
+  opacity: 0.4;
 }
 
 .modal {

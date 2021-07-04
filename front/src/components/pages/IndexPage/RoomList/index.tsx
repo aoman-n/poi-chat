@@ -22,16 +22,14 @@ const RoomList: React.FC<RoomListProps> = ({ rooms }) => {
         {rooms.map((room) => (
           <Link key={room.id} href={`/rooms/${getRoomIdParam(room.id)}`}>
             <a>
-              <div className="h-full flex items-center border-gray-200 border-b px-2 py-4 hover:bg-gray-100 duration-150 cursor-pointer">
-                <img
+              <div className="h-full flex items-center border-gray-200 border-b px-2 py-2 hover:bg-gray-200 duration-75 cursor-pointer">
+                {/* <img
                   alt="team"
                   className="w-12 h-12 bg-gray-100 object-cover object-center flex-shrink-0 rounded-full mr-4"
                   src="https://dummyimage.com/80x80"
-                />
+                /> */}
                 <div className="flex-grow">
-                  <h4 className="text-gray-900 font-medium text-lg">
-                    {room.name}
-                  </h4>
+                  <h4 className="text-gray-900 font-medium">{room.name}</h4>
                   <div className="text-gray-500 my-1 flex">
                     <div className="ml-auto flex space-x-4">
                       <div className="flex items-center space-x-1">

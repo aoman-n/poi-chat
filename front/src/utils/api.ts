@@ -13,8 +13,7 @@ export const loginByGuest = async ({ name, image }: LoginByGuestParams) => {
 
   try {
     const res = await fetch(`${config.apiBaseUrl}/guest-login`, {
-      // @see: https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#sending_a_request_with_credentials_included
-      // set-cookieを機能させるために必要なパラメータ指定
+      // credentials - @see: https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#sending_a_request_with_credentials_included
       credentials: 'include',
       method: 'POST',
       body: formData,

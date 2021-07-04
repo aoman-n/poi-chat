@@ -62,17 +62,23 @@ const useBalloon = (userManager: UserManager, roomId: string) => {
     removeBalloon({
       variables: { roomId },
     })
-    setBalloonState(initialBalloonState)
+    setBalloonState((prev) => ({
+      ...prev,
+      hasBalloon: false,
+    }))
   }, [removeBalloon, roomId])
 
-  const handleSetDefaultBalloonState = useCallback(() => {
-    setBalloonState(defaultBalloonState)
+  const handleBalloonStateToShowStatus = useCallback(() => {
+    setBalloonState((prev) => ({
+      ...prev,
+      hasBalloon: true,
+    }))
   }, [])
 
   return {
     handleChangeBalloonPos,
     handleRemoveBalloon,
-    handleSetDefaultBalloonState,
+    handleBalloonStateToShowStatus,
     balloonState,
   }
 }
@@ -89,12 +95,12 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   const {
     handleChangeBalloonPos,
     handleRemoveBalloon,
-    handleSetDefaultBalloonState,
+    handleBalloonStateToShowStatus,
     balloonState,
   } = useBalloon(userManager, roomId)
   const { handleSubmitMessage } = useSendMessage(
     roomId,
-    handleSetDefaultBalloonState,
+    handleBalloonStateToShowStatus,
   )
 
   return (

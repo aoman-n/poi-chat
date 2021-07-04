@@ -16,10 +16,10 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
         </div>
       </header>
       <main className="flex space-x-10 max-w-screen-lg mx-auto mt-24">
-        <aside className="w-80 min-w-80">
+        <aside className="flex-1" style={{ minWidth: '240px' }}>
           <UsersNav />
         </aside>
-        {/* Canvasのレスポンシブは考慮する点が多いので一旦決め打ちのサイズで */}
+        {/* 一旦決め打ちのサイズで */}
         <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>{children}</div>
       </main>
     </div>
