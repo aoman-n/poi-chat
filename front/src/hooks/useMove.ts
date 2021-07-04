@@ -2,15 +2,19 @@ import { useCallback } from 'react'
 import { UserManager } from '@/utils/painter'
 import { useMoveMutation } from '@/graphql'
 import { useCurrentUser } from '@/contexts/auth'
+import { useThrottleFn } from '@/hooks'
 
-export const useMove = (roomId: string, userManager: UserManager) => {
+export const useMovePos = (roomId: string, userManager: UserManager) => {
   const [moveMutation] = useMoveMutation()
   const { currentUser } = useCurrentUser()
 
   const handleMovePos = useCallback(
-    (x: number, y: number) => {
+    (e: MouseEvent) => {
       if (!userManager) return
       if (!currentUser) return
+
+      const x = e.offsetX
+      const y = e.offsetY
 
       moveMutation({
         variables: {
@@ -24,5 +28,7 @@ export const useMove = (roomId: string, userManager: UserManager) => {
     [userManager, currentUser, moveMutation, roomId],
   )
 
-  return { handleMovePos }
+  return {
+    handleMovePos: useThrottleFn(handleMovePos, 800),
+  }
 }

@@ -18,7 +18,7 @@ const mainLoop = (
 
 export type RoomScreenProps = {
   userManager: UserManager
-  handleMovePos: (x: number, y: number) => void
+  handleMovePos: (e: MouseEvent) => void
   bgColor: string
   bgUrl: string
 }
@@ -37,17 +37,10 @@ const RoomScreen: React.FC<RoomScreenProps> = ({
     const roomScreenPainter = new RoomScreenPainter({ bgColor, bgUrl })
     mainLoop(ctx, userManager, roomScreenPainter)
 
-    const clickHandler = (e: MouseEvent) => {
-      const x = e.offsetX
-      const y = e.offsetY
-      handleMovePos(x, y)
-    }
-
-    // TODO: イベントをまびく
-    canvas.addEventListener('click', clickHandler)
+    canvas.addEventListener('click', handleMovePos)
 
     return () => {
-      canvas.removeEventListener('click', clickHandler)
+      canvas.removeEventListener('click', handleMovePos)
     }
   }, [])
 

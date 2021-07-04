@@ -7,7 +7,7 @@ import {
   useChangeBalloonPositionMutation,
   BalloonPosition,
 } from '@/graphql'
-import { useSubscribeRoomUserEvent, useSendMessage, useMove } from '@/hooks'
+import { useSubscribeRoomUserEvent, useSendMessage, useMovePos } from '@/hooks'
 import { useCurrentUser } from '@/contexts/auth'
 
 type PlaygroundContainerProps = {
@@ -63,7 +63,7 @@ const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
   moreLoading,
 }) => {
   useSubscribeRoomUserEvent(roomId, userManager)
-  const { handleMovePos } = useMove(roomId, userManager)
+  const { handleMovePos } = useMovePos(roomId, userManager)
   const { handleSubmitMessage } = useSendMessage(roomId)
   const { handleChangeBalloonPos } = useChangeBalloonPos(userManager, roomId)
   const { handleRemoveBalloon } = useRemoveBalloon(roomId)
