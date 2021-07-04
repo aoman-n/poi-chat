@@ -1,10 +1,11 @@
 import React from 'react'
-import { ArrowRight, ArrowLeft, Check } from './icons'
+import { ArrowRight, ArrowLeft, Check, Upload } from './icons'
 
 const icons = {
   arrowRight: ArrowRight,
   arrowLeft: ArrowLeft,
   check: Check,
+  upload: Upload,
 }
 
 type Color = 'gray' | 'green' | 'white'

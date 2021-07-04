@@ -25,6 +25,7 @@
     "graphql-anywhere": "4.2.7",
     "immer": "9.0.2",
     "next": "11.0.0",
+    "nookies": "2.5.2",
     "notistack": "1.0.9",
     "nprogress": "0.2.0",
     "react": "17.0.1",

@@ -22,4 +22,4 @@ declare module 'next' {
 }
 
 export type AppGetStaticProps = GetStaticProps<PageProps>
-export type AppGetServerSideProps<P> = GetServerSideProps<PageProps & P>
+export type AppGetServerSideProps<P = void> = GetServerSideProps<PageProps & P>

@@ -1,13 +1,28 @@
 import React from 'react'
-import { NextPage } from 'next'
+import { NextPage, GetServerSideProps } from 'next'
 import IndexPageComponent from '@/components/pages/IndexPage'
-import { AppGetStaticProps } from '@/types'
+import {
+  getAccessPathOnServer,
+  destroyAccessPathOnServer,
+} from '@/utils/cookies'
 
 const IndexPage: NextPage = () => {
   return <IndexPageComponent />
 }
 
-export const getStaticProps: AppGetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const prevAccessPath = getAccessPathOnServer(ctx)
+
+  if (prevAccessPath) {
+    destroyAccessPathOnServer(ctx)
+    return {
+      redirect: {
+        permanent: false,
+        destination: prevAccessPath,
+      },
+    }
+  }
+
   return {
     props: {
       title: 'ルーム一覧',

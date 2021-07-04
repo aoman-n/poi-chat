@@ -26,8 +26,8 @@ const CropIcon: React.FC<CropIconProps> = ({
       const croppieInstance = new Croppie(croppieEl.current, {
         enableExif: true,
         viewport: {
-          height: 360,
-          width: 360,
+          height: 380,
+          width: 380,
           type: 'circle',
         },
         boundary: {

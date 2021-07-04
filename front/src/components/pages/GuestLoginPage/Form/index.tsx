@@ -1,8 +1,14 @@
 import React, { useState } from 'react'
-import cn from 'classnames'
-import CropIcon from '../CropIcon'
 import { useInputImage } from '@/hooks'
 import { loginByGuest } from '@/utils/api'
+import {
+  getAccessPathOnClient,
+  destroyAccessPathOnClient,
+} from '@/utils/cookies'
+import config from '@/config'
+import Button from '@/components/parts/Button'
+import Icon from '@/components/parts/Icon'
+import CropIcon from '../CropIcon'
 
 export type GuestLoginFormProps = {
   noop?: string
@@ -14,7 +20,7 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
   const [username, setUsername] = useState('名無しさん')
   const [imageBlob, setImageBlob] = useState<Blob | null>(null)
   const { fileRef, handleChangeFile, imageUrl } = useInputImage(
-    'http://placekitten.com/500/800',
+    `${config.frontBaseUrl}/defaultAvatar1.png`,
   )
 
   const handleChangeUsername = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +33,13 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
       setIsSubmitting(true)
       try {
         await loginByGuest({ name: username, image: imageBlob })
-        window.location.href = '/'
+        const accessPath = getAccessPathOnClient()
+        if (accessPath) {
+          destroyAccessPathOnClient()
+          window.location.href = accessPath
+        } else {
+          window.location.href = '/'
+        }
       } catch (err) {
         setIsSubmitting(false)
         console.log(err)
@@ -61,57 +73,41 @@ const GuestLoginForm: React.FC<GuestLoginFormProps> = () => {
                 onChange={handleChangeUsername}
               />
             </div>
-            <div className="text-sm">
-              <label htmlFor="username" className="block text-black mb-3">
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-black mb-3 text-sm"
+              >
                 アイコン画像
               </label>
-              <label className="flex justify-center space-x-1 rounded-sm px-4 py-3 bg-green-500 shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue text-white w-full text-center hover:opacity-90">
+              <Button
+                elementType="label"
+                color="green"
+                classNames="flex justify-center items-center space-x-1 h-12"
+              >
                 <span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                    />
-                  </svg>
+                  <Icon type="upload" color="white" />
                 </span>
-                <span className="text-base leading-normal">
-                  アイコン画像を選択
-                </span>
+                <span className="text-base">アイコン画像を選択</span>
                 <input
                   type="file"
                   className="hidden"
                   ref={fileRef}
-                  onChange={() => handleChangeFile()}
+                  onChange={handleChangeFile}
                 />
-              </label>
+              </Button>
             </div>
           </div>
           <div className="my-6">
-            <button
+            <Button
               disabled={isSubmitting}
               type="submit"
-              className={cn(
-                'py-4',
-                'w-full',
-                'text-white',
-                'rounded-sm',
-                'tracking-wide',
-                'bg-gray-800',
-                'duration-200',
-                'hover:opacity-90',
-                'focus:outline-none',
-              )}
+              fullWidth
+              fontSize="m"
+              classNames="h-12"
             >
               ログインする
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -2,6 +2,7 @@ import React from 'react'
 import { NextPage } from 'next'
 import { useRequireLogin } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
+import { destroyAccessPathOnServer } from '@/utils/cookies'
 import RoomPageComponent from '@/components/pages/RoomPage'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
@@ -12,6 +13,8 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
 export const getServerSideProps: AppGetServerSideProps<{
   roomId: string | string[] | undefined
 }> = async (ctx) => {
+  destroyAccessPathOnServer(ctx)
+
   return {
     props: {
       roomId: 'Room:' + ctx.params?.roomId,

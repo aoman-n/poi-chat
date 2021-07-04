@@ -15,6 +15,7 @@ export type ButtonProps = {
   fullHeight?: boolean
   outline?: boolean
   color?: Color
+  elementType?: 'button' | 'label'
   classNames?: string
 }
 
@@ -50,12 +51,13 @@ const Button: React.FC<ButtonProps> = ({
   fullHeight = false,
   outline = false,
   color = 'gray',
+  elementType = 'button',
   classNames = '',
 }) => {
-  return (
-    <button
-      type={type}
-      className={cn(
+  return React.createElement(
+    elementType,
+    {
+      className: cn(
         fontSizeClasses(fontSize),
         { 'w-full': fullWidth },
         { 'h-full': fullHeight },
@@ -64,15 +66,16 @@ const Button: React.FC<ButtonProps> = ({
         'rounded-sm',
         'focus:outline-none',
         'disabled:opacity-40',
+        'cursor-pointer',
         { 'font-semibold': fontBold },
         { 'cursor-default': disabled },
         classNames,
-      )}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
+      ),
+      type,
+      onClick,
+      disabled,
+    },
+    children,
   )
 }
 
