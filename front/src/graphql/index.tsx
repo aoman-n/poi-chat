@@ -357,6 +357,10 @@ export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
   'id' | 'name' | 'avatarUrl'
 >
 
+export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
+
+export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
+
 export type RoomListFragment = { __typename?: 'Query' } & {
   rooms: { __typename?: 'RoomConnection' } & Pick<
     RoomConnection,
@@ -375,9 +379,12 @@ export type RoomListFragment = { __typename?: 'Query' } & {
     }
 }
 
-export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
+export type RoomPageQueryVariables = Exact<{
+  roomId: Scalars['ID']
+  before?: Maybe<Scalars['String']>
+}>
 
-export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
+export type RoomPageQuery = { __typename?: 'Query' } & RoomFragment
 
 export type RoomFragment = { __typename?: 'Query' } & {
   room: { __typename?: 'Room' } & Pick<
@@ -485,13 +492,6 @@ export type RoomUserFieldsFragment = { __typename?: 'RoomUser' } & Pick<
   RoomUser,
   'id' | 'name' | 'avatarUrl' | 'x' | 'y' | 'balloonPosition'
 > & { lastMessage?: Maybe<{ __typename?: 'Message' } & MessageFieldsFragment> }
-
-export type RoomPageQueryVariables = Exact<{
-  roomId: Scalars['ID']
-  before?: Maybe<Scalars['String']>
-}>
-
-export type RoomPageQuery = { __typename?: 'Query' } & RoomFragment
 
 export type CommonQueryVariables = Exact<{ [key: string]: never }>
 
@@ -744,6 +744,59 @@ export type IndexPageLazyQueryHookResult = ReturnType<
 export type IndexPageQueryResult = Apollo.QueryResult<
   IndexPageQuery,
   IndexPageQueryVariables
+>
+export const RoomPageDocument = gql`
+  query RoomPage($roomId: ID!, $before: String) {
+    ...Room
+  }
+  ${RoomFragmentDoc}
+`
+
+/**
+ * __useRoomPageQuery__
+ *
+ * To run a query within a React component, call `useRoomPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useRoomPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useRoomPageQuery({
+ *   variables: {
+ *      roomId: // value for 'roomId'
+ *      before: // value for 'before'
+ *   },
+ * });
+ */
+export function useRoomPageQuery(
+  baseOptions: Apollo.QueryHookOptions<RoomPageQuery, RoomPageQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<RoomPageQuery, RoomPageQueryVariables>(
+    RoomPageDocument,
+    options,
+  )
+}
+export function useRoomPageLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    RoomPageQuery,
+    RoomPageQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<RoomPageQuery, RoomPageQueryVariables>(
+    RoomPageDocument,
+    options,
+  )
+}
+export type RoomPageQueryHookResult = ReturnType<typeof useRoomPageQuery>
+export type RoomPageLazyQueryHookResult = ReturnType<
+  typeof useRoomPageLazyQuery
+>
+export type RoomPageQueryResult = Apollo.QueryResult<
+  RoomPageQuery,
+  RoomPageQueryVariables
 >
 export const MoreRoomMessagesDocument = gql`
   query MoreRoomMessages($roomId: ID!, $before: String) {
@@ -1087,59 +1140,6 @@ export type ActedRoomUserEventSubscriptionHookResult = ReturnType<
   typeof useActedRoomUserEventSubscription
 >
 export type ActedRoomUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedRoomUserEventSubscription>
-export const RoomPageDocument = gql`
-  query RoomPage($roomId: ID!, $before: String) {
-    ...Room
-  }
-  ${RoomFragmentDoc}
-`
-
-/**
- * __useRoomPageQuery__
- *
- * To run a query within a React component, call `useRoomPageQuery` and pass it any options that fit your needs.
- * When your component renders, `useRoomPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useRoomPageQuery({
- *   variables: {
- *      roomId: // value for 'roomId'
- *      before: // value for 'before'
- *   },
- * });
- */
-export function useRoomPageQuery(
-  baseOptions: Apollo.QueryHookOptions<RoomPageQuery, RoomPageQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useQuery<RoomPageQuery, RoomPageQueryVariables>(
-    RoomPageDocument,
-    options,
-  )
-}
-export function useRoomPageLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<
-    RoomPageQuery,
-    RoomPageQueryVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useLazyQuery<RoomPageQuery, RoomPageQueryVariables>(
-    RoomPageDocument,
-    options,
-  )
-}
-export type RoomPageQueryHookResult = ReturnType<typeof useRoomPageQuery>
-export type RoomPageLazyQueryHookResult = ReturnType<
-  typeof useRoomPageLazyQuery
->
-export type RoomPageQueryResult = Apollo.QueryResult<
-  RoomPageQuery,
-  RoomPageQueryVariables
->
 export const CommonDocument = gql`
   query Common {
     me {

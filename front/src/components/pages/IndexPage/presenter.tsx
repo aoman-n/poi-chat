@@ -1,28 +1,24 @@
 import React from 'react'
-import RoomList, { RoomListProps } from '@/components/pages/IndexPage/RoomList'
+import ContentHeader, { ContentHeaderProps } from './ContentHeader'
+import RoomList, { RoomListProps } from './RoomList'
 import CreateRoomModal, {
   CreateRoomModalProps,
 } from '@/components/domainParts/CreateRoomModal'
-import Button from '@/components/parts/Button'
 
 export type IndexPagePresenterProps = {
-  navigationProps: {
-    handleOpenModal: () => void
-  }
+  contentHeaderProps: ContentHeaderProps
   roomListProps: RoomListProps
   createRoomModalProps: CreateRoomModalProps
 }
 
 const IndexPagePresenter: React.VFC<IndexPagePresenterProps> = ({
-  navigationProps,
+  contentHeaderProps,
   roomListProps,
   createRoomModalProps,
 }) => {
   return (
     <div>
-      <div className="flex justify-end">
-        <Button onClick={navigationProps.handleOpenModal}>ルーム作成</Button>
-      </div>
+      <ContentHeader {...contentHeaderProps} />
       <RoomList {...roomListProps} />
       <CreateRoomModal {...createRoomModalProps} />
     </div>

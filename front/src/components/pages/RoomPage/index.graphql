@@ -1,3 +1,143 @@
 query RoomPage ($roomId: ID!, $before: String) {
   ...Room
 }
+
+# -----------------------------------
+# query fragments on root Query
+fragment Room on Query {
+  room(id: $roomId) {
+    id
+    name
+    bgColor
+    bgUrl
+    users {
+      ... RoomUserFields
+    }
+    ... PageMessagesField
+  }
+}
+
+fragment PageMessagesField on Room {
+  messages(last: 10, before: $before) {
+    pageInfo {
+      startCursor
+      endCursor
+      hasNextPage
+      hasPreviousPage
+    }
+    nodes {
+      ... MessageFields
+    }
+  }
+}
+
+# messagesのfieldのみをmoreFetchでpaginationさせるためのQuery
+query MoreRoomMessages($roomId: ID!, $before: String) {
+  room(id: $roomId) {
+    id
+    ... PageMessagesField
+  }
+} 
+
+# -----------------------------------
+# mutations
+mutation SendMessage($roomId: ID!, $body: String!) {
+  sendMessage(input: {
+    roomID: $roomId,
+    body: $body
+  }) {
+    message {
+      ... MessageFields
+    }
+  }
+}
+
+mutation Move($roomId: ID!, $x: Int!, $y: Int!) {
+  move(input: {
+    roomId: $roomId,
+    x: $x,
+    y: $y
+  }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
+mutation RemoveBalloon($roomId: ID!) {
+  removeLastMessage(input: { roomId: $roomId }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
+mutation ChangeBalloonPosition($roomId: ID!, $balloonPosition: BalloonPosition!) {
+  changeBalloonPosition(input: {
+    roomId: $roomId,
+    balloonPosition: $balloonPosition
+  }) {
+    roomUser {
+      ... RoomUserFields
+    }
+  }
+}
+
+# -----------------------------------
+# subscriptions
+subscription actedRoomUserEvent($roomId: ID!) {
+  actedRoomUserEvent(roomId: $roomId) {
+    __typename
+    ... on JoinedPayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on ExitedPayload {
+      userId
+    }
+    ... on MovedPayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on SentMassagePayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on RemovedLastMessagePayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+    ... on ChangedBalloonPositionPayload {
+      roomUser {
+        ... RoomUserFields
+      }
+    }
+  }
+}
+
+# -----------------------------------
+# fields fragments
+fragment MessageFields on Message {
+  id
+  userId
+  userName
+  userAvatarUrl
+  body
+  createdAt
+}
+
+fragment RoomUserFields on RoomUser {
+  id
+  name
+  avatarUrl
+  x
+  y
+  lastMessage {
+    ... MessageFields
+  }
+  balloonPosition
+}

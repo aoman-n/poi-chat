@@ -5,9 +5,11 @@ import {
   RoomListFragment,
   RoomListFragmentDoc,
 } from '@/graphql'
-import Component, { IndexPagePresenterProps } from './presenter'
+import { useAuthContext } from '@/contexts/auth'
+import Component from './presenter'
 
 const IndexPageContainer: React.VFC = () => {
+  const { isLoggedIn } = useAuthContext()
   const [openModal, setOpenModal] = useState(false)
   const { data } = useIndexPageQuery({ fetchPolicy: 'network-only' })
 
@@ -24,16 +26,13 @@ const IndexPageContainer: React.VFC = () => {
 
   if (!rooms) return <div>スケルトン表示</div>
 
-  const passProps: IndexPagePresenterProps = {
-    navigationProps: { handleOpenModal },
-    roomListProps: { rooms },
-    createRoomModalProps: {
-      open: openModal,
-      handleClose: handleCloseModal,
-    },
-  }
-
-  return <Component {...passProps} />
+  return (
+    <Component
+      contentHeaderProps={{ isLoggedIn, handleOpenModal }}
+      roomListProps={{ rooms }}
+      createRoomModalProps={{ open: openModal, handleClose: handleCloseModal }}
+    />
+  )
 }
 
 export default IndexPageContainer

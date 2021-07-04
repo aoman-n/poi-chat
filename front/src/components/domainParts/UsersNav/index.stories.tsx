@@ -16,6 +16,20 @@ const Template: Story<UsersNavProps> = (args) => (
 
 export const Default = Template.bind({})
 Default.args = {
+  isLoggedIn: true,
+  profile: {
+    name: 'sample name',
+    avatarUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png',
+  },
+  onlineUserList: {
+    users: mockOnlineUsers,
+  },
+}
+
+export const NotLoggedIn = Template.bind({})
+NotLoggedIn.args = {
+  isLoggedIn: false,
   profile: {
     name: 'sample name',
     avatarUrl:
