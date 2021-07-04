@@ -2,15 +2,18 @@ import React, { useEffect } from 'react'
 import { AppPageProps } from 'next'
 import Head from 'next/head'
 import { ApolloProvider } from '@apollo/client'
+import { useCommonQuery } from '@/graphql'
 import { createApolloClient } from '@/utils/apolloClient'
 import { TotalProvider } from '@/contexts'
 import { useAuthContext } from '@/contexts/auth'
 import Main from '@/components/layouts/Main'
 import Entrance from '@/components/layouts/Entrance'
 import GuestLogin from '@/components/layouts/GuestLogin'
+import nprogress from 'nprogress'
+import 'nprogress/nprogress.css'
 import '../styles/globals.css'
 
-import { useCommonQuery } from '@/graphql'
+nprogress.configure({ showSpinner: false, speed: 400, minimum: 0.25 })
 
 const WithCurrentUser: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -35,9 +38,15 @@ const Noop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>{children}</>
 )
 
-// TODO:
-// main以外のLayoutではwebsocketでアクセスしないようにする
 function MyApp({ Component, pageProps }: AppPageProps) {
+  if (process.browser) {
+    nprogress.start()
+  }
+
+  useEffect(() => {
+    nprogress.done()
+  })
+
   const getLayout = () => {
     switch (pageProps.layout) {
       case 'Main':

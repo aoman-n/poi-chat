@@ -296,7 +296,7 @@ export class User {
     // 描画情報
     ctx.beginPath()
     ctx.fillStyle = this.#balloonBgColor
-    ctx.strokeStyle = this.#balloonStrokeColor
+    ctx.strokeStyle = this.#balloonBgColor
     ctx.lineWidth = this.#balloonStrokeWidth
 
     // TODO: Refactor
