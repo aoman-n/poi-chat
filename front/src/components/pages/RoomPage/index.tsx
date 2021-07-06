@@ -1,19 +1,21 @@
 import React, { useState, useCallback } from 'react'
 import { filter } from 'graphql-anywhere'
 import { useRequireLogin, useUserManager } from '@/hooks'
-import Playground from '@/components/pages/RoomPage/Playground'
 import {
   useRoomPageQuery,
   RoomFragment,
   RoomFragmentDoc,
   MoreRoomMessagesDocument,
 } from '@/graphql'
+import { getErrorMsg } from './errors'
+import Skeleton from './Skeleton'
+import Playground from './Playground'
 
 const RoomPage: React.VFC<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
 
   const [moreLoading, setMoreLoading] = useState(false)
-  const { data, fetchMore } = useRoomPageQuery({
+  const { data, fetchMore, error } = useRoomPageQuery({
     variables: { roomId },
     notifyOnNetworkStatusChange: true,
   })
@@ -34,7 +36,8 @@ const RoomPage: React.VFC<{ roomId: string }> = ({ roomId }) => {
   const room =
     (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
 
-  if (!room || !userManager) return <div>スケルトン表示</div>
+  if (error) return <div>{getErrorMsg(error)}</div>
+  if (!room || !userManager) return <Skeleton />
 
   return (
     <Playground

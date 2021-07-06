@@ -15,9 +15,9 @@ export type BalloonState = {
 export type PlaygroundProps = {
   messages: RoomFragment['room']['messages']['nodes']
   hasMoreMessage: boolean
+  handleMoreMessage: () => void
   handleSubmitMessage: (values: { body: string }) => void
   rooomScreenProps: RoomScreenProps
-  handleMoreMessage: () => void
   moreLoading: boolean
   handleChangeBalloonPos: (pos: BalloonPosition) => void
   handleRemoveBalloon: () => void

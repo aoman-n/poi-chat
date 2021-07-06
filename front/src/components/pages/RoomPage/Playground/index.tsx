@@ -1,14 +1,9 @@
-import React, { useState, useCallback } from 'react'
+import React from 'react'
 import { UserManager } from '@/utils/painter'
-import {
-  RoomFragment,
-  useRemoveBalloonMutation,
-  useChangeBalloonPositionMutation,
-} from '@/graphql'
+import { RoomFragment } from '@/graphql'
 import { useSubscribeRoomUserEvent, useSendMessage, useMovePos } from '@/hooks'
-import { useCurrentUser } from '@/contexts/auth'
-import { BalloonPosition, convertToGraphBalloonPos } from '@/constants'
-import Playground, { BalloonState } from './presenter'
+import { useBalloon } from './hooks'
+import Playground from './presenter'
 
 type PlaygroundContainerProps = {
   roomId: string
@@ -16,71 +11,6 @@ type PlaygroundContainerProps = {
   userManager: UserManager
   handleMoreMessage: () => void
   moreLoading: boolean
-}
-
-const initialBalloonState: BalloonState = {
-  hasBalloon: false,
-  position: null,
-}
-
-const defaultBalloonState: BalloonState = {
-  hasBalloon: true,
-  position: 'TOP_RIGHT',
-}
-
-const useBalloon = (userManager: UserManager, roomId: string) => {
-  const { currentUser } = useCurrentUser()
-  const [balloonState, setBalloonState] = useState<BalloonState>(
-    initialBalloonState,
-  )
-  const [changeBalloonPos] = useChangeBalloonPositionMutation()
-  const [removeBalloon] = useRemoveBalloonMutation()
-
-  const handleChangeBalloonPos = (balloonPosition: BalloonPosition) => {
-    if (currentUser) {
-      // TODO: 自身の情報はここで更新するようにする
-      // TODO: globalUserとroomUserのidを同じにする
-      // roomStatus/onlineStatusで管理する
-      // 一旦はidを変換
-      // const ids = currentUser.id.split(':')
-      // userManager.chanageBalloonPos('RoomUser:' + ids[1], pos)
-
-      changeBalloonPos({
-        variables: {
-          roomId,
-          balloonPosition: convertToGraphBalloonPos(balloonPosition),
-        },
-      })
-      setBalloonState((prev) => ({
-        ...prev,
-        position: balloonPosition,
-      }))
-    }
-  }
-
-  const handleRemoveBalloon = useCallback(() => {
-    removeBalloon({
-      variables: { roomId },
-    })
-    setBalloonState((prev) => ({
-      ...prev,
-      hasBalloon: false,
-    }))
-  }, [removeBalloon, roomId])
-
-  const handleBalloonStateToShowStatus = useCallback(() => {
-    setBalloonState((prev) => ({
-      ...prev,
-      hasBalloon: true,
-    }))
-  }, [])
-
-  return {
-    handleChangeBalloonPos,
-    handleRemoveBalloon,
-    handleBalloonStateToShowStatus,
-    balloonState,
-  }
 }
 
 const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
