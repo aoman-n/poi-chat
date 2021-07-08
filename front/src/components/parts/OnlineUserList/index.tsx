@@ -13,11 +13,11 @@ export type OnlineUserListProps = {
 const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
   return (
     <div>
-      <div className="flex items-center justify-center mb-4 space-x-2">
+      <div className="flex items-center justify-center py-5 space-x-2 border border-gray-200">
         <span className="inline-block bg-green-500 w-2 h-2 rounded-full" />
-        <p>ログイン中のユーザー</p>
+        <p className="text-gray-700">ログイン中のユーザー一覧</p>
       </div>
-      <ul className="overflow-y-auto bg-white py-2" style={{ height: '400px' }}>
+      <ul className="overflow-y-auto py-2" style={{ height: '400px' }}>
         {users.map((user) => (
           <li
             key={user.id}
@@ -35,7 +35,7 @@ const OnlineUserList: React.FC<OnlineUserListProps> = ({ users }) => {
               />
             </div>
             <div
-              className="flex-1 text-sm"
+              className="flex-1 text-sm text-gray-600"
               style={{
                 overflow: 'hidden',
                 whiteSpace: 'nowrap',

@@ -1,13 +1,25 @@
 import React from 'react'
 import Link from 'next/link'
 import styles from './index.module.scss'
+import Icon from '@/components/parts/Icon'
+import IconButton from '@/components/parts/IconButton'
+import Dropdown from '@/components/parts/Dropdown'
+import OnlineUserList, {
+  OnlineUserListProps,
+} from '@/components/parts/OnlineUserList'
 import config from '@/config'
 
-export type HeaderProps = {
-  isLoggedIn: boolean
+export type Profile = {
+  name: string
+  avatarUrl: string
 }
 
-const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
+export type HeaderProps = {
+  profile: Profile | null
+  onlineUserList: OnlineUserListProps
+}
+
+const Header: React.FC<HeaderProps> = ({ profile, onlineUserList }) => {
   return (
     <div
       className={[
@@ -37,21 +49,59 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
           </h1>
         </a>
       </Link>
-      <div className="ml-auto">
-        {isLoggedIn ? (
-          <Link href={`${config.apiBaseUrl}/logout`}>
-            <a className="text-sm font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
-              ログアウト
-            </a>
-          </Link>
-        ) : (
-          <Link href="/login">
-            <a className="text-sm font-semibold text-gray-700 py-2 px-3 hover:bg-gray-100 duration-100 rounded-md">
-              ログイン
-            </a>
-          </Link>
-        )}
-      </div>
+      {profile && (
+        <div className="ml-auto flex items-center space-x-6">
+          {/* オペレータリスト */}
+          <Dropdown
+            leftPx={-324}
+            button={
+              <IconButton>
+                <Icon type="users" />
+              </IconButton>
+            }
+          >
+            <div style={{ width: '360px' }}>
+              <OnlineUserList {...onlineUserList} />
+            </div>
+          </Dropdown>
+          <Dropdown
+            leftPx={-234}
+            button={
+              <button className="focus:outline-none">
+                <img
+                  src={profile.avatarUrl}
+                  className="rounded-full"
+                  height={40}
+                  width={40}
+                />
+              </button>
+            }
+          >
+            <div style={{ width: '270px' }}>
+              <div>
+                <div className="flex items-center justify-center py-5 space-x-4 border border-gray-200">
+                  <div className="inline-block rounded-full">
+                    <img
+                      src={profile.avatarUrl}
+                      className="rounded-full"
+                      height="54"
+                      width="54"
+                    />
+                  </div>
+                  <p className="text-gray-700 text-lg">{profile.name}</p>
+                </div>
+                <div>
+                  <Link href={`${config.apiBaseUrl}/logout`}>
+                    <a className="block py-4 text-center hover:bg-gray-100 duration-75">
+                      ログアウト
+                    </a>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </Dropdown>
+        </div>
+      )}
     </div>
   )
 }

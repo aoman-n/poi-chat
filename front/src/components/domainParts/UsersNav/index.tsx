@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuthContext } from '@/contexts/auth'
 import withAuthcheckRequired from '@/components/domainParts/withAuthcheckRequired'
-import { useSubscribeGlobalUserEvent } from './hooks'
+import { useSubscribeGlobalUserEvent } from '../Header/hooks'
 import UsersNav from './presenter'
 
 const UsersNavContainer: React.FC = () => {

@@ -1,11 +1,12 @@
 import React from 'react'
-import { ArrowRight, ArrowLeft, Check, Upload } from './icons'
+import { ArrowRight, ArrowLeft, Check, Upload, Users } from './icons'
 
 const icons = {
   arrowRight: ArrowRight,
   arrowLeft: ArrowLeft,
   check: Check,
   upload: Upload,
+  users: Users,
 }
 
 type Color = 'gray' | 'green' | 'white'
@@ -21,7 +22,7 @@ const getColor = (color: Color) => {
   }
 }
 
-type IconProps = {
+export type IconProps = {
   type: keyof typeof icons
   color?: Color
   className?: string

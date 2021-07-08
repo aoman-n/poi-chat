@@ -29,6 +29,6 @@ export const useMovePos = (roomId: string, userManager: UserManager) => {
   )
 
   return {
-    handleMovePos: useThrottleFn(handleMovePos, 800),
+    handleMovePos: useThrottleFn(handleMovePos, 400),
   }
 }
