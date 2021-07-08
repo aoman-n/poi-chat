@@ -35,7 +35,7 @@ const Playground: React.FC<PlaygroundProps> = ({
   handleRemoveBalloon,
   balloonState,
 }) => {
-  const { scrollBottomRef } = useScrollBottom(messages)
+  const { scrollBottomRef, parentRef } = useScrollBottom(messages)
   const { scrollTopRef, prevFirstItem, firstItemRef } = useReverseFetchMore(
     messages,
     handleMoreMessage,
@@ -107,8 +107,9 @@ const Playground: React.FC<PlaygroundProps> = ({
 
       {/* コメント欄 */}
       <div className={['mt-6'].join(' ')}>
-        <h4 className={['mb-1', 'text-gray-900'].join(' ')}>コメント欄</h4>
+        <h4 className={['mb-2', 'text-gray-900'].join(' ')}>コメント欄</h4>
         <ul
+          ref={parentRef}
           className={[
             'py-4',
             'px-4',
@@ -141,7 +142,7 @@ const Playground: React.FC<PlaygroundProps> = ({
         </ul>
       </div>
       <form
-        className={['mt-6', 'text-gray-900', 'flex'].join(' ')}
+        className={['mt-2', 'text-gray-900', 'flex'].join(' ')}
         onSubmit={wrappedHandleSubmitMessage}
       >
         <input

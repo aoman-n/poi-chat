@@ -15,7 +15,7 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
           <Header />
         </div>
       </header>
-      <main className="flex space-x-10 max-w-screen-lg mx-auto mt-24">
+      <main className="flex space-x-10 max-w-screen-lg mx-auto mt-12">
         <aside className="flex-1" style={{ minWidth: '240px' }}>
           <UsersNav />
         </aside>
