@@ -6,7 +6,7 @@ import {
 } from '@/graphql'
 import { useCurrentUser } from '@/contexts/auth'
 import { BalloonPosition, convertToGraphBalloonPos } from '@/constants'
-import { BalloonState } from './presenter'
+import { BalloonState } from '@/components/pages/RoomPage/Settings'
 
 const initialBalloonState: BalloonState = {
   hasBalloon: false,

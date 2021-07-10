@@ -1,6 +1,5 @@
 import React from 'react'
 import { Story, Meta } from '@storybook/react'
-import { ROOM_SCREEN_SIZE } from '@/constants'
 import Frame from '.'
 
 export default {
@@ -10,11 +9,12 @@ export default {
 
 const Template: Story = () => {
   return (
-    <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>
+    <div style={{ width: `1000px` }}>
       <Frame
-        screen={<div className="bg-blue-300">screenArea</div>}
+        screen={<div className="bg-blue-300 h-full">screenArea</div>}
         settings={<div className="bg-yellow-300 h-20">settingsArea</div>}
-        comments={<div className="bg-green-300 h-32">commentsArea</div>}
+        messages={<div className="bg-green-300 h-80">messagesArea</div>}
+        messageFrom={<div className="bg-pink-300 h-14">messageFormArea</div>}
       />
     </div>
   )

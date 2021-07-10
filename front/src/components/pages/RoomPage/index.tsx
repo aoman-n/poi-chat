@@ -1,37 +1,48 @@
-import React, { useState, useCallback } from 'react'
+import React from 'react'
 import { filter } from 'graphql-anywhere'
-import { useRequireLogin, useUserManager } from '@/hooks'
 import {
-  useRoomPageQuery,
-  RoomFragment,
-  RoomFragmentDoc,
-  MoreRoomMessagesDocument,
-} from '@/graphql'
+  useSubscribeRoomUserEvent,
+  useSendMessage,
+  useMovePos,
+  useBalloon,
+} from '@/hooks'
+import { RoomFragment, RoomFragmentDoc, RoomPageQuery } from '@/graphql'
+import { UserManager } from '@/utils/painter'
 import { getErrorMsg } from './errors'
 import Skeleton from './Skeleton'
-import Playground from './Playground'
+import Component from './presenter'
+import { ApolloError } from '@apollo/client'
 
-const RoomPage: React.VFC<{ roomId: string }> = ({ roomId }) => {
-  useRequireLogin()
+export type RoomPageProps = {
+  data: RoomPageQuery
+  roomId: string
+  userManager: UserManager
+  handleMoreMessage: () => void
+  moreLoading: boolean
+  error: ApolloError | undefined
+}
 
-  const [moreLoading, setMoreLoading] = useState(false)
-  const { data, fetchMore, error } = useRoomPageQuery({
-    variables: { roomId },
-    notifyOnNetworkStatusChange: true,
-  })
-  const { userManager } = useUserManager(data?.room.users)
+const RoomPage: React.VFC<RoomPageProps> = ({
+  data,
+  roomId,
+  userManager,
+  handleMoreMessage,
+  moreLoading,
+  error,
+}) => {
+  useSubscribeRoomUserEvent(roomId, userManager)
+  const { handleMovePos } = useMovePos(roomId, userManager)
+  const {
+    handleChangeBalloonPos,
+    handleRemoveBalloon,
+    handleBalloonStateToShowStatus,
+    balloonState,
+  } = useBalloon(userManager, roomId)
 
-  const handleMoreMessage = useCallback(async () => {
-    setMoreLoading(true)
-    await fetchMore({
-      query: MoreRoomMessagesDocument,
-      variables: {
-        roomId,
-        before: data?.room.messages.pageInfo.startCursor,
-      },
-    })
-    setMoreLoading(false)
-  }, [fetchMore, data, roomId])
+  const { handleSubmitMessage } = useSendMessage(
+    roomId,
+    handleBalloonStateToShowStatus,
+  )
 
   const room =
     (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
@@ -40,12 +51,25 @@ const RoomPage: React.VFC<{ roomId: string }> = ({ roomId }) => {
   if (!room || !userManager) return <Skeleton />
 
   return (
-    <Playground
-      room={room}
-      roomId={roomId}
-      userManager={userManager}
-      handleMoreMessage={handleMoreMessage}
-      moreLoading={moreLoading}
+    <Component
+      playgroundProps={{
+        userManager: userManager,
+        handleMovePos,
+        bgColor: room.bgColor,
+        bgUrl: room.bgUrl,
+      }}
+      settingsProps={{
+        handleChangeBalloonPos,
+        handleRemoveBalloon,
+        balloonState,
+      }}
+      messageListProps={{
+        handleMoreMessage: handleMoreMessage,
+        moreLoading: moreLoading,
+        messages: room.messages.nodes,
+        hasMoreMessage: room.messages.pageInfo.hasPreviousPage,
+      }}
+      messageFormProps={{ handleSubmitMessage }}
     />
   )
 }

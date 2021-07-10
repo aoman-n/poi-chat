@@ -1,13 +1,47 @@
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import { NextPage } from 'next'
-import { useRequireLogin } from '@/hooks'
+import { useRoomPageQuery, MoreRoomMessagesDocument } from '@/graphql'
+import { useRequireLogin, useUserManager } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
 import { destroyAccessPathOnServer } from '@/utils/cookies'
 import RoomPageComponent from '@/components/pages/RoomPage'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
-  return <RoomPageComponent roomId={roomId} />
+
+  const [moreLoading, setMoreLoading] = useState(false)
+
+  const { data, fetchMore, error } = useRoomPageQuery({
+    variables: { roomId },
+    notifyOnNetworkStatusChange: true,
+  })
+  const { userManager } = useUserManager(data?.room.users)
+
+  const handleMoreMessage = useCallback(async () => {
+    setMoreLoading(true)
+    await fetchMore({
+      query: MoreRoomMessagesDocument,
+      variables: {
+        roomId,
+        before: data?.room.messages.pageInfo.startCursor,
+      },
+    })
+    setMoreLoading(false)
+  }, [fetchMore, data, roomId])
+
+  if (!userManager) return null
+  if (!data) return null
+
+  return (
+    <RoomPageComponent
+      data={data}
+      roomId={roomId}
+      userManager={userManager}
+      handleMoreMessage={handleMoreMessage}
+      moreLoading={moreLoading}
+      error={error}
+    />
+  )
 }
 
 export const getServerSideProps: AppGetServerSideProps<{

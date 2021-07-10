@@ -15,12 +15,13 @@ const MainTemplate: React.FC<MainTemplateProps> = ({ children }) => {
           <Header />
         </div>
       </header>
-      <main className="flex space-x-10 max-w-screen-lg mx-auto mt-12">
-        <aside className="flex-1" style={{ minWidth: '240px' }}>
-          <UsersNav />
-        </aside>
+      <main className="flex justify-center space-x-10 max-w-screen-lg mx-auto mt-12">
+        {children}
         {/* 一旦決め打ちのサイズで */}
-        <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>{children}</div>
+        {/* <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>{children}</div> */}
+        {/* <aside className="flex-1" style={{ minWidth: '240px' }}> */}
+        {/* <UsersNav /> */}
+        {/* </aside> */}
       </main>
     </div>
   )

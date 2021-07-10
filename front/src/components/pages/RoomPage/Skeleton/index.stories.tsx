@@ -4,7 +4,8 @@ import { ROOM_SCREEN_SIZE } from '@/constants'
 import Skeleton from '.'
 import ScreenSkeletonComponent from './ScreenSkeleton'
 import SettingsSkeletonComponent from './SettingsSkeleton'
-import CommentsSkeletonComponent from './CommentsSkeleton'
+import MessagesSkeletonComponent from './MessagesSkeleton'
+import MessageFormSkeletonComponent from './MessageFormSkeleton'
 
 export default {
   title: 'RoomPage/Skeleton',
@@ -13,7 +14,7 @@ export default {
 
 const Template: Story = () => {
   return (
-    <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>
+    <div style={{ width: `1000px` }}>
       <Skeleton />
     </div>
   )
@@ -46,8 +47,17 @@ export const SettingsSkeleton = Template3.bind({})
 const Template4: Story = () => {
   return (
     <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>
-      <CommentsSkeletonComponent />
+      <MessagesSkeletonComponent />
     </div>
   )
 }
 export const CommentsSkeleton = Template4.bind({})
+
+const Template5: Story = () => {
+  return (
+    <div style={{ width: `${ROOM_SCREEN_SIZE.WIDTH}px` }}>
+      <MessageFormSkeletonComponent />
+    </div>
+  )
+}
+export const MessageFormSkeleton = Template5.bind({})

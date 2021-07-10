@@ -1,56 +1,56 @@
-import React from 'react'
-import { UserManager } from '@/utils/painter'
-import { RoomFragment } from '@/graphql'
-import { useSubscribeRoomUserEvent, useSendMessage, useMovePos } from '@/hooks'
-import { useBalloon } from './hooks'
-import Playground from './presenter'
+import React, { useEffect } from 'react'
+import { RoomScreenPainter, UserManager } from '@/utils/painter'
+import { ROOM_SCREEN_SIZE } from '@/constants'
 
-type PlaygroundContainerProps = {
-  roomId: string
-  room: RoomFragment['room']
-  userManager: UserManager
-  handleMoreMessage: () => void
-  moreLoading: boolean
+const mainLoop = (
+  ctx: CanvasRenderingContext2D,
+  userManager: UserManager,
+  roomScreenPainter: RoomScreenPainter,
+) => {
+  setInterval(() => {
+    roomScreenPainter.draw(ctx)
+    userManager.update()
+    if (roomScreenPainter.isInitialized) {
+      userManager.draw(ctx)
+    }
+  }, 1000 / 30)
 }
 
-const PlaygroundContainer: React.FC<PlaygroundContainerProps> = ({
-  roomId,
-  room,
+export type PlaygroundProps = {
+  userManager: UserManager
+  handleMovePos: (e: MouseEvent) => void
+  bgColor: string
+  bgUrl: string
+}
+
+const Playground: React.FC<PlaygroundProps> = ({
   userManager,
-  handleMoreMessage,
-  moreLoading,
+  handleMovePos,
+  bgColor,
+  bgUrl,
 }) => {
-  useSubscribeRoomUserEvent(roomId, userManager)
-  const { handleMovePos } = useMovePos(roomId, userManager)
-  const {
-    handleChangeBalloonPos,
-    handleRemoveBalloon,
-    handleBalloonStateToShowStatus,
-    balloonState,
-  } = useBalloon(userManager, roomId)
-  const { handleSubmitMessage } = useSendMessage(
-    roomId,
-    handleBalloonStateToShowStatus,
-  )
+  /* eslint react-hooks/exhaustive-deps: 0 */
+  useEffect(() => {
+    // TODO: refを使う
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    const roomScreenPainter = new RoomScreenPainter({ bgColor, bgUrl })
+    mainLoop(ctx, userManager, roomScreenPainter)
+
+    canvas.addEventListener('click', handleMovePos)
+
+    return () => {
+      canvas.removeEventListener('click', handleMovePos)
+    }
+  }, [])
 
   return (
-    <Playground
-      messages={room.messages.nodes}
-      hasMoreMessage={room.messages.pageInfo.hasPreviousPage}
-      handleSubmitMessage={handleSubmitMessage}
-      rooomScreenProps={{
-        userManager: userManager,
-        handleMovePos: handleMovePos,
-        bgColor: room.bgColor,
-        bgUrl: room.bgUrl,
-      }}
-      handleMoreMessage={handleMoreMessage}
-      moreLoading={moreLoading}
-      handleChangeBalloonPos={handleChangeBalloonPos}
-      handleRemoveBalloon={handleRemoveBalloon}
-      balloonState={balloonState}
+    <canvas
+      id="canvas"
+      width={ROOM_SCREEN_SIZE.WIDTH}
+      height={ROOM_SCREEN_SIZE.HEIGHT}
     />
   )
 }
 
-export default PlaygroundContainer
+export default Playground
