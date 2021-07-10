@@ -13,7 +13,7 @@ const Template: Story = () => {
       <Frame
         screen={<div className="bg-blue-300 h-full">screenArea</div>}
         settings={<div className="bg-yellow-300 h-20">settingsArea</div>}
-        messages={<div className="bg-green-300 h-80">messagesArea</div>}
+        messageList={<div className="bg-green-300 h-80">messagesArea</div>}
         messageFrom={<div className="bg-pink-300 h-14">messageFormArea</div>}
       />
     </div>

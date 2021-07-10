@@ -5,6 +5,7 @@ import { useRequireLogin, useUserManager } from '@/hooks'
 import { AppGetServerSideProps } from '@/types'
 import { destroyAccessPathOnServer } from '@/utils/cookies'
 import RoomPageComponent from '@/components/pages/RoomPage'
+import Skeleton from '@/components/pages/RoomPage/Skeleton'
 
 const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
   useRequireLogin()
@@ -29,8 +30,7 @@ const RoomPage: NextPage<{ roomId: string }> = ({ roomId }) => {
     setMoreLoading(false)
   }, [fetchMore, data, roomId])
 
-  if (!userManager) return null
-  if (!data) return null
+  if (!userManager || !data) return <Skeleton />
 
   return (
     <RoomPageComponent

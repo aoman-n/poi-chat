@@ -24,41 +24,40 @@ const MessageList: React.VFC<MessageListProps> = ({
 
   return (
     <div>
-      <div className={['mt-6'].join(' ')}>
-        <h4 className={['mb-2', 'text-gray-900'].join(' ')}>コメント欄</h4>
-        <ul
-          ref={parentRef}
-          className={[
-            'py-4',
-            'px-4',
-            'border',
-            'border-gray-300',
-            'bg-white',
-            'h-52',
-            'overflow-y-auto',
-            'text-sm',
-          ].join(' ')}
-        >
-          <div ref={scrollTopRef} />
-          {moreLoading && <div>Now Loading...</div>}
-          {messages.map((message) => {
-            if (prevFirstItem && prevFirstItem.id === message.id) {
-              return (
-                <li key={message.id} ref={firstItemRef}>
-                  <Message message={message} />
-                </li>
-              )
-            } else {
-              return (
-                <li key={message.id} className="mt-2">
-                  <Message message={message} />
-                </li>
-              )
-            }
-          })}
-          <div ref={scrollBottomRef} />
-        </ul>
-      </div>
+      <h4 className={['mb-2', 'text-gray-900'].join(' ')}>コメント欄</h4>
+      <ul
+        ref={parentRef}
+        className={[
+          'py-4',
+          'px-4',
+          'border',
+          'border-gray-300',
+          'bg-white',
+          'h-52',
+          'overflow-y-auto',
+          'text-sm',
+        ].join(' ')}
+        style={{ height: '440px' }}
+      >
+        <div ref={scrollTopRef} />
+        {moreLoading && <div>Now Loading...</div>}
+        {messages.map((message) => {
+          if (prevFirstItem && prevFirstItem.id === message.id) {
+            return (
+              <li key={message.id} ref={firstItemRef}>
+                <Message message={message} />
+              </li>
+            )
+          } else {
+            return (
+              <li key={message.id} className="mt-2">
+                <Message message={message} />
+              </li>
+            )
+          }
+        })}
+        <div ref={scrollBottomRef} />
+      </ul>
     </div>
   )
 }

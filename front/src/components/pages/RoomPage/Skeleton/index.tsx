@@ -10,7 +10,7 @@ const Skeleton: React.VFC = () => {
     <Frame
       screen={<ScreenSkeleton />}
       settings={<SettingsSkeleton />}
-      messages={<MessagesSkeleton />}
+      messageList={<MessagesSkeleton />}
       messageFrom={<MessageFormSkeleton />}
     />
   )

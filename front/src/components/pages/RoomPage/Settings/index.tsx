@@ -26,9 +26,9 @@ const Settings: React.FC<SettingsProps> = ({
   balloonState,
 }) => {
   return (
-    <div className="pt-4 flex">
+    <div className="flex">
       <div>
-        <h4 className="mb-2">吹き出し位置変更</h4>
+        <h4 className="mb-2">吹き出し位置</h4>
         <div className="space-x-2 pb-2">
           <Button
             onClick={() => handleChangeBalloonPos('TOP_LEFT')}

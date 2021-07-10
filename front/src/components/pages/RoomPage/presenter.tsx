@@ -19,14 +19,12 @@ const RoomPagePresenter: React.VFC<RoomPageProps> = ({
   messageFormProps,
 }) => {
   return (
-    <div style={{ width: '1180px' }}>
-      <Frame
-        screen={<Playground {...playgroundProps} />}
-        settings={<Settings {...settingsProps} />}
-        messages={<MessageList {...messageListProps} />}
-        messageFrom={<MessageForm {...messageFormProps} />}
-      />
-    </div>
+    <Frame
+      screen={<Playground {...playgroundProps} />}
+      settings={<Settings {...settingsProps} />}
+      messageList={<MessageList {...messageListProps} />}
+      messageFrom={<MessageForm {...messageFormProps} />}
+    />
   )
 }
 

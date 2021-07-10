@@ -20,10 +20,7 @@ const MessageForm: React.VFC<MessageFormProps> = ({ handleSubmitMessage }) => {
   }, [])
 
   return (
-    <form
-      className={['mt-6', 'text-gray-900', 'flex'].join(' ')}
-      onSubmit={wrappedHandleSubmitMessage}
-    >
+    <form className="text-gray-900 flex" onSubmit={wrappedHandleSubmitMessage}>
       <input
         id="username"
         type="text"
