@@ -35,13 +35,13 @@ const RoomPage: React.VFC<RoomPageProps> = ({
   const {
     handleChangeBalloonPos,
     handleRemoveBalloon,
-    handleBalloonStateToShowStatus,
+    handleChangeInitialBalloonState,
     balloonState,
   } = useBalloon(userManager, roomId)
 
   const { handleSubmitMessage } = useSendMessage(
     roomId,
-    handleBalloonStateToShowStatus,
+    handleChangeInitialBalloonState,
   )
 
   const room =

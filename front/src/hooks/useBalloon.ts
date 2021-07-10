@@ -53,17 +53,17 @@ export const useBalloon = (userManager: UserManager, roomId: string) => {
     }))
   }, [removeBalloon, roomId])
 
-  const handleBalloonStateToShowStatus = useCallback(() => {
-    setBalloonState((prev) => ({
-      ...prev,
+  const handleChangeInitialBalloonState = useCallback(() => {
+    setBalloonState({
       hasBalloon: true,
-    }))
+      position: 'TOP_RIGHT',
+    })
   }, [])
 
   return {
     handleChangeBalloonPos,
     handleRemoveBalloon,
-    handleBalloonStateToShowStatus,
+    handleChangeInitialBalloonState,
     balloonState,
   }
 }
