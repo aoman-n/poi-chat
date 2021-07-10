@@ -1,6 +1,7 @@
 import React from 'react'
 import ContentHeader, { ContentHeaderProps } from './ContentHeader'
 import RoomList, { RoomListProps } from './RoomList'
+import Frame from './Frame'
 import CreateRoomModal, {
   CreateRoomModalProps,
 } from '@/components/domainParts/CreateRoomModal'
@@ -17,11 +18,13 @@ const IndexPagePresenter: React.VFC<IndexPagePresenterProps> = ({
   createRoomModalProps,
 }) => {
   return (
-    <div>
-      <ContentHeader {...contentHeaderProps} />
-      <RoomList {...roomListProps} />
+    <>
+      <Frame
+        contentHeader={<ContentHeader {...contentHeaderProps} />}
+        roomList={<RoomList {...roomListProps} />}
+      />
       <CreateRoomModal {...createRoomModalProps} />
-    </div>
+    </>
   )
 }
 

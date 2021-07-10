@@ -16,7 +16,7 @@ const ContentHeader: React.FC<ContentHeaderProps> = ({
         <h2 className="text-gray-900 font-medium title-font text-xl mb-4">
           チャットルーム一覧
         </h2>
-        <p className="leading-relaxed text-sm mb-8 text-gray-700">
+        <p className="leading-relaxed text-sm text-gray-700">
           一覧からルームをクリックすると入室することができます。
         </p>
       </div>

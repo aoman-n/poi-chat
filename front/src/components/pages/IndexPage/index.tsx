@@ -6,6 +6,7 @@ import {
   RoomListFragmentDoc,
 } from '@/graphql'
 import { useAuthContext } from '@/contexts/auth'
+import Skeleton from './Skeleton'
 import Component from './presenter'
 
 const IndexPageContainer: React.VFC = () => {
@@ -24,7 +25,7 @@ const IndexPageContainer: React.VFC = () => {
   const rooms =
     data && filter<RoomListFragment>(RoomListFragmentDoc, data).rooms.nodes
 
-  if (!rooms) return <div>スケルトン表示</div>
+  if (!rooms) return <Skeleton />
 
   return (
     <Component
