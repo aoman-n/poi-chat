@@ -37,7 +37,7 @@ func (r *RoomRepo) GetByID(ctx context.Context, id int) (*domain.Room, error) {
 	if err := r.db.First(&room, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			msg := fmt.Sprintf("not found room, id: %d", id)
-			return nil, aerrors.New(msg).SetCode(aerrors.CodeNotFound).Message(msg)
+			return nil, aerrors.New(msg).SetCode(aerrors.CodeNotFound).Message("not found room")
 		}
 
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
