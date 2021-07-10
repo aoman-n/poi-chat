@@ -4,6 +4,69 @@ schema {
   subscription: Subscription
 }
 
-type Query
-type Mutation
-type Subscription
+type Query {
+  """
+  ルーム情報を取得
+  """
+  room(id: ID!): Room!
+
+  """
+  ルーム一覧を取得
+  """
+  rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
+
+  """
+  ログイン中のユーザーが自身の情報を取得
+  """
+  me: Me!
+
+  """
+  オンライン中のユーザー一覧を取得
+  """
+  globalUsers: [GlobalUser!]!
+}
+
+
+type Mutation {
+  """
+  ルームの作成
+  """
+  createRoom(input: CreateRoomInput): CreateRoomPayload!
+
+  """
+  メッセージの送信
+  """
+  sendMessage(input: SendMessageInput): SendMassagePaylaod!
+
+  """
+  ルーム内ユーザーのポジション移動
+  """
+  move(input: MoveInput!): MovePayload!
+
+  """
+  ルーム内ユーザーの吹き出し削除
+  """
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload!
+
+  """
+  ルーム内ユーザーの吹き出し位置変更
+  """
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload!
+}
+
+type Subscription {
+  """
+  ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
+  このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
+  """
+  actedGlobalUserEvent: GlobalUserEvent
+
+  """
+  ルーム内ユーザーのアクションを待ち受けるサブスクリプション 
+  このサブスクリプションを待ち受けると同時に自身をルームに入室させる
+  """
+  actedRoomUserEvent(roomId: ID!): RoomUserEvent
+}
+
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+  | FIELD_DEFINITION

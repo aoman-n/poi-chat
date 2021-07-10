@@ -1,20 +1,13 @@
-extend type Query {
-  rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
-  room(id: ID!): Room!
-}
-
-extend type Mutation {
-  createRoom(input: CreateRoomInput): CreateRoomPayload!
-}
-
 type Room implements Node {
-  id: ID!
+  id: ID! @goField(forceResolver: true)
   name: String!
   bgColor: String!
   bgUrl: String!
   createdAt: Time!
-  totalUserCount: Int!
-  totalMessageCount: Int!
+  totalUserCount: Int! @goField(forceResolver: true)
+  totalMessageCount: Int! @goField(forceResolver: true)
+  messages(last: Int, before: String): MessageConnection! @goField(forceResolver: true)
+  users: [RoomUser!]! @goField(forceResolver: true)
 }
 
 type RoomEdge implements Edge {

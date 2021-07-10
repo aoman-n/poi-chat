@@ -1,51 +1,24 @@
-extend type Room {
-  """
-  ルーム内のユーザー一覧を取得
-  """
-  users: [RoomUser!]!
+type Me {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
 }
 
-extend type Query {
-  """
-  ログイン中のユーザーが自身の情報を取得
-  """
-  me: Me!
-
-  """
-  本アプリケーションにオンラインしているユーザー一覧を取得
-  """
-  globalUsers: [GlobalUser!]!
+type GlobalUser {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
+  joined: Room @goField(forceResolver: true)
 }
 
-extend type Mutation {
-  """
-  ルーム内ユーザーのポジション移動
-  """
-  move(input: MoveInput!): MovePayload!
-
-  """
-  ルーム内ユーザーの吹き出し削除
-  """
-  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload!
-
-  """
-  ルーム内ユーザーの吹き出し位置変更
-  """
-  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload!
-}
-
-extend type Subscription {
-  """
-  ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
-  このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
-  """
-  actedGlobalUserEvent: GlobalUserEvent
-
-  """
-  ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
-  このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
-  """
-  actedRoomUserEvent(roomId: ID!): RoomUserEvent
+type RoomUser {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+  lastMessage: Message
+  balloonPosition: BalloonPosition!
 }
 
 input MoveInput {
@@ -75,34 +48,11 @@ type MovePayload {
   roomUser: RoomUser!
 }
 
-type Me {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-}
-
-type RoomUser {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
 enum BalloonPosition {
   TOP_LEFT
   TOP_RIGHT
   BOTTOM_LEFT
   BOTTOM_RIGHT
-}
-
-type GlobalUser {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-  joined: Room
 }
 
 """
@@ -113,7 +63,7 @@ type OnlinedPayload {
   globalUser: GlobalUser!
 }
 type OfflinedPayload {
-  userId: ID!
+  userId: ID! @goField(forceResolver: true)
 }
 
 
@@ -132,7 +82,7 @@ type JoinedPayload {
   roomUser: RoomUser!
 }
 type ExitedPayload {
-  userId: ID!
+  userId: ID! @goField(forceResolver: true)
 }
 type MovedPayload {
   roomUser: RoomUser!

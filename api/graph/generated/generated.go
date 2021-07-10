@@ -887,13 +887,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "schema/message.graphql", Input: `type SendMassagePaylaod {
-  message: Message!
-}
-
-type Message implements Node {
-  id: ID!
-  userId: ID!
+	{Name: "schema/message.graphql", Input: `type Message implements Node {
+  id: ID! @goField(forceResolver: true)
+  userId: ID! @goField(forceResolver: true)
   userName: String!
   userAvatarUrl: String!
   body: String!
@@ -915,6 +911,10 @@ type MessageConnection implements Connection {
 input SendMessageInput {
   roomID: ID!
   body: String!
+}
+
+type SendMassagePaylaod {
+  message: Message!
 }
 `, BuiltIn: false},
 	{Name: "schema/node.graphql", Input: `interface Node {
@@ -1000,7 +1000,14 @@ type CreateRoomPayload {
 }
 
 type Query {
+  """
+  ルーム情報を取得
+  """
   room(id: ID!): Room!
+
+  """
+  ルーム一覧を取得
+  """
   rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
 
   """
@@ -1009,14 +1016,21 @@ type Query {
   me: Me!
 
   """
-  本アプリケーションにオンラインしているユーザー一覧を取得
+  オンライン中のユーザー一覧を取得
   """
   globalUsers: [GlobalUser!]!
 }
 
 
 type Mutation {
+  """
+  ルームの作成
+  """
   createRoom(input: CreateRoomInput): CreateRoomPayload!
+
+  """
+  メッセージの送信
+  """
   sendMessage(input: SendMessageInput): SendMassagePaylaod!
 
   """
@@ -1037,14 +1051,14 @@ type Mutation {
 
 type Subscription {
   """
-  ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
-  このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
+  ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
+  このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
   """
   actedGlobalUserEvent: GlobalUserEvent
 
   """
-  ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
-  このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
+  ルーム内ユーザーのアクションを待ち受けるサブスクリプション 
+  このサブスクリプションを待ち受けると同時に自身をルームに入室させる
   """
   actedRoomUserEvent(roomId: ID!): RoomUserEvent
 }
@@ -1052,7 +1066,30 @@ type Subscription {
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
   | FIELD_DEFINITION
 `, BuiltIn: false},
-	{Name: "schema/user.graphql", Input: `input MoveInput {
+	{Name: "schema/user.graphql", Input: `type Me {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
+}
+
+type GlobalUser {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
+  joined: Room @goField(forceResolver: true)
+}
+
+type RoomUser {
+  id: ID! @goField(forceResolver: true)
+  name: String!
+  avatarUrl: String!
+  x: Int!
+  y: Int!
+  lastMessage: Message
+  balloonPosition: BalloonPosition!
+}
+
+input MoveInput {
   roomId: ID!
   x: Int!
   y: Int!
@@ -1079,34 +1116,11 @@ type MovePayload {
   roomUser: RoomUser!
 }
 
-type Me {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-}
-
-type RoomUser {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
 enum BalloonPosition {
   TOP_LEFT
   TOP_RIGHT
   BOTTOM_LEFT
   BOTTOM_RIGHT
-}
-
-type GlobalUser {
-  id: ID!
-  name: String!
-  avatarUrl: String!
-  joined: Room
 }
 
 """
@@ -1117,7 +1131,7 @@ type OnlinedPayload {
   globalUser: GlobalUser!
 }
 type OfflinedPayload {
-  userId: ID!
+  userId: ID! @goField(forceResolver: true)
 }
 
 
@@ -1136,7 +1150,7 @@ type JoinedPayload {
   roomUser: RoomUser!
 }
 type ExitedPayload {
-  userId: ID!
+  userId: ID! @goField(forceResolver: true)
 }
 type MovedPayload {
   roomUser: RoomUser!
