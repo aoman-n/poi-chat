@@ -33,8 +33,6 @@ tmp/
 # GraphQL Environment Variables
 .env
 
-graph
-
 static/*
 !static/.gitkeep
 
