@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
 	"github.com/laster18/poi/api/src/util/aerrors"
 	"gorm.io/gorm"
 )
 
-type MessageRepo struct {
+type Message struct {
 	db *gorm.DB
 }
 
-var _ domain.IMessageRepo = (*MessageRepo)(nil)
-
-func NewMessageRepo(db *gorm.DB) *MessageRepo {
-	return &MessageRepo{db}
+func NewMessage(db *gorm.DB) *Message {
+	return &Message{db}
 }
 
-func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*domain.MessageListResp, error) {
+var _ message.Repository = (*Message)(nil)
+
+func (r *Message) List(ctx context.Context, req *message.ListReq) (*message.ListResp, error) {
 	if req.Limit == 0 {
 		req.Limit = 10
 	}
@@ -38,11 +38,11 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 		Order("created_at desc, id desc").
 		Limit(req.Limit + 1)
 
-	var messages []*domain.Message
+	var messages []*message.Message
 	if err := db.Find(&messages).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &domain.MessageListResp{
-				List:            []*domain.Message{},
+			return &message.ListResp{
+				List:            []*message.Message{},
 				HasPreviousPage: false,
 			}, nil
 		}
@@ -55,19 +55,19 @@ func (r *MessageRepo) List(ctx context.Context, req *domain.MessageListReq) (*do
 	}
 
 	if len(messages) > req.Limit {
-		return &domain.MessageListResp{
+		return &message.ListResp{
 			List:            messages[1:],
 			HasPreviousPage: true,
 		}, nil
 	}
 
-	return &domain.MessageListResp{
+	return &message.ListResp{
 		List:            messages,
 		HasPreviousPage: false,
 	}, nil
 }
 
-func (r *MessageRepo) Create(ctx context.Context, message *domain.Message) error {
+func (r *Message) Create(ctx context.Context, message *message.Message) error {
 	if err := r.db.Create(message).Error; err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
@@ -75,43 +75,13 @@ func (r *MessageRepo) Create(ctx context.Context, message *domain.Message) error
 	return nil
 }
 
-func (r *MessageRepo) Count(ctx context.Context, roomID int) (int, error) {
+func (r *Message) Count(ctx context.Context, roomID int) (int, error) {
 	var count int64
-	if err := r.db.Model(&domain.Message{}).
+	if err := r.db.Model(&message.Message{}).
 		Where("room_id = ?", roomID).
 		Count(&count).Error; err != nil {
 		return 0, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 
 	return int(count), nil
-}
-
-type messageCount struct {
-	RoomID int
-	Count  int
-}
-
-func (r *MessageRepo) CountByRoomIDs(ctx context.Context, roomIDs []int) ([]int, error) {
-	var messageCounts []messageCount
-
-	if err := r.db.Table("messages").
-		Select("room_id, count(room_id) as count").
-		Where("room_id IN ?", roomIDs).
-		Group("room_id").
-		Find(&messageCounts).
-		Error; err != nil {
-		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
-	}
-
-	// 渡されたroomID順に詰めて返す
-	counts := make([]int, len(roomIDs))
-	for i, roomID := range roomIDs {
-		for _, c := range messageCounts {
-			if roomID == c.RoomID {
-				counts[i] = c.Count
-			}
-		}
-	}
-
-	return counts, nil
 }

@@ -2,76 +2,78 @@ package repository_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
 	"github.com/laster18/poi/api/src/repository"
 	"github.com/laster18/poi/api/src/testutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
-func setupRepo(t *testing.T) (context.Context, *gorm.DB, domain.IMessageRepo) {
+func setupMessageRepo(t *testing.T) (context.Context, *gorm.DB, message.Repository) {
 	t.Helper()
 
 	ctx := testutil.NewMockCtx()
 	rdb := testutil.SetupRDB(t)
-	repo := repository.NewMessageRepo(rdb)
+	repo := repository.NewMessage(rdb)
 	return ctx, rdb, repo
 }
 
-func Test_MessageRepo_CountByRoomIDs(t *testing.T) {
-	ctx, rdb, repo := setupRepo(t)
+func Test_Message_Create(t *testing.T) {
+	ctx, rdb, repo := setupMessageRepo(t)
 
-	// roomを2つ作成
-	room1 := createRoom(t, rdb, 1)
-	room2 := createRoom(t, rdb, 2)
+	user := testutil.CreateUser(t, rdb, 1)
+	room := testutil.CreateRoom(t, rdb, 1, user.ID)
 
-	// room1へmessageを3つ保存
-	createMessage(t, rdb, 1, room1.ID)
-	createMessage(t, rdb, 2, room1.ID)
-	createMessage(t, rdb, 3, room1.ID)
-	// room2へmessageを5つ保存
-	createMessage(t, rdb, 4, room2.ID)
-	createMessage(t, rdb, 5, room2.ID)
-	createMessage(t, rdb, 6, room2.ID)
-	createMessage(t, rdb, 7, room2.ID)
-	createMessage(t, rdb, 8, room2.ID)
+	message := &message.Message{
+		UserID: user.ID,
+		RoomID: room.ID,
+		Body:   "message!",
+	}
 
-	got, err := repo.CountByRoomIDs(ctx, []int{room1.ID, room2.ID})
+	assert.NoError(t, repo.Create(ctx, message))
+}
 
+func Test_Message_Count(t *testing.T) {
+	ctx, rdb, repo := setupMessageRepo(t)
+
+	user := testutil.CreateUser(t, rdb, 1)
+	room := testutil.CreateRoom(t, rdb, 1, user.ID)
+
+	// messageを10件作成
+	for i := range make([]int, 10) {
+		testutil.CreateMessage(t, rdb, i, user.ID, room.ID)
+	}
+
+	messageCount, err := repo.Count(ctx, room.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, []int{3, 5}, got)
+	assert.Equal(t, 10, messageCount)
 }
 
-func createRoom(t *testing.T, rdb *gorm.DB, index int) *domain.Room {
-	room := domain.Room{
-		Name:            fmt.Sprintf("room%d", index),
-		BackgroundURL:   fmt.Sprintf("https://example.com/%d", index),
-		BackgroundColor: "#ffffff",
-		UserCount:       0,
-	}
+// func Test_MessageRepo_CountByRoomIDs(t *testing.T) {
+// 	ctx, rdb, repo := setupRepo(t)
 
-	if err := rdb.Create(&room).Error; err != nil {
-		t.Fatalf("failed to setup, create room error: %#v", err)
-	}
+// 	// userを1つ作成
+// 	user := testutil.CreateUser(t, rdb, 1)
 
-	return &room
-}
+// 	// roomを2つ作成
+// 	room1 := testutil.CreateRoom(t, rdb, 1)
+// 	room2 := testutil.CreateRoom(t, rdb, 2)
 
-func createMessage(t *testing.T, rdb *gorm.DB, index, roomID int) *domain.Message {
-	msg := domain.Message{
-		UserUID:       "1",
-		Body:          fmt.Sprintf("メッセージ%d", index),
-		UserName:      fmt.Sprintf("名無しさん%d", index),
-		UserAvatarURL: fmt.Sprintf("http://localhost:3000/image/%d", index),
-		RoomID:        roomID,
-	}
+// 	// room1へmessageを3つ保存
+// 	testutil.CreateMessage(t, rdb, 1, user.ID, room1.ID)
+// 	testutil.CreateMessage(t, rdb, 2, user.ID, room1.ID)
+// 	testutil.CreateMessage(t, rdb, 3, user.ID, room1.ID)
+// 	// room2へmessageを5つ保存
+// 	testutil.CreateMessage(t, rdb, 4, user.ID, room2.ID)
+// 	testutil.CreateMessage(t, rdb, 5, user.ID, room2.ID)
+// 	testutil.CreateMessage(t, rdb, 6, user.ID, room2.ID)
+// 	testutil.CreateMessage(t, rdb, 7, user.ID, room2.ID)
+// 	testutil.CreateMessage(t, rdb, 8, user.ID, room2.ID)
 
-	if err := rdb.Create(&msg).Error; err != nil {
-		t.Fatalf("failed to setup, create message error: %v", err)
-	}
+// 	// got, err := repo.CountByRoomIDs(ctx, []int{room1.ID, room2.ID})
 
-	return &msg
-}
+// 	// assert.NoError(t, err)
+// 	// assert.Equal(t, []int{3, 5}, got)
+// }

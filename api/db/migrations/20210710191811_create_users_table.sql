@@ -1,17 +1,17 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE TABLE rooms (
+CREATE TABLE users (
   `id` int(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `uid` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `background_url` varchar(255),
-  `background_color` varchar(255),
-  `user_count` int(11) NOT NULL,
+  `avatar_url` varchar(255) NOT NULL,
+  `provider` varchar(255) NOT NULl,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE index_name_on_rooms (name)
+  UNIQUE unique_index_uid_on_users (uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE IF EXISTS rooms;
+DROP TABLE IF EXISTS users;
