@@ -4,11 +4,11 @@ import (
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/room"
 	"github.com/laster18/poi/api/src/presentation/graphql"
 )
 
-func ToRoom(r *domain.Room) *model.Room {
+func ToRoom(r *room.Room) *model.Room {
 	return &model.Room{
 		ID:        strconv.Itoa(r.ID),
 		Name:      r.Name,
@@ -18,13 +18,13 @@ func ToRoom(r *domain.Room) *model.Room {
 	}
 }
 
-func ToCreateRoomPayload(r *domain.Room) *model.CreateRoomPayload {
+func ToCreateRoomPayload(r *room.Room) *model.CreateRoomPayload {
 	return &model.CreateRoomPayload{
 		Room: ToRoom(r),
 	}
 }
 
-func ToRoomConnection(after *string, resp *domain.RoomListResp, total int) *model.RoomConnection {
+func ToRoomConnection(after *string, resp *room.ListResp, total int) *model.RoomConnection {
 	// create pageInfo
 	hasPrevious := false
 	if after != nil {

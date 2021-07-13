@@ -89,6 +89,7 @@ func Test_Room_Count(t *testing.T) {
 func createUserAndStatus(ctx context.Context, t *testing.T, rdb *gorm.DB, repo room.Repository, roomID, index int) {
 	user := testutil.CreateUser(t, rdb, index)
 	userStatus := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         user.UID,
 		X:               10 * index,
 		Y:               20 * index,
@@ -96,7 +97,7 @@ func createUserAndStatus(ctx context.Context, t *testing.T, rdb *gorm.DB, repo r
 		LastEvent:       room.AddMessageEvent,
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
-	err := repo.SaveUserStatus(ctx, roomID, userStatus)
+	err := repo.SaveUserStatus(ctx, userStatus)
 	if err != nil {
 		t.Fatalf("failed to setup user status, err: %v", err)
 	}
@@ -173,6 +174,7 @@ func Test_Room_GetUsers(t *testing.T) {
 	user3 := testutil.CreateUser(t, rdb, 3)
 
 	userStatus1 := &room.UserStatus{
+		RoomID:          1000,
 		UserUID:         user1.UID,
 		X:               100,
 		Y:               200,
@@ -181,6 +183,8 @@ func Test_Room_GetUsers(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus2 := &room.UserStatus{
+		RoomID: 1000,
+
 		UserUID:         user2.UID,
 		X:               100,
 		Y:               200,
@@ -189,6 +193,7 @@ func Test_Room_GetUsers(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus3 := &room.UserStatus{
+		RoomID:          1000,
 		UserUID:         user3.UID,
 		X:               100,
 		Y:               200,
@@ -198,9 +203,9 @@ func Test_Room_GetUsers(t *testing.T) {
 	}
 	roomID := 1000
 
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus1))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus2))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus3))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus1))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus2))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus3))
 
 	actual, err := repo.GetUsers(ctx, roomID)
 	assert.NoError(t, err)
@@ -217,7 +222,9 @@ func Test_Room_GetUsers(t *testing.T) {
 func Test_Room_Save_GetUserStatus(t *testing.T) {
 	ctx, _, _, repo := setupRoomRepo(t)
 
+	roomID := 1000
 	userStatus := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         "uid_hoge",
 		X:               100,
 		Y:               200,
@@ -225,9 +232,8 @@ func Test_Room_Save_GetUserStatus(t *testing.T) {
 		LastEvent:       room.AddMessageEvent,
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
-	roomID := 1000
 
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus))
 
 	actual, err := repo.GetUserStatus(ctx, roomID, userStatus.UserUID)
 	assert.NoError(t, err)
@@ -241,7 +247,9 @@ func Test_Room_Delete(t *testing.T) {
 	user2 := testutil.CreateUser(t, rdb, 2)
 	user3 := testutil.CreateUser(t, rdb, 3)
 
+	roomID := 1000
 	userStatus1 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         user1.UID,
 		X:               100,
 		Y:               200,
@@ -250,6 +258,7 @@ func Test_Room_Delete(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus2 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         user2.UID,
 		X:               100,
 		Y:               200,
@@ -258,6 +267,7 @@ func Test_Room_Delete(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus3 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         user3.UID,
 		X:               100,
 		Y:               200,
@@ -265,15 +275,14 @@ func Test_Room_Delete(t *testing.T) {
 		LastEvent:       room.AddMessageEvent,
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
-	roomID := 1000
 
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus1))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus2))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus3))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus1))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus2))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus3))
 
 	// user1とuser2のstatusを削除
-	assert.NoError(t, repo.DeleteUserStatus(ctx, roomID, user1.UID))
-	assert.NoError(t, repo.DeleteUserStatus(ctx, roomID, user2.UID))
+	assert.NoError(t, repo.DeleteUserStatus(ctx, userStatus1))
+	assert.NoError(t, repo.DeleteUserStatus(ctx, userStatus2))
 
 	actual, err := repo.GetUsers(ctx, roomID)
 	assert.NoError(t, err)
@@ -288,7 +297,9 @@ func Test_Room_Delete(t *testing.T) {
 func Test_Room_GetUserStatuses(t *testing.T) {
 	ctx, _, _, repo := setupRoomRepo(t)
 
+	roomID := 1000
 	userStatus1 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         "uid_hoge1",
 		X:               100,
 		Y:               200,
@@ -297,6 +308,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus2 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         "uid_hoge2",
 		X:               100,
 		Y:               200,
@@ -305,6 +317,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus3 := &room.UserStatus{
+		RoomID:          roomID,
 		UserUID:         "uid_hoge3",
 		X:               100,
 		Y:               200,
@@ -312,11 +325,10 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 		LastEvent:       room.AddMessageEvent,
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
-	roomID := 1000
 
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus1))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus2))
-	assert.NoError(t, repo.SaveUserStatus(ctx, roomID, userStatus3))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus1))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus2))
+	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus3))
 
 	userIDs := []string{
 		userStatus1.UserUID,

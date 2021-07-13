@@ -48,6 +48,7 @@ type ResolverRoot interface {
 	Room() RoomResolver
 	RoomUser() RoomUserResolver
 	Subscription() SubscriptionResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -143,6 +144,7 @@ type ComplexityRoot struct {
 		GlobalUsers func(childComplexity int) int
 		Me          func(childComplexity int) int
 		Node        func(childComplexity int, id string) int
+		OnlineUsers func(childComplexity int) int
 		Room        func(childComplexity int, id string) int
 		Rooms       func(childComplexity int, first *int, after *string, orderBy *model.RoomOrderField) int
 	}
@@ -189,6 +191,19 @@ type ComplexityRoot struct {
 		Y               func(childComplexity int) int
 	}
 
+	RoomUser2 struct {
+		ID     func(childComplexity int) int
+		Status func(childComplexity int) int
+		User   func(childComplexity int) int
+	}
+
+	RoomUserStatus struct {
+		BalloonPosition func(childComplexity int) int
+		LastMessage     func(childComplexity int) int
+		X               func(childComplexity int) int
+		Y               func(childComplexity int) int
+	}
+
 	SendMassagePaylaod struct {
 		Message func(childComplexity int) int
 	}
@@ -200,6 +215,13 @@ type ComplexityRoot struct {
 	Subscription struct {
 		ActedGlobalUserEvent func(childComplexity int) int
 		ActedRoomUserEvent   func(childComplexity int, roomID string) int
+	}
+
+	User struct {
+		AvatarURL  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		JoinedRoom func(childComplexity int) int
+		Name       func(childComplexity int) int
 	}
 }
 
@@ -233,6 +255,7 @@ type QueryResolver interface {
 	Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error)
 	Me(ctx context.Context) (*model.Me, error)
 	GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error)
+	OnlineUsers(ctx context.Context) ([]*model.User, error)
 	Node(ctx context.Context, id string) (model.Node, error)
 }
 type RoomResolver interface {
@@ -241,7 +264,7 @@ type RoomResolver interface {
 	TotalUserCount(ctx context.Context, obj *model.Room) (int, error)
 	TotalMessageCount(ctx context.Context, obj *model.Room) (int, error)
 	Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error)
-	Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error)
+	Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser2, error)
 }
 type RoomUserResolver interface {
 	ID(ctx context.Context, obj *model.RoomUser) (string, error)
@@ -249,6 +272,9 @@ type RoomUserResolver interface {
 type SubscriptionResolver interface {
 	ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error)
 	ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error)
+}
+type UserResolver interface {
+	JoinedRoom(ctx context.Context, obj *model.User) (*model.Room, error)
 }
 
 type executableSchema struct {
@@ -576,6 +602,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Node(childComplexity, args["id"].(string)), true
 
+	case "Query.onlineUsers":
+		if e.complexity.Query.OnlineUsers == nil {
+			break
+		}
+
+		return e.complexity.Query.OnlineUsers(childComplexity), true
+
 	case "Query.room":
 		if e.complexity.Query.Room == nil {
 			break
@@ -773,6 +806,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RoomUser.Y(childComplexity), true
 
+	case "RoomUser2.id":
+		if e.complexity.RoomUser2.ID == nil {
+			break
+		}
+
+		return e.complexity.RoomUser2.ID(childComplexity), true
+
+	case "RoomUser2.status":
+		if e.complexity.RoomUser2.Status == nil {
+			break
+		}
+
+		return e.complexity.RoomUser2.Status(childComplexity), true
+
+	case "RoomUser2.user":
+		if e.complexity.RoomUser2.User == nil {
+			break
+		}
+
+		return e.complexity.RoomUser2.User(childComplexity), true
+
+	case "RoomUserStatus.balloonPosition":
+		if e.complexity.RoomUserStatus.BalloonPosition == nil {
+			break
+		}
+
+		return e.complexity.RoomUserStatus.BalloonPosition(childComplexity), true
+
+	case "RoomUserStatus.lastMessage":
+		if e.complexity.RoomUserStatus.LastMessage == nil {
+			break
+		}
+
+		return e.complexity.RoomUserStatus.LastMessage(childComplexity), true
+
+	case "RoomUserStatus.x":
+		if e.complexity.RoomUserStatus.X == nil {
+			break
+		}
+
+		return e.complexity.RoomUserStatus.X(childComplexity), true
+
+	case "RoomUserStatus.y":
+		if e.complexity.RoomUserStatus.Y == nil {
+			break
+		}
+
+		return e.complexity.RoomUserStatus.Y(childComplexity), true
+
 	case "SendMassagePaylaod.message":
 		if e.complexity.SendMassagePaylaod.Message == nil {
 			break
@@ -805,6 +887,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.ActedRoomUserEvent(childComplexity, args["roomId"].(string)), true
+
+	case "User.avatarUrl":
+		if e.complexity.User.AvatarURL == nil {
+			break
+		}
+
+		return e.complexity.User.AvatarURL(childComplexity), true
+
+	case "User.id":
+		if e.complexity.User.ID == nil {
+			break
+		}
+
+		return e.complexity.User.ID(childComplexity), true
+
+	case "User.joinedRoom":
+		if e.complexity.User.JoinedRoom == nil {
+			break
+		}
+
+		return e.complexity.User.JoinedRoom(childComplexity), true
+
+	case "User.name":
+		if e.complexity.User.Name == nil {
+			break
+		}
+
+		return e.complexity.User.Name(childComplexity), true
 
 	}
 	return 0, false
@@ -961,7 +1071,8 @@ input PaginationInput {
   totalUserCount: Int! @goField(forceResolver: true)
   totalMessageCount: Int! @goField(forceResolver: true)
   messages(last: Int, before: String): MessageConnection! @goField(forceResolver: true)
-  users: [RoomUser!]! @goField(forceResolver: true)
+  # 下記追加
+  users: [RoomUser2!]! @goField(forceResolver: true)
 }
 
 type RoomEdge implements Edge {
@@ -1019,6 +1130,7 @@ type Query {
   オンライン中のユーザー一覧を取得
   """
   globalUsers: [GlobalUser!]!
+  onlineUsers: [User!]!
 }
 
 
@@ -1066,7 +1178,31 @@ type Subscription {
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
   | FIELD_DEFINITION
 `, BuiltIn: false},
-	{Name: "schema/user.graphql", Input: `type Me {
+	{Name: "schema/user.graphql", Input: `type User {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+  # 下記追加
+  """ ルームに入室していなかったらnull """
+  joinedRoom: Room @goField(forceResolver: true)
+}
+
+type RoomUser2 {
+  id: ID!
+  user: User!
+  status: RoomUserStatus!
+}
+
+type RoomUserStatus {
+  x: Int!
+  y: Int!
+  lastMessage: Message
+  balloonPosition: BalloonPosition!
+}
+
+# -------------------------------------
+
+type Me {
   id: ID! @goField(forceResolver: true)
   name: String!
   avatarUrl: String!
@@ -2874,6 +3010,41 @@ func (ec *executionContext) _Query_globalUsers(ctx context.Context, field graphq
 	return ec.marshalNGlobalUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUserᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_onlineUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().OnlineUsers(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_node(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3368,9 +3539,9 @@ func (ec *executionContext) _Room_users(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RoomUser)
+	res := resTmp.([]*model.RoomUser2)
 	fc.Result = res
-	return ec.marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RoomConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.RoomConnection) (ret graphql.Marshaler) {
@@ -3825,6 +3996,248 @@ func (ec *executionContext) _RoomUser_balloonPosition(ctx context.Context, field
 	return ec.marshalNBalloonPosition2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐBalloonPosition(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RoomUser2_id(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUser2",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUser2_user(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUser2",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUser2_status(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUser2",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RoomUserStatus)
+	fc.Result = res
+	return ec.marshalNRoomUserStatus2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUserStatus_x(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUserStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.X, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUserStatus_y(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUserStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Y, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUserStatus_lastMessage(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUserStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastMessage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Message)
+	fc.Result = res
+	return ec.marshalOMessage2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RoomUserStatus_balloonPosition(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RoomUserStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BalloonPosition, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.BalloonPosition)
+	fc.Result = res
+	return ec.marshalNBalloonPosition2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐBalloonPosition(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _SendMassagePaylaod_message(ctx context.Context, field graphql.CollectedField, obj *model.SendMassagePaylaod) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3984,6 +4397,143 @@ func (ec *executionContext) _Subscription_actedRoomUserEvent(ctx context.Context
 			w.Write([]byte{'}'})
 		})
 	}
+}
+
+func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_avatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AvatarURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_joinedRoom(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().JoinedRoom(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Room)
+	fc.Result = res
+	return ec.marshalORoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6079,6 +6629,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "onlineUsers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_onlineUsers(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "node":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -6405,6 +6969,82 @@ func (ec *executionContext) _RoomUser(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var roomUser2Implementors = []string{"RoomUser2"}
+
+func (ec *executionContext) _RoomUser2(ctx context.Context, sel ast.SelectionSet, obj *model.RoomUser2) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, roomUser2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RoomUser2")
+		case "id":
+			out.Values[i] = ec._RoomUser2_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "user":
+			out.Values[i] = ec._RoomUser2_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._RoomUser2_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var roomUserStatusImplementors = []string{"RoomUserStatus"}
+
+func (ec *executionContext) _RoomUserStatus(ctx context.Context, sel ast.SelectionSet, obj *model.RoomUserStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, roomUserStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RoomUserStatus")
+		case "x":
+			out.Values[i] = ec._RoomUserStatus_x(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "y":
+			out.Values[i] = ec._RoomUserStatus_y(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "lastMessage":
+			out.Values[i] = ec._RoomUserStatus_lastMessage(ctx, field, obj)
+		case "balloonPosition":
+			out.Values[i] = ec._RoomUserStatus_balloonPosition(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var sendMassagePaylaodImplementors = []string{"SendMassagePaylaod"}
 
 func (ec *executionContext) _SendMassagePaylaod(ctx context.Context, sel ast.SelectionSet, obj *model.SendMassagePaylaod) graphql.Marshaler {
@@ -6479,6 +7119,54 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
+}
+
+var userImplementors = []string{"User"}
+
+func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("User")
+		case "id":
+			out.Values[i] = ec._User_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._User_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "avatarUrl":
+			out.Values[i] = ec._User_avatarUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "joinedRoom":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_joinedRoom(ctx, field, obj)
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
 }
 
 var __DirectiveImplementors = []string{"__Directive"}
@@ -7143,7 +7831,7 @@ func (ec *executionContext) marshalNRoomEdge2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋ
 	return ec._RoomEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomUser) graphql.Marshaler {
+func (ec *executionContext) marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2ᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomUser2) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -7167,7 +7855,7 @@ func (ec *executionContext) marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoi
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, sel, v[i])
+			ret[i] = ec.marshalNRoomUser22ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7180,6 +7868,16 @@ func (ec *executionContext) marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoi
 	return ret
 }
 
+func (ec *executionContext) marshalNRoomUser22ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2(ctx context.Context, sel ast.SelectionSet, v *model.RoomUser2) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._RoomUser2(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx context.Context, sel ast.SelectionSet, v *model.RoomUser) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -7188,6 +7886,16 @@ func (ec *executionContext) marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋ
 		return graphql.Null
 	}
 	return ec._RoomUser(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRoomUserStatus2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserStatus(ctx context.Context, sel ast.SelectionSet, v *model.RoomUserStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._RoomUserStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSendMassagePaylaod2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐSendMassagePaylaod(ctx context.Context, sel ast.SelectionSet, v model.SendMassagePaylaod) graphql.Marshaler {
@@ -7232,6 +7940,53 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

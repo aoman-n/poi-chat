@@ -5,73 +5,84 @@ import (
 
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/room"
+	"github.com/laster18/poi/api/src/domain/user"
 )
 
-func ToMovePayload(ru *domain.RoomUser) *model.MovePayload {
+func ToMovePayload(ru *room.UserStatus) *model.MovePayload {
 	return &model.MovePayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToRemoveLastMessagePayload(ru *domain.RoomUser) *model.RemoveLastMessagePayload {
+func ToRemoveLastMessagePayload(us *room.UserStatus) *model.RemoveLastMessagePayload {
 	return &model.RemoveLastMessagePayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToChangeBalloonPositionPayload(ru *domain.RoomUser) *model.ChangeBalloonPositionPayload {
+func ToChangeBalloonPositionPayload(us *room.UserStatus) *model.ChangeBalloonPositionPayload {
 	return &model.ChangeBalloonPositionPayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
 func ToRoomUser(ru *domain.RoomUser) *model.RoomUser {
 	return &model.RoomUser{
-		ID:              ru.UID,
-		Name:            ru.Name,
-		AvatarURL:       ru.AvatarURL,
-		X:               ru.X,
-		Y:               ru.Y,
-		LastMessage:     ToMessage(ru.LastMessage),
+		ID:        ru.UID,
+		Name:      ru.Name,
+		AvatarURL: ru.AvatarURL,
+		X:         ru.X,
+		Y:         ru.Y,
+		// LastMessage:     ToMessage(ru.LastMessage),
 		BalloonPosition: ConvertBalloonPosition(ru.BalloonPosition),
 	}
 }
 
-func ToGlobalUsers(gs []*domain.GlobalUser) []*model.GlobalUser {
-	os := make([]*model.GlobalUser, len(gs))
-	for i, g := range gs {
-		os[i] = &model.GlobalUser{
-			ID:        g.UID,
-			Name:      g.Name,
-			AvatarURL: g.AvatarURL,
-			Joined:    nil, // TODO: ちゃんと返す
-		}
+func ToUser(u *user.User) *model.User {
+	return &model.User{
+		ID:         strconv.Itoa(u.ID),
+		Name:       u.Name,
+		AvatarURL:  u.AvatarURL,
+		JoinedRoom: &model.Room{},
 	}
-
-	return os
 }
 
-func ToRoomUsers(rus []*domain.RoomUser) []*model.RoomUser {
-	roomUsers := make([]*model.RoomUser, len(rus))
-	for i, r := range rus {
-		roomUser := &model.RoomUser{
-			ID:              r.UID,
-			Name:            r.Name,
-			AvatarURL:       r.AvatarURL,
-			X:               r.X,
-			Y:               r.Y,
-			BalloonPosition: ConvertBalloonPosition(r.BalloonPosition),
+func ToUsers(users []*user.User) []*model.User {
+	ret := make([]*model.User, len(users))
+	for i, u := range users {
+		ret[i] = ToUser(u)
+	}
+
+	return ret
+}
+
+func ToRoomUsers(users []*user.User) []*model.RoomUser2 {
+	roomUsers := make([]*model.RoomUser2, len(users))
+	for i, u := range users {
+		roomUser := &model.RoomUser2{
+			ID:     strconv.Itoa(u.ID),
+			User:   ToUser(u),
+			Status: &model.RoomUserStatus{},
 		}
-		if r.LastMessage != nil {
-			roomUser.LastMessage = &model.Message{
-				ID:            strconv.Itoa(r.LastMessage.ID),
-				UserID:        r.LastMessage.UserUID,
-				UserName:      r.LastMessage.UserName,
-				UserAvatarURL: r.LastMessage.UserAvatarURL,
-				Body:          r.LastMessage.Body,
-				CreatedAt:     r.LastMessage.CreatedAt,
-			}
-		}
+		// roomUser := &model.RoomUser2{
+		// 	ID:              r.UID,
+		// 	Name:            r.Name,
+		// 	AvatarURL:       r.AvatarURL,
+		// 	X:               r.X,
+		// 	Y:               r.Y,
+		// 	BalloonPosition: ConvertBalloonPosition(r.BalloonPosition),
+		// }
+		// if r.LastMessage != nil {
+		// 	roomUser.LastMessage = &model.Message{
+		// 		ID:            strconv.Itoa(r.LastMessage.ID),
+		// 		UserID:        r.LastMessage.UserUID,
+		// 		UserName:      r.LastMessage.UserName,
+		// 		UserAvatarURL: r.LastMessage.UserAvatarURL,
+		// 		Body:          r.LastMessage.Body,
+		// 		CreatedAt:     r.LastMessage.CreatedAt,
+		// 	}
+		// }
 		roomUsers[i] = roomUser
 	}
 

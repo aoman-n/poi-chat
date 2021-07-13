@@ -22,7 +22,7 @@ import (
 	"github.com/laster18/poi/api/src/presentation/graphql/resolver"
 	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
 	"github.com/laster18/poi/api/src/presentation/rest"
-	"github.com/laster18/poi/api/src/repository"
+	"github.com/laster18/poi/api/src/registry"
 	"github.com/rs/cors"
 )
 
@@ -31,16 +31,13 @@ func Start() {
 	db := db.NewDb()
 	redisClient := redis.New()
 
-	globalUserRepo := repository.NewGlobalUserRepo(redisClient)
-	roomUserRepo := repository.NewRoomUserRepo(db, redisClient)
-	messageRepo := repository.NewMessageRepo(db)
+	repo := registry.NewRepository(db, redisClient)
 
-	// TODO: subscriberにredisClientを渡さないようにする
 	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
-	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, globalUserRepo)
+	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, nil)
 
 	router := chi.NewRouter()
-	resolver := resolver.New(db, redisClient, roomUserSubscriber, globalUserSubscriber)
+	resolver := resolver.New(repo, roomUserSubscriber, globalUserSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
 	// set middlewares
@@ -67,8 +64,8 @@ func Start() {
 	router.Use(middleware.Recoverer)
 	router.Use(customMiddleware.Logger())
 	router.Use(customMiddleware.Authorize())
-	router.Use(customMiddleware.RoomUserCountLoader(roomUserRepo))
-	router.Use(customMiddleware.RoomMessageCountLoader(messageRepo))
+	// router.Use(customMiddleware.RoomUserCountLoader(roomUserRepo))
+	// router.Use(customMiddleware.RoomMessageCountLoader(messageRepo))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))
 

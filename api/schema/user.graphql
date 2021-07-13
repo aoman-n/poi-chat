@@ -1,3 +1,27 @@
+type User {
+  id: ID!
+  name: String!
+  avatarUrl: String!
+  # 下記追加
+  """ ルームに入室していなかったらnull """
+  joinedRoom: Room @goField(forceResolver: true)
+}
+
+type RoomUser2 {
+  id: ID!
+  user: User!
+  status: RoomUserStatus!
+}
+
+type RoomUserStatus {
+  x: Int!
+  y: Int!
+  lastMessage: Message
+  balloonPosition: BalloonPosition!
+}
+
+# -------------------------------------
+
 type Me {
   id: ID! @goField(forceResolver: true)
   name: String!

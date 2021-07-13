@@ -24,7 +24,7 @@ const (
 	DefaultBgURL   = "https://poi-chat.s3.ap-northeast-1.amazonaws.com/roomBg1.jpg"
 )
 
-func NewRoom(name string, bgColor, bgURL *string) *Room {
+func New(uid int, name string, bgColor, bgURL *string) *Room {
 	color := DefaultBgColor
 	if bgColor != nil {
 		color = *bgColor
@@ -36,7 +36,7 @@ func NewRoom(name string, bgColor, bgURL *string) *Room {
 	}
 
 	return &Room{
-		ID:              0,
+		OwnerID:         uid,
 		Name:            name,
 		BackgroundURL:   url,
 		BackgroundColor: color,

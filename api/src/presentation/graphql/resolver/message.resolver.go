@@ -9,7 +9,7 @@ import (
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
 	"github.com/laster18/poi/api/src/presentation/graphql"
 	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
@@ -22,7 +22,6 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 }
 
 func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (string, error) {
-	// return encodeIDStr(roomUserPrefix, obj.UserID), nil
 	return graphql.RoomUserIDStr(obj.UserID), nil
 }
 
@@ -40,31 +39,30 @@ func (r *mutationResolver) SendMessage(
 		return nil, aerrors.Wrap(err)
 	}
 
-	msg := &domain.Message{
-		UserUID:       currentUser.UID,
-		Body:          input.Body,
-		UserName:      currentUser.Name,
-		UserAvatarURL: currentUser.AvatarURL,
-		RoomID:        domainRoomID,
-		CreatedAt:     clock.Now(),
+	msg := &message.Message{
+		UserID:    currentUser.ID,
+		Body:      input.Body,
+		RoomID:    domainRoomID,
+		CreatedAt: clock.Now(),
 	}
 
-	if err := r.messageRepo.Create(ctx, msg); err != nil {
+	messageRepo := r.repo.NewMessage()
+	if err := messageRepo.Create(ctx, msg); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Create"))
 		return nil, nil
 	}
 
-	roomUser, err := r.roomUserRepo.Get(ctx, domainRoomID, currentUser.UID)
+	roomRepo := r.repo.NewRoom()
+	roomUserStatus, err := roomRepo.GetUserStatus(ctx, domainRoomID, currentUser.UID)
+	// TODO: statusが見つからなかったら作成する
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Get"))
 		return nil, nil
 	}
-	if roomUser == nil {
-		roomUser = domain.NewDefaultRoomUser(domainRoomID, currentUser)
-	}
-	roomUser.SetMessage(msg)
 
-	if err := r.roomUserRepo.Save(ctx, roomUser); err != nil {
+	roomUserStatus.SetMessage(msg)
+
+	if err := roomRepo.SaveUserStatus(ctx, roomUserStatus); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
 		return nil, nil
 	}
@@ -90,7 +88,7 @@ func (r *roomResolver) Messages(
 		return nil, nil
 	}
 
-	messageListReq := &domain.MessageListReq{
+	messageListReq := &message.ListReq{
 		RoomID: roomID,
 	}
 
@@ -108,13 +106,15 @@ func (r *roomResolver) Messages(
 		messageListReq.LastKnownUnix = unix
 	}
 
-	messageListResp, err := r.messageRepo.List(ctx, messageListReq)
+	messageRepo := r.repo.NewMessage()
+
+	messageListResp, err := messageRepo.List(ctx, messageListReq)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.List"))
 		return nil, nil
 	}
 
-	totalCount, err := r.messageRepo.Count(ctx, roomID)
+	totalCount, err := messageRepo.Count(ctx, roomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to messageRepo.Count"))
 		return nil, nil

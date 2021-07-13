@@ -173,7 +173,7 @@ type Room struct {
 	TotalUserCount    int                `json:"totalUserCount"`
 	TotalMessageCount int                `json:"totalMessageCount"`
 	Messages          *MessageConnection `json:"messages"`
-	Users             []*RoomUser        `json:"users"`
+	Users             []*RoomUser2       `json:"users"`
 }
 
 func (Room) IsNode() {}
@@ -204,6 +204,19 @@ type RoomUser struct {
 	BalloonPosition BalloonPosition `json:"balloonPosition"`
 }
 
+type RoomUser2 struct {
+	ID     string          `json:"id"`
+	User   *User           `json:"user"`
+	Status *RoomUserStatus `json:"status"`
+}
+
+type RoomUserStatus struct {
+	X               int             `json:"x"`
+	Y               int             `json:"y"`
+	LastMessage     *Message        `json:"lastMessage"`
+	BalloonPosition BalloonPosition `json:"balloonPosition"`
+}
+
 type SendMassagePaylaod struct {
 	Message *Message `json:"message"`
 }
@@ -218,6 +231,14 @@ type SentMassagePayload struct {
 }
 
 func (SentMassagePayload) IsRoomUserEvent() {}
+
+type User struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatarUrl"`
+	//  ルームに入室していなかったらnull
+	JoinedRoom *Room `json:"joinedRoom"`
+}
 
 type BalloonPosition string
 

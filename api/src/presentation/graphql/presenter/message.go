@@ -4,32 +4,29 @@ import (
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
 	"github.com/laster18/poi/api/src/presentation/graphql"
 )
 
-func ToMessage(m *domain.Message) *model.Message {
+func ToMessage(m *message.Message) *model.Message {
 	if m == nil {
 		return nil
 	}
 
 	return &model.Message{
-		ID:            strconv.Itoa(m.ID),
-		UserID:        m.UserUID,
-		UserName:      m.UserName,
-		UserAvatarURL: m.UserAvatarURL,
-		Body:          m.Body,
-		CreatedAt:     m.CreatedAt,
+		ID:        strconv.Itoa(m.ID),
+		Body:      m.Body,
+		CreatedAt: m.CreatedAt,
 	}
 }
 
-func ToSendMessagePayload(m *domain.Message) *model.SendMassagePaylaod {
+func ToSendMessagePayload(m *message.Message) *model.SendMassagePaylaod {
 	return &model.SendMassagePaylaod{
 		Message: ToMessage(m),
 	}
 }
 
-func ToMessageConnection(before *string, resp *domain.MessageListResp, totalCount int) *model.MessageConnection {
+func ToMessageConnection(before *string, resp *message.ListResp, totalCount int) *model.MessageConnection {
 	// create pageInfo
 	hasNextPage := false
 	if before != nil {

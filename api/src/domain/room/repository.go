@@ -16,8 +16,8 @@ type Repository interface {
 	CountUserByRoomIDs(ctx context.Context, roomIDs []int) ([]int, error)
 	CountMessageByRoomIDs(ctx context.Context, roomIDs []int) ([]int, error)
 	GetUsers(ctx context.Context, roomID int) ([]*user.User, error)
-	SaveUserStatus(ctx context.Context, roomID int, status *UserStatus) error
-	DeleteUserStatus(ctx context.Context, roomID int, userUID string) error
+	SaveUserStatus(ctx context.Context, status *UserStatus) error
+	DeleteUserStatus(ctx context.Context, status *UserStatus) error
 	GetUserStatus(ctx context.Context, roomID int, userUID string) (*UserStatus, error)
 	GetUserStatuses(ctx context.Context, roomID int, userUIDs []string) ([]*UserStatus, error)
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/room"
 	"github.com/laster18/poi/api/src/presentation/graphql"
 	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
@@ -27,7 +27,8 @@ func (r *mutationResolver) CreateRoom(
 		return nil, nil
 	}
 
-	dupRoom, err := r.roomRepo.GetByName(ctx, input.Name)
+	roomRepo := r.repo.NewRoom()
+	dupRoom, err := roomRepo.GetByName(ctx, input.Name)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByName"))
 		return nil, nil
@@ -38,13 +39,13 @@ func (r *mutationResolver) CreateRoom(
 		return nil, nil
 	}
 
-	newRoom := domain.NewRoom(input.Name, input.BgColor, input.BgURL)
+	newRoom := room.New(currentUser.ID, input.Name, input.BgColor, input.BgURL)
 	if err := newRoom.Validate(); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err))
 		return nil, nil
 	}
 
-	if err := r.roomRepo.Create(ctx, newRoom); err != nil {
+	if err := roomRepo.Create(ctx, newRoom); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.Create"))
 		return nil, nil
 	}
@@ -58,7 +59,7 @@ func (r *queryResolver) Rooms(
 	after *string,
 	orderBy *model.RoomOrderField,
 ) (*model.RoomConnection, error) {
-	roomListReq := &domain.RoomListReq{}
+	roomListReq := &room.ListReq{}
 
 	if first != nil {
 		roomListReq.Limit = *first
@@ -75,12 +76,13 @@ func (r *queryResolver) Rooms(
 		roomListReq.LastKnownUnix = unix
 	}
 
-	roomListResp, err := r.roomRepo.List(ctx, roomListReq)
+	roomRepo := r.repo.NewRoom()
+	roomListResp, err := roomRepo.List(ctx, roomListReq)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.List"))
 		return nil, nil
 	}
-	totalCount, err := r.roomRepo.Count(ctx)
+	totalCount, err := roomRepo.Count(ctx)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.Count"))
 		return nil, nil
@@ -96,7 +98,8 @@ func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error
 		return nil, nil
 	}
 
-	room, err := r.roomRepo.GetByID(ctx, roomID)
+	roomRepo := r.repo.NewRoom()
+	room, err := roomRepo.GetByID(ctx, roomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByID"))
 		return nil, nil

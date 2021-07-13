@@ -1,7 +1,9 @@
 package registry
 
 import (
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
+	"github.com/laster18/poi/api/src/domain/room"
+	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/repository"
 	"gorm.io/gorm"
@@ -12,18 +14,28 @@ import (
 
 // interface化することでテスト時には必要なものだけ実装すればよくなる
 type Repository interface {
-	NewGlobalUser() domain.GlobalUserRepo
+	NewUser() user.Repository
+	NewRoom() room.Repository
+	NewMessage() message.Repository
 }
 
 type repositoryImpl struct {
-	redis *redis.Client
 	db    *gorm.DB
+	redis *redis.Client
 }
 
-func NewRepository() Repository {
-	return &repositoryImpl{}
+func NewRepository(db *gorm.DB, redis *redis.Client) Repository {
+	return &repositoryImpl{db, redis}
 }
 
-func (r *repositoryImpl) NewGlobalUser() domain.GlobalUserRepo {
-	return repository.NewGlobalUserRepo(r.redis)
+func (r *repositoryImpl) NewUser() user.Repository {
+	return repository.NewUser(r.db, r.redis)
+}
+
+func (r *repositoryImpl) NewRoom() room.Repository {
+	return repository.NewRoom(r.db, r.redis)
+}
+
+func (r *repositoryImpl) NewMessage() message.Repository {
+	return repository.NewMessage(r.db)
 }

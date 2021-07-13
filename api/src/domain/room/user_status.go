@@ -1,14 +1,56 @@
 package room
 
-import "github.com/laster18/poi/api/src/domain"
+import (
+	"github.com/laster18/poi/api/src/domain/message"
+	"github.com/laster18/poi/api/src/domain/user"
+)
 
 type UserStatus struct {
+	RoomID          int
 	UserUID         string
 	X               int
 	Y               int
-	LastMessage     *domain.Message
+	LastMessage     *message.Message
 	LastEvent       Event
 	BalloonPosition BalloonPosition
+}
+
+const (
+	DefaultX = 100
+	DefaultY = 100
+)
+
+func NewUserStatus(u *user.User) *UserStatus {
+	return &UserStatus{
+		UserUID:     u.UID,
+		X:           DefaultX,
+		Y:           DefaultY,
+		LastMessage: nil,
+		LastEvent:   JoinEvent,
+		// default balloon position is TopRight
+		BalloonPosition: BalloonPositionTopRight,
+	}
+}
+
+func (u *UserStatus) SetPosition(x, y int) {
+	u.X = x
+	u.Y = y
+	u.LastEvent = MoveEvent
+}
+
+func (u *UserStatus) RemoveMessgae() {
+	u.LastMessage = nil
+	u.LastEvent = RemoveLastMessageEvent
+}
+
+func (u *UserStatus) SetMessage(msg *message.Message) {
+	u.LastMessage = msg
+	u.LastEvent = AddMessageEvent
+}
+
+func (u *UserStatus) ChangeBalloonPosition(p BalloonPosition) {
+	u.BalloonPosition = p
+	u.LastEvent = ChangeBalloonPositionEvent
 }
 
 type Event int

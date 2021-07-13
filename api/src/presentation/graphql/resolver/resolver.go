@@ -1,12 +1,8 @@
 package resolver
 
 import (
-	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
-	"github.com/laster18/poi/api/src/repository"
-	"gorm.io/gorm"
-
-	"github.com/go-redis/redis/v8"
+	"github.com/laster18/poi/api/src/registry"
 )
 
 // This file will not be regenerated automatically.
@@ -14,31 +10,19 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 func New(
-	db *gorm.DB,
-	redis *redis.Client,
+	repo registry.Repository,
 	roomUserSubscriber *subscriber.RoomUserSubscriber,
 	globalUserSubscriber *subscriber.GlobalUserSubscriber,
 ) *Resolver {
-	roomRepo := repository.NewRoomRepo(db)
-	messageRepo := repository.NewMessageRepo(db)
-	roomUserRepo := repository.NewRoomUserRepo(db, redis)
-	globalUserRepo := repository.NewGlobalUserRepo(redis)
-
 	return &Resolver{
-		roomRepo:             roomRepo,
-		messageRepo:          messageRepo,
-		roomUserRepo:         roomUserRepo,
-		globalUserRepo:       globalUserRepo,
+		repo:                 repo,
 		roomUserSubscriber:   roomUserSubscriber,
 		globalUserSubscriber: globalUserSubscriber,
 	}
 }
 
 type Resolver struct {
-	roomRepo             domain.IRoomRepo
-	messageRepo          domain.IMessageRepo
-	roomUserRepo         domain.IRoomUserRepo
-	globalUserRepo       domain.GlobalUserRepo
+	repo                 registry.Repository
 	roomUserSubscriber   *subscriber.RoomUserSubscriber
 	globalUserSubscriber *subscriber.GlobalUserSubscriber
 }

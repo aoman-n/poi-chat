@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/util/alog"
 )
 
@@ -22,13 +23,13 @@ func SetUser(c context.Context, u *domain.GlobalUser) context.Context {
 	return context.WithValue(c, userKey, u)
 }
 
-func GetUser(c context.Context) *domain.GlobalUser {
+func GetUser(c context.Context) *user.User {
 	if c.Value(userKey) == nil {
 		return nil
 	}
 
-	user, ok := c.Value(userKey).(*domain.GlobalUser)
-	if !ok || user.UID == "" {
+	user, ok := c.Value(userKey).(*user.User)
+	if !ok {
 		return nil
 	}
 

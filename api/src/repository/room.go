@@ -240,31 +240,31 @@ func (r *Room) GetUsers(ctx context.Context, roomID int) ([]*user.User, error) {
 	return users, nil
 }
 
-func (r *Room) SaveUserStatus(ctx context.Context, roomID int, status *room.UserStatus) error {
+func (r *Room) SaveUserStatus(ctx context.Context, status *room.UserStatus) error {
 	statusBytes, err := json.Marshal(status)
 	if err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
-	key := subscriber.MakeRoomUserStatusKey(roomID, status.UserUID)
+	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserUID)
 
 	if err := r.redis.Set(ctx, key, statusBytes, expireTimeSecond).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
-	if err := r.redis.SAdd(ctx, r.makeRoomUserStatusIndexKey(roomID), key).Err(); err != nil {
+	if err := r.redis.SAdd(ctx, r.makeRoomUserStatusIndexKey(status.RoomID), key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
 }
 
-func (r *Room) DeleteUserStatus(ctx context.Context, roomID int, userUID string) error {
-	key := subscriber.MakeRoomUserStatusKey(roomID, userUID)
+func (r *Room) DeleteUserStatus(ctx context.Context, status *room.UserStatus) error {
+	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserUID)
 
 	if err := r.redis.Del(ctx, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
-	if err := r.redis.SRem(ctx, r.makeRoomUserStatusIndexKey(roomID), key).Err(); err != nil {
+	if err := r.redis.SRem(ctx, r.makeRoomUserStatusIndexKey(status.RoomID), key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
@@ -276,6 +276,9 @@ func (r *Room) GetUserStatus(ctx context.Context, roomID int, userUID string) (*
 
 	userStatusStr, err := r.redis.Get(ctx, key).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, aerrors.Wrap(err).SetCode(aerrors.CodeNotFound).Message("not found user status")
+		}
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 

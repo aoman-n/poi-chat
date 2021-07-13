@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/message"
+	"github.com/laster18/poi/api/src/domain/room"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
@@ -44,7 +46,7 @@ func RoomCursor(id, unix int) *string {
 	return encodeCursor(RoomPrefix, id, unix)
 }
 
-func RoomCursors(rooms []*domain.Room) (startCursor *string, endCursor *string) {
+func RoomCursors(rooms []*room.Room) (startCursor *string, endCursor *string) {
 	var nodes = make([]domain.INode, len(rooms))
 	for i, room := range rooms {
 		nodes[i] = room
@@ -53,7 +55,7 @@ func RoomCursors(rooms []*domain.Room) (startCursor *string, endCursor *string) 
 	return encodeCursors(nodes, RoomPrefix)
 }
 
-func MessageCursors(messages []*domain.Message) (startCursor *string, endCursor *string) {
+func MessageCursors(messages []*message.Message) (startCursor *string, endCursor *string) {
 	var nodes = make([]domain.INode, len(messages))
 	for i, msg := range messages {
 		nodes[i] = msg
