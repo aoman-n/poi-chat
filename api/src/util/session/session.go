@@ -3,9 +3,11 @@ package session
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/sessions"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/domain/user"
 )
 
 var sessionSecret string
@@ -68,16 +70,10 @@ type UserSession struct {
 
 const (
 	idKey     = "user_id"
+	uidKey    = "user_uid"
 	nameKey   = "user_name"
 	avatarKey = "avatar_url"
 )
-
-type User struct {
-	// TODO: UIDにする
-	ID        string
-	Name      string
-	AvatarURL string
-}
 
 func GetUserSession(r *http.Request) (*UserSession, error) {
 	sess, err := store.Get(r, userSessionName)
@@ -88,8 +84,9 @@ func GetUserSession(r *http.Request) (*UserSession, error) {
 	return &UserSession{sess: sess}, nil
 }
 
-func (s *UserSession) SetUser(u *User) {
+func (s *UserSession) SetUser(u *user.User) {
 	s.sess.Values[idKey] = u.ID
+	s.sess.Values[uidKey] = u.UID
 	s.sess.Values[nameKey] = u.Name
 	s.sess.Values[avatarKey] = u.AvatarURL
 }
@@ -110,10 +107,16 @@ func (s *UserSession) IsNew() bool {
 	return s.sess.IsNew
 }
 
-func (s *UserSession) GetUser() (*User, error) {
-	id, ok := s.sess.Values[idKey].(string)
+func (s *UserSession) GetUser() (*user.User, error) {
+	idStr, ok := s.sess.Values[idKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("not found userId in session")
+		return nil, fmt.Errorf("not found user id in session")
+	}
+	id, _ := strconv.Atoi(idStr)
+
+	uid, ok := s.sess.Values[uidKey].(string)
+	if !ok {
+		return nil, fmt.Errorf("not found user uid in session")
 	}
 
 	name, ok := s.sess.Values[nameKey].(string)
@@ -126,8 +129,9 @@ func (s *UserSession) GetUser() (*User, error) {
 		return nil, fmt.Errorf("not found avatarUrl in session")
 	}
 
-	return &User{
+	return &user.User{
 		ID:        id,
+		UID:       uid,
 		Name:      name,
 		AvatarURL: avatarURL,
 	}, nil

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/util/session"
 	"github.com/olahol/go-imageupload"
 )
@@ -33,60 +35,70 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 // parameters
 // name: string
 // image: file
-func guestLoginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("recevied guestLogin!!!")
+func guestLoginHandler(userRepo user.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("recevied guestLogin!!!")
 
-	username := r.FormValue("name")
+		username := r.FormValue("name")
 
-	if username == "" {
-		handleValidationErr(w, errors.New("required name parameter"))
-		return
-	}
-
-	if utf8.RuneCountInString(username) > 12 {
-		handleValidationErr(w, errors.New("name is max 12 characters"))
-		return
-	}
-
-	err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "internal server error")
-		return
-	}
-
-	uploadedAvatarURL, err := saveImageToLocal(r, "image")
-	if err != nil {
-		if err == errNoFile {
-			handleValidationErr(w, errors.New("required image"))
+		if username == "" {
+			handleValidationErr(w, errors.New("required name parameter"))
 			return
 		}
 
-		log.Println("failed to save image to local, err:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "internal server error")
-	}
+		if utf8.RuneCountInString(username) > 12 {
+			handleValidationErr(w, errors.New("name is max 12 characters"))
+			return
+		}
 
-	userSession, err := session.GetUserSession(r)
-	if err != nil {
-		log.Printf("failed to get user session, the cause was %v", err)
-		handleInvalidSessionErr(w, err)
-		return
-	}
+		err := r.ParseMultipartForm(32 << 20)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "internal server error")
+			return
+		}
 
-	userSession.SetUser(&session.User{
-		ID:        uuid.NewString(),
-		Name:      username,
-		AvatarURL: uploadedAvatarURL,
-	})
-	if err := userSession.Save(r, w); err != nil {
-		log.Print("failed to set user to session err:", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		uploadedAvatarURL, err := saveImageToLocal(r, "image")
+		if err != nil {
+			if err == errNoFile {
+				handleValidationErr(w, errors.New("required image"))
+				return
+			}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"ok"}`))
+			log.Println("failed to save image to local, err:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "internal server error")
+		}
+
+		userSession, err := session.GetUserSession(r)
+		if err != nil {
+			log.Printf("failed to get user session, the cause was %v", err)
+			handleInvalidSessionErr(w, err)
+			return
+		}
+
+		user := &user.User{
+			UID:       uuid.NewString(),
+			Name:      username,
+			AvatarURL: uploadedAvatarURL,
+			Provider:  user.ProviderGuest,
+		}
+		if err := userRepo.Save(context.Background(), user); err != nil {
+			log.Print("failed to save user err:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		userSession.SetUser(user)
+		if err := userSession.Save(r, w); err != nil {
+			log.Print("failed to set user to session err:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"message":"ok"}`))
+	}
 }
 
 var (

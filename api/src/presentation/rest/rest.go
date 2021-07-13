@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/laster18/poi/api/src/config"
+	"github.com/laster18/poi/api/src/domain/user"
 )
 
 var (
@@ -19,10 +20,10 @@ var (
 )
 
 // NewRoutes will initialize the all resources endpoint
-func NewRoutes(r *chi.Mux) {
+func NewRoutes(r *chi.Mux, userRepo user.Repository) {
 	r.Get("/twitter/oauth", twitterOauthHandler)
-	r.Get("/twitter/callback", twitterCallbackHandler)
-	r.Post("/guest-login", guestLoginHandler)
+	r.Get("/twitter/callback", twitterCallbackHandler(userRepo))
+	r.Post("/guest-login", guestLoginHandler(userRepo))
 	r.Get("/logout", logoutHandler)
 }
 

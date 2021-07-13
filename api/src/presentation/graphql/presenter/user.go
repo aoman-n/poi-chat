@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/domain/room"
 	"github.com/laster18/poi/api/src/domain/user"
 )
@@ -27,15 +26,12 @@ func ToChangeBalloonPositionPayload(us *room.UserStatus) *model.ChangeBalloonPos
 	}
 }
 
-func ToRoomUser(ru *domain.RoomUser) *model.RoomUser {
+func ToRoomUser(u *room.UserStatus) *model.RoomUser {
 	return &model.RoomUser{
-		ID:        ru.UID,
-		Name:      ru.Name,
-		AvatarURL: ru.AvatarURL,
-		X:         ru.X,
-		Y:         ru.Y,
+		X: u.X,
+		Y: u.Y,
 		// LastMessage:     ToMessage(ru.LastMessage),
-		BalloonPosition: ConvertBalloonPosition(ru.BalloonPosition),
+		BalloonPosition: ConvertBalloonPosition(u.BalloonPosition),
 	}
 }
 
@@ -119,15 +115,15 @@ func ToChangedBalloonPositionPayload(ru *room.UserStatus) *model.ChangedBalloonP
 	}
 }
 
-func ConvertBalloonPosition(p domain.BalloonPosition) model.BalloonPosition {
+func ConvertBalloonPosition(p room.BalloonPosition) model.BalloonPosition {
 	switch p {
-	case domain.TopRight:
+	case room.BalloonPositionTopRight:
 		return model.BalloonPositionTopRight
-	case domain.TopLeft:
+	case room.BalloonPositionTopLeft:
 		return model.BalloonPositionTopLeft
-	case domain.BottomRight:
+	case room.BalloonPositionBottomRight:
 		return model.BalloonPositionBottomRight
-	case domain.BottomLeft:
+	case room.BalloonPositionBottomLeft:
 		return model.BalloonPositionBottomLeft
 	default:
 		return model.BalloonPositionTopRight

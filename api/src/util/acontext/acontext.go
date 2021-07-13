@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/laster18/poi/api/graph/generated"
-	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/util/alog"
 )
@@ -19,7 +18,7 @@ const (
 	loggerKey                 key = "logger"
 )
 
-func SetUser(c context.Context, u *domain.GlobalUser) context.Context {
+func SetUser(c context.Context, u *user.User) context.Context {
 	return context.WithValue(c, userKey, u)
 }
 

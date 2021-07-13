@@ -94,7 +94,7 @@ func Start() {
 	})
 
 	// rest
-	rest.NewRoutes(router)
+	rest.NewRoutes(router, repo.NewUser())
 
 	// graphql
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))

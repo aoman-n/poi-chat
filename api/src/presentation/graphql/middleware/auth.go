@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/laster18/poi/api/src/domain"
 	"github.com/laster18/poi/api/src/util/acontext"
 	"github.com/laster18/poi/api/src/util/session"
 )
@@ -25,20 +24,16 @@ func Authorize() func(http.Handler) http.Handler {
 				return
 			}
 
-			user, err := sess.GetUser()
+			u, err := sess.GetUser()
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// logger := acontext.GetLogger(r.Context())
-			// logger.Debugf("authenticated user is %+v\n", user)
+			logger := acontext.GetLogger(r.Context())
+			logger.Debugf("authenticated user is %+v\n", u)
 
-			newCtx := acontext.SetUser(r.Context(), &domain.GlobalUser{
-				UID:       user.ID,
-				Name:      user.Name,
-				AvatarURL: user.AvatarURL,
-			})
+			newCtx := acontext.SetUser(r.Context(), u)
 
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		})
