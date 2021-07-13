@@ -89,33 +89,33 @@ func ToRoomUsers(users []*user.User) []*model.RoomUser2 {
 	return roomUsers
 }
 
-func ToJoinedPayload(ru *domain.RoomUser) *model.JoinedPayload {
+func ToJoinedPayload(ru *room.UserStatus) *model.JoinedPayload {
 	return &model.JoinedPayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToMovedPayload(ru *domain.RoomUser) *model.MovedPayload {
+func ToMovedPayload(ru *room.UserStatus) *model.MovedPayload {
 	return &model.MovedPayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToSentMassagePayload(ru *domain.RoomUser) *model.SentMassagePayload {
+func ToSentMassagePayload(ru *room.UserStatus) *model.SentMassagePayload {
 	return &model.SentMassagePayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToRemovedLastMessagePayload(ru *domain.RoomUser) *model.RemovedLastMessagePayload {
+func ToRemovedLastMessagePayload(ru *room.UserStatus) *model.RemovedLastMessagePayload {
 	return &model.RemovedLastMessagePayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 
-func ToChangedBalloonPositionPayload(ru *domain.RoomUser) *model.ChangedBalloonPositionPayload {
+func ToChangedBalloonPositionPayload(ru *room.UserStatus) *model.ChangedBalloonPositionPayload {
 	return &model.ChangedBalloonPositionPayload{
-		RoomUser: ToRoomUser(ru),
+		// RoomUser: ToRoomUser(ru),
 	}
 }
 

@@ -20,7 +20,6 @@ import (
 	"github.com/laster18/poi/api/src/infra/redis"
 	customMiddleware "github.com/laster18/poi/api/src/presentation/graphql/middleware"
 	"github.com/laster18/poi/api/src/presentation/graphql/resolver"
-	"github.com/laster18/poi/api/src/presentation/graphql/subscriber"
 	"github.com/laster18/poi/api/src/presentation/rest"
 	"github.com/laster18/poi/api/src/registry"
 	"github.com/rs/cors"
@@ -32,12 +31,15 @@ func Start() {
 	redisClient := redis.New()
 
 	repo := registry.NewRepository(db, redisClient)
+	subscriber := registry.NewSubscriber(redisClient, repo.NewUser())
 
-	roomUserSubscriber := subscriber.NewRoomUserSubscriber(ctx, redisClient)
-	globalUserSubscriber := subscriber.NewGlobalUserSubscriber(ctx, redisClient, nil)
+	userSubscriber := subscriber.NewUser()
+	roomUserSubscriber := subscriber.NewRoomUser()
+	userSubscriber.Start(ctx)
+	roomUserSubscriber.Start(ctx)
 
 	router := chi.NewRouter()
-	resolver := resolver.New(repo, roomUserSubscriber, globalUserSubscriber)
+	resolver := resolver.New(repo, roomUserSubscriber, userSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
 	// set middlewares

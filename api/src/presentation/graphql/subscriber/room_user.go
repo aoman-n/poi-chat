@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/laster18/poi/api/graph/model"
-	"github.com/laster18/poi/api/src/domain"
+	"github.com/laster18/poi/api/src/domain/room"
 	"github.com/laster18/poi/api/src/infra/redis"
 	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
@@ -22,74 +22,73 @@ type RoomUserSubscriber struct {
 	chans map[int]map[string]chan model.RoomUserEvent
 }
 
-func NewRoomUserSubscriber(ctx context.Context, client *redis.Client) *RoomUserSubscriber {
+func NewRoomUserSubscriber(client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
 		chans:  make(map[int]map[string]chan model.RoomUserEvent),
 	}
-	go subscriber.start(ctx)
 	return subscriber
 }
 
-func (s *RoomUserSubscriber) start(ctx context.Context) {
+func (s *RoomUserSubscriber) Start(ctx context.Context) {
 	logger := acontext.GetLogger(ctx)
 
-	// subscribeCh "roomUser:*"
-	subscribeCh := fmt.Sprintf("%s:%s:%s", redis.KeySpace, RoomUserChannel, "*")
+	subscribeCh := fmt.Sprintf("%s:%s:%s", redis.KeySpace, RoomUserStatusChannel, "*")
 	pubsub := s.client.PSubscribe(ctx, subscribeCh)
 	defer pubsub.Close()
 
 	for {
-		logger.Debugf("on subscribe room user event, channel: %s \n", subscribeCh)
+		select {
+		case <-ctx.Done():
+			logger.Info("stop room_user subscriber")
+			return
+		case msg := <-pubsub.Channel():
+			logger.Debugf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
-		msg := <-pubsub.Channel()
-
-		logger.Debugf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
-
-		ch := removeKeyspacePrefix(msg.Channel)
-		roomID, userUID, err := DestructRoomUserKey(ch)
-		if err != nil {
-			log.Println("getted invalid channel key from redis, err:", err)
-			continue
-		}
-
-		switch msg.Payload {
-		case redis.EventSet:
-			// TODO: repositoryへ移譲
-			roomUserJSON, err := s.client.Get(ctx, ch).Result()
+			ch := removeKeyspacePrefix(msg.Channel)
+			roomID, userUID, err := DestructRoomUserStatusKey(ch)
 			if err != nil {
-				logger.Infof("failed to get from redis, err: %v", err)
+				log.Println("getted invalid channel key from redis, err:", err)
 				continue
 			}
 
-			var roomUser domain.RoomUser
-			if err := json.Unmarshal([]byte(roomUserJSON), &roomUser); err != nil {
-				logger.Info("received unexpected json data struct from redis")
-				continue
-			}
+			switch msg.Payload {
+			case redis.EventSet:
+				// TODO: repositoryへ移譲
+				roomUserJSON, err := s.client.Get(ctx, ch).Result()
+				if err != nil {
+					logger.Infof("failed to get from redis, err: %v", err)
+					continue
+				}
 
-			d, err := s.makePublishDataFromSetEvent(&roomUser)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
+				var roomUserStatus room.UserStatus
+				if err := json.Unmarshal([]byte(roomUserJSON), &roomUserStatus); err != nil {
+					logger.Info("received unexpected json data struct from redis")
+					continue
+				}
 
-			s.deliver(roomID, d)
-		case redis.EventDel:
-			fallthrough
-		case redis.EventExpired:
-			data := &model.ExitedPayload{
-				UserID: userUID,
+				d, err := s.makePublishDataFromSetEvent(&roomUserStatus)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+
+				s.deliver(roomID, d)
+			case redis.EventDel:
+				fallthrough
+			case redis.EventExpired:
+				data := &model.ExitedPayload{
+					UserID: userUID,
+				}
+				s.deliver(roomID, data)
+			default:
+				fmt.Println("received unknown event:", msg.Payload)
 			}
-			s.deliver(roomID, data)
-		default:
-			fmt.Println("received unknown event:", msg.Payload)
 		}
 	}
 }
 
 func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
-	// TODO: ここLock必要？
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -125,17 +124,17 @@ func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
 	delete(userChannels, userUID)
 }
 
-func (s *RoomUserSubscriber) makePublishDataFromSetEvent(ru *domain.RoomUser) (model.RoomUserEvent, error) {
+func (s *RoomUserSubscriber) makePublishDataFromSetEvent(ru *room.UserStatus) (model.RoomUserEvent, error) {
 	switch ru.LastEvent {
-	case domain.JoinEvent:
+	case room.JoinEvent:
 		return presenter.ToJoinedPayload(ru), nil
-	case domain.MoveEvent:
+	case room.MoveEvent:
 		return presenter.ToMovedPayload(ru), nil
-	case domain.AddMessageEvent:
+	case room.AddMessageEvent:
 		return presenter.ToSentMassagePayload(ru), nil
-	case domain.RemoveLastMessageEvent:
+	case room.RemoveLastMessageEvent:
 		return presenter.ToRemovedLastMessagePayload(ru), nil
-	case domain.ChangeBalloonPositionEvent:
+	case room.ChangeBalloonPositionEvent:
 		return presenter.ToChangedBalloonPositionPayload(ru), nil
 	default:
 		return nil, errors.New("getted unknown roomUser event")

@@ -18,71 +18,9 @@ func removeKeyspacePrefix(key string) string {
 }
 
 const (
-	GlobalUserChannel     = "globalUser"
-	RoomUserChannel       = "roomUser"
 	OnlineUserChannel     = "onlineUser"
 	RoomUserStatusChannel = "roomUserStatus"
 )
-
-// --------------------------------------------
-// --------------------------------------------
-// For GlobalUser
-
-// MakeRoomUserKey "globalUser:<userId>"
-func MakeGlobalUserKey(userUID string) string {
-	return fmt.Sprintf("%s:%s", GlobalUserChannel, userUID)
-}
-
-// globalUser:11111
-var globalUserChannelReg = regexp.MustCompile(GlobalUserChannel + `:([a-zA-Z\d-]+)`)
-
-func destructGlobalUserKey(key string) (userUID string, err error) {
-	matches := globalUserChannelReg.FindStringSubmatch(key)
-
-	if len(matches) == 0 {
-		return "", fmt.Errorf(`globalUserKey is invalid format, key: "%s"`, key)
-	}
-
-	userUID = matches[1]
-	if userUID == "" {
-		return "", fmt.Errorf(`globalUserKey is invalid format, key: "%s"`, key)
-	}
-
-	return
-}
-
-// --------------------------------------------
-// --------------------------------------------
-// For RoomUser
-
-// roomUser:1:335902496
-var roomUserChannelReg = regexp.MustCompile(RoomUserChannel + `:(\d+):([a-zA-Z\d-]+)`)
-
-// MakeRoomUserKey "roomUser:<roomId>:<userId>"
-func MakeRoomUserKey(roomID int, userUID string) string {
-	return fmt.Sprintf("%s:%d:%s", RoomUserChannel, roomID, userUID)
-}
-
-func DestructRoomUserKey(key string) (roomID int, userUID string, err error) {
-	matches := roomUserChannelReg.FindStringSubmatch(key)
-
-	if len(matches) == 0 {
-		return 0, "", fmt.Errorf(`roomUserKey is invalid format", key: "%s"`, key)
-	}
-
-	roomIDStr := matches[1]
-	userIDStr := matches[2]
-	if roomIDStr == "" || userIDStr == "" {
-		return 0, "", fmt.Errorf(`roomUserKey is invalid format", key: "%s"`, key)
-	}
-
-	roomID, err = strconv.Atoi(roomIDStr)
-	if err != nil {
-		return
-	}
-	userUID = userIDStr
-	return
-}
 
 // --------------------------------------------
 // --------------------------------------------

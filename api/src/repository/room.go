@@ -30,7 +30,7 @@ const RoomUserStatusIndexKey = "roomUserStatusIndex"
 
 // makeRoomUserStatusIndexKey roomUserStatusIndex:<roomId>
 func (r *Room) makeRoomUserStatusIndexKey(roomID int) string {
-	return fmt.Sprintf("%s:%d", RoomUserIndexKey, roomID)
+	return fmt.Sprintf("%s:%d", RoomUserStatusIndexKey, roomID)
 }
 
 func (r *Room) GetByID(ctx context.Context, id int) (*room.Room, error) {
