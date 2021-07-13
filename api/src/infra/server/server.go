@@ -31,12 +31,13 @@ func Start() {
 	redisClient := redis.New()
 
 	repo := registry.NewRepository(db, redisClient)
+	svc := registry.NewService(repo)
 	subscriber := registry.NewSubscriber(redisClient, repo.NewUser())
 
 	userSubscriber := subscriber.NewUser()
 	roomUserSubscriber := subscriber.NewRoomUser()
-	userSubscriber.Start(ctx)
-	roomUserSubscriber.Start(ctx)
+	go userSubscriber.Start(ctx)
+	go roomUserSubscriber.Start(ctx)
 
 	router := chi.NewRouter()
 	resolver := resolver.New(repo, roomUserSubscriber, userSubscriber)
@@ -94,7 +95,7 @@ func Start() {
 	})
 
 	// rest
-	rest.NewRoutes(router, repo.NewUser())
+	rest.NewRoutes(router, svc.NewUser())
 
 	// graphql
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))

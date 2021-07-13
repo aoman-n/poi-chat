@@ -35,7 +35,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 // parameters
 // name: string
 // image: file
-func guestLoginHandler(userRepo user.Repository) http.HandlerFunc {
+func guestLoginHandler(userSvc user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("recevied guestLogin!!!")
 
@@ -83,7 +83,7 @@ func guestLoginHandler(userRepo user.Repository) http.HandlerFunc {
 			AvatarURL: uploadedAvatarURL,
 			Provider:  user.ProviderGuest,
 		}
-		if err := userRepo.Save(context.Background(), user); err != nil {
+		if err := userSvc.SaveIfNotExists(context.Background(), user); err != nil {
 			log.Print("failed to save user err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

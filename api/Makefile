@@ -1,7 +1,7 @@
-.PHONY: gen gqlgen fmt lint
+.PHONY: mockgen-repo gqlgen fmt lint test-repo
 
-gen:
-	- go generate ./...
+mockgen-domain:
+	- go generate ./src/domain/.../.
 
 gqlgen:
 	- gqlgen generate
@@ -12,7 +12,7 @@ fmt:
 lint:
 	golangci-lint run --tests
 
-test:
+test-repo:
 	GO_ENV=test \
 	DB_NAME=poi_test \
 	REDIS_DB=1 \

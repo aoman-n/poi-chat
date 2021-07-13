@@ -20,10 +20,10 @@ var (
 )
 
 // NewRoutes will initialize the all resources endpoint
-func NewRoutes(r *chi.Mux, userRepo user.Repository) {
+func NewRoutes(r *chi.Mux, userSvc user.Service) {
 	r.Get("/twitter/oauth", twitterOauthHandler)
-	r.Get("/twitter/callback", twitterCallbackHandler(userRepo))
-	r.Post("/guest-login", guestLoginHandler(userRepo))
+	r.Get("/twitter/callback", twitterCallbackHandler(userSvc))
+	r.Post("/guest-login", guestLoginHandler(userSvc))
 	r.Get("/logout", logoutHandler)
 }
 

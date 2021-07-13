@@ -40,7 +40,7 @@ func twitterOauthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func twitterCallbackHandler(userRepo user.Repository) http.HandlerFunc {
+func twitterCallbackHandler(userSvc user.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("start callbackHandler")
 
@@ -93,7 +93,7 @@ func twitterCallbackHandler(userRepo user.Repository) http.HandlerFunc {
 			AvatarURL: account.ProfileImageURL,
 			Provider:  user.ProviderTwitter,
 		}
-		if err := userRepo.Save(context.Background(), user); err != nil {
+		if err := userSvc.SaveIfNotExists(context.Background(), user); err != nil {
 			log.Print("failed to save user err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
