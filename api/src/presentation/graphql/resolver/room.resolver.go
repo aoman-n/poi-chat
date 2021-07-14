@@ -22,18 +22,21 @@ func (r *mutationResolver) CreateRoom(
 	input *model.CreateRoomInput,
 ) (*model.CreateRoomPayload, error) {
 	currentUser := acontext.GetUser(ctx)
+	fmt.Printf("currentUser: %v \n", currentUser)
 	if currentUser == nil {
 		graphql.HandleErr(ctx, graphql.ErrUnauthorized)
 		return nil, nil
 	}
 
 	roomRepo := r.repo.NewRoom()
-	dupRoom, err := roomRepo.GetByName(ctx, input.Name)
+	roomService := r.service.NewRoom()
+
+	exists, err := roomService.ExistsRoom(ctx, input.Name)
 	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByName"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomService.ExistsRoom"))
 		return nil, nil
 	}
-	if dupRoom != nil {
+	if exists {
 		msg := fmt.Sprintf("%q is already exists", input.Name)
 		graphql.HandleErr(ctx, aerrors.New(msg).Message("already exists room name"))
 		return nil, nil

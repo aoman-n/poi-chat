@@ -19,7 +19,7 @@ type Repository interface {
 	SaveUserStatus(ctx context.Context, status *UserStatus) error
 	DeleteUserStatus(ctx context.Context, status *UserStatus) error
 	GetUserStatus(ctx context.Context, roomID int, userUID string) (*UserStatus, error)
-	GetUserStatuses(ctx context.Context, roomID int, userUIDs []string) ([]*UserStatus, error)
+	GetUserStatuses(ctx context.Context, roomID int) ([]*UserStatus, error)
 }
 
 type ListReq struct {

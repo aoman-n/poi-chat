@@ -49,6 +49,10 @@ func GlobalUserIDStr(id string) string {
 	return encodeIDStr(GlobalUserPrefix, id)
 }
 
+func UserIDStr(id string) string {
+	return encodeIDStr(UserPrefix, id)
+}
+
 func decodeID(prefix Prefix, id string) (int, error) {
 	idParts := strings.Split(id, ":")
 	if !strings.HasPrefix(id, string(prefix)) || len(idParts) != 2 {

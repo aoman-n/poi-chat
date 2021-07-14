@@ -330,12 +330,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus2))
 	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus3))
 
-	userIDs := []string{
-		userStatus1.UserUID,
-		userStatus2.UserUID,
-		userStatus3.UserUID,
-	}
-	actual, err := repo.GetUserStatuses(ctx, roomID, userIDs)
+	actual, err := repo.GetUserStatuses(ctx, roomID)
 	assert.NoError(t, err)
 
 	expected := []*room.UserStatus{
@@ -344,5 +339,5 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 		userStatus3,
 	}
 
-	assert.Equal(t, expected, actual)
+	assert.ElementsMatch(t, expected, actual)
 }

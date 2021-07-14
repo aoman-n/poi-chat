@@ -8,6 +8,7 @@ import (
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/infra/redis"
+	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
 )
 
@@ -17,14 +18,14 @@ type GlobalUserSubscriber struct {
 	client   *redis.Client
 	mutex    sync.Mutex
 	// chans map[userUID]chan ...
-	chans map[string]chan<- model.GlobalUserEvent
+	chans map[string]chan<- model.UserEvent
 }
 
 func NewGlobalUserSubscriber(client *redis.Client, userRepo user.Repository) *GlobalUserSubscriber {
 	subscriber := &GlobalUserSubscriber{
 		userRepo: userRepo,
 		client:   client,
-		chans:    make(map[string]chan<- model.GlobalUserEvent),
+		chans:    make(map[string]chan<- model.UserEvent),
 	}
 	return subscriber
 }
@@ -59,26 +60,18 @@ func (s *GlobalUserSubscriber) Start(ctx context.Context) {
 					logger.Warnf("failed to get user on subscriber, err: %v", err)
 					continue
 				}
-				if user == nil {
-					logger.Warnf("user uid=%q is not found", userUID)
-					continue
-				}
-
-				s.deliver(&model.OnlinedPayload{
-					GlobalUser: &model.GlobalUser{
-						ID:        user.UID,
-						Name:      user.Name,
-						AvatarURL: user.AvatarURL,
-					},
-				})
+				s.deliver(presenter.ToOnlinedPayload(user))
 			// offlineになった
 			case redis.EventDel:
 				fallthrough
 			// offlineになった
 			case redis.EventExpired:
-				s.deliver(&model.OfflinedPayload{
-					UserID: userUID,
-				})
+				user, err := s.userRepo.GetByUID(ctx, userUID)
+				if err != nil {
+					logger.Warnf("failed to get user on subscriber, err: %v", err)
+					continue
+				}
+				s.deliver(presenter.ToOfflinedPayload(user))
 			default:
 				logger.Infof("received unknown event: %s", msg.Payload)
 			}
@@ -86,13 +79,13 @@ func (s *GlobalUserSubscriber) Start(ctx context.Context) {
 	}
 }
 
-func (s *GlobalUserSubscriber) deliver(data model.GlobalUserEvent) {
+func (s *GlobalUserSubscriber) deliver(data model.UserEvent) {
 	for _, ch := range s.chans {
 		ch <- data
 	}
 }
 
-func (s *GlobalUserSubscriber) AddCh(ch chan<- model.GlobalUserEvent, userUID string) {
+func (s *GlobalUserSubscriber) AddCh(ch chan<- model.UserEvent, userUID string) {
 	s.mutex.Lock()
 	s.chans[userUID] = ch
 	s.mutex.Unlock()

@@ -3,7 +3,6 @@ package session
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/sessions"
 	"github.com/laster18/poi/api/src/config"
@@ -108,11 +107,10 @@ func (s *UserSession) IsNew() bool {
 }
 
 func (s *UserSession) GetUser() (*user.User, error) {
-	idStr, ok := s.sess.Values[idKey].(string)
+	id, ok := s.sess.Values[idKey].(int)
 	if !ok {
 		return nil, fmt.Errorf("not found user id in session")
 	}
-	id, _ := strconv.Atoi(idStr)
 
 	uid, ok := s.sess.Values[uidKey].(string)
 	if !ok {

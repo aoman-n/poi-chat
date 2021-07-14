@@ -11,11 +11,13 @@ import (
 
 func New(
 	repo registry.Repository,
+	service registry.Service,
 	roomUserSubscriber *subscriber.RoomUserSubscriber,
 	globalUserSubscriber *subscriber.GlobalUserSubscriber,
 ) *Resolver {
 	return &Resolver{
 		repo:                 repo,
+		service:              service,
 		roomUserSubscriber:   roomUserSubscriber,
 		globalUserSubscriber: globalUserSubscriber,
 	}
@@ -23,6 +25,7 @@ func New(
 
 type Resolver struct {
 	repo                 registry.Repository
+	service              registry.Service
 	roomUserSubscriber   *subscriber.RoomUserSubscriber
 	globalUserSubscriber *subscriber.GlobalUserSubscriber
 }

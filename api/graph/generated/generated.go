@@ -39,11 +39,8 @@ type Config struct {
 
 type ResolverRoot interface {
 	ExitedPayload() ExitedPayloadResolver
-	GlobalUser() GlobalUserResolver
-	Me() MeResolver
 	Message() MessageResolver
 	Mutation() MutationResolver
-	OfflinedPayload() OfflinedPayloadResolver
 	Query() QueryResolver
 	Room() RoomResolver
 	RoomUser() RoomUserResolver
@@ -71,21 +68,8 @@ type ComplexityRoot struct {
 		UserID func(childComplexity int) int
 	}
 
-	GlobalUser struct {
-		AvatarURL func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Joined    func(childComplexity int) int
-		Name      func(childComplexity int) int
-	}
-
 	JoinedPayload struct {
 		RoomUser func(childComplexity int) int
-	}
-
-	Me struct {
-		AvatarURL func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Name      func(childComplexity int) int
 	}
 
 	Message struct {
@@ -126,11 +110,11 @@ type ComplexityRoot struct {
 	}
 
 	OfflinedPayload struct {
-		UserID func(childComplexity int) int
+		User func(childComplexity int) int
 	}
 
 	OnlinedPayload struct {
-		GlobalUser func(childComplexity int) int
+		User func(childComplexity int) int
 	}
 
 	PageInfo struct {
@@ -141,7 +125,6 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GlobalUsers func(childComplexity int) int
 		Me          func(childComplexity int) int
 		Node        func(childComplexity int, id string) int
 		OnlineUsers func(childComplexity int) int
@@ -182,24 +165,10 @@ type ComplexityRoot struct {
 	}
 
 	RoomUser struct {
-		AvatarURL       func(childComplexity int) int
 		BalloonPosition func(childComplexity int) int
 		ID              func(childComplexity int) int
 		LastMessage     func(childComplexity int) int
-		Name            func(childComplexity int) int
-		X               func(childComplexity int) int
-		Y               func(childComplexity int) int
-	}
-
-	RoomUser2 struct {
-		ID     func(childComplexity int) int
-		Status func(childComplexity int) int
-		User   func(childComplexity int) int
-	}
-
-	RoomUserStatus struct {
-		BalloonPosition func(childComplexity int) int
-		LastMessage     func(childComplexity int) int
+		User            func(childComplexity int) int
 		X               func(childComplexity int) int
 		Y               func(childComplexity int) int
 	}
@@ -213,8 +182,8 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		ActedGlobalUserEvent func(childComplexity int) int
-		ActedRoomUserEvent   func(childComplexity int, roomID string) int
+		ActedRoomUserEvent func(childComplexity int, roomID string) int
+		ActedUserEvent     func(childComplexity int) int
 	}
 
 	User struct {
@@ -228,14 +197,6 @@ type ComplexityRoot struct {
 type ExitedPayloadResolver interface {
 	UserID(ctx context.Context, obj *model.ExitedPayload) (string, error)
 }
-type GlobalUserResolver interface {
-	ID(ctx context.Context, obj *model.GlobalUser) (string, error)
-
-	Joined(ctx context.Context, obj *model.GlobalUser) (*model.Room, error)
-}
-type MeResolver interface {
-	ID(ctx context.Context, obj *model.Me) (string, error)
-}
 type MessageResolver interface {
 	ID(ctx context.Context, obj *model.Message) (string, error)
 	UserID(ctx context.Context, obj *model.Message) (string, error)
@@ -247,14 +208,10 @@ type MutationResolver interface {
 	RemoveLastMessage(ctx context.Context, input model.RemoveLastMessageInput) (*model.RemoveLastMessagePayload, error)
 	ChangeBalloonPosition(ctx context.Context, input model.ChangeBalloonPositionInput) (*model.ChangeBalloonPositionPayload, error)
 }
-type OfflinedPayloadResolver interface {
-	UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error)
-}
 type QueryResolver interface {
 	Room(ctx context.Context, id string) (*model.Room, error)
 	Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error)
-	Me(ctx context.Context) (*model.Me, error)
-	GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error)
+	Me(ctx context.Context) (*model.User, error)
 	OnlineUsers(ctx context.Context) ([]*model.User, error)
 	Node(ctx context.Context, id string) (model.Node, error)
 }
@@ -264,16 +221,19 @@ type RoomResolver interface {
 	TotalUserCount(ctx context.Context, obj *model.Room) (int, error)
 	TotalMessageCount(ctx context.Context, obj *model.Room) (int, error)
 	Messages(ctx context.Context, obj *model.Room, last *int, before *string) (*model.MessageConnection, error)
-	Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser2, error)
+	Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error)
 }
 type RoomUserResolver interface {
 	ID(ctx context.Context, obj *model.RoomUser) (string, error)
+	User(ctx context.Context, obj *model.RoomUser) (*model.User, error)
 }
 type SubscriptionResolver interface {
-	ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error)
+	ActedUserEvent(ctx context.Context) (<-chan model.UserEvent, error)
 	ActedRoomUserEvent(ctx context.Context, roomID string) (<-chan model.RoomUserEvent, error)
 }
 type UserResolver interface {
+	ID(ctx context.Context, obj *model.User) (string, error)
+
 	JoinedRoom(ctx context.Context, obj *model.User) (*model.Room, error)
 }
 
@@ -320,61 +280,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ExitedPayload.UserID(childComplexity), true
 
-	case "GlobalUser.avatarUrl":
-		if e.complexity.GlobalUser.AvatarURL == nil {
-			break
-		}
-
-		return e.complexity.GlobalUser.AvatarURL(childComplexity), true
-
-	case "GlobalUser.id":
-		if e.complexity.GlobalUser.ID == nil {
-			break
-		}
-
-		return e.complexity.GlobalUser.ID(childComplexity), true
-
-	case "GlobalUser.joined":
-		if e.complexity.GlobalUser.Joined == nil {
-			break
-		}
-
-		return e.complexity.GlobalUser.Joined(childComplexity), true
-
-	case "GlobalUser.name":
-		if e.complexity.GlobalUser.Name == nil {
-			break
-		}
-
-		return e.complexity.GlobalUser.Name(childComplexity), true
-
 	case "JoinedPayload.roomUser":
 		if e.complexity.JoinedPayload.RoomUser == nil {
 			break
 		}
 
 		return e.complexity.JoinedPayload.RoomUser(childComplexity), true
-
-	case "Me.avatarUrl":
-		if e.complexity.Me.AvatarURL == nil {
-			break
-		}
-
-		return e.complexity.Me.AvatarURL(childComplexity), true
-
-	case "Me.id":
-		if e.complexity.Me.ID == nil {
-			break
-		}
-
-		return e.complexity.Me.ID(childComplexity), true
-
-	case "Me.name":
-		if e.complexity.Me.Name == nil {
-			break
-		}
-
-		return e.complexity.Me.Name(childComplexity), true
 
 	case "Message.body":
 		if e.complexity.Message.Body == nil {
@@ -534,19 +445,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SendMessage(childComplexity, args["input"].(*model.SendMessageInput)), true
 
-	case "OfflinedPayload.userId":
-		if e.complexity.OfflinedPayload.UserID == nil {
+	case "OfflinedPayload.user":
+		if e.complexity.OfflinedPayload.User == nil {
 			break
 		}
 
-		return e.complexity.OfflinedPayload.UserID(childComplexity), true
+		return e.complexity.OfflinedPayload.User(childComplexity), true
 
-	case "OnlinedPayload.globalUser":
-		if e.complexity.OnlinedPayload.GlobalUser == nil {
+	case "OnlinedPayload.user":
+		if e.complexity.OnlinedPayload.User == nil {
 			break
 		}
 
-		return e.complexity.OnlinedPayload.GlobalUser(childComplexity), true
+		return e.complexity.OnlinedPayload.User(childComplexity), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -575,13 +486,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
-
-	case "Query.globalUsers":
-		if e.complexity.Query.GlobalUsers == nil {
-			break
-		}
-
-		return e.complexity.Query.GlobalUsers(childComplexity), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -757,13 +661,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RoomEdge.Node(childComplexity), true
 
-	case "RoomUser.avatarUrl":
-		if e.complexity.RoomUser.AvatarURL == nil {
-			break
-		}
-
-		return e.complexity.RoomUser.AvatarURL(childComplexity), true
-
 	case "RoomUser.balloonPosition":
 		if e.complexity.RoomUser.BalloonPosition == nil {
 			break
@@ -785,12 +682,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RoomUser.LastMessage(childComplexity), true
 
-	case "RoomUser.name":
-		if e.complexity.RoomUser.Name == nil {
+	case "RoomUser.user":
+		if e.complexity.RoomUser.User == nil {
 			break
 		}
 
-		return e.complexity.RoomUser.Name(childComplexity), true
+		return e.complexity.RoomUser.User(childComplexity), true
 
 	case "RoomUser.x":
 		if e.complexity.RoomUser.X == nil {
@@ -806,55 +703,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RoomUser.Y(childComplexity), true
 
-	case "RoomUser2.id":
-		if e.complexity.RoomUser2.ID == nil {
-			break
-		}
-
-		return e.complexity.RoomUser2.ID(childComplexity), true
-
-	case "RoomUser2.status":
-		if e.complexity.RoomUser2.Status == nil {
-			break
-		}
-
-		return e.complexity.RoomUser2.Status(childComplexity), true
-
-	case "RoomUser2.user":
-		if e.complexity.RoomUser2.User == nil {
-			break
-		}
-
-		return e.complexity.RoomUser2.User(childComplexity), true
-
-	case "RoomUserStatus.balloonPosition":
-		if e.complexity.RoomUserStatus.BalloonPosition == nil {
-			break
-		}
-
-		return e.complexity.RoomUserStatus.BalloonPosition(childComplexity), true
-
-	case "RoomUserStatus.lastMessage":
-		if e.complexity.RoomUserStatus.LastMessage == nil {
-			break
-		}
-
-		return e.complexity.RoomUserStatus.LastMessage(childComplexity), true
-
-	case "RoomUserStatus.x":
-		if e.complexity.RoomUserStatus.X == nil {
-			break
-		}
-
-		return e.complexity.RoomUserStatus.X(childComplexity), true
-
-	case "RoomUserStatus.y":
-		if e.complexity.RoomUserStatus.Y == nil {
-			break
-		}
-
-		return e.complexity.RoomUserStatus.Y(childComplexity), true
-
 	case "SendMassagePaylaod.message":
 		if e.complexity.SendMassagePaylaod.Message == nil {
 			break
@@ -869,13 +717,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SentMassagePayload.RoomUser(childComplexity), true
 
-	case "Subscription.actedGlobalUserEvent":
-		if e.complexity.Subscription.ActedGlobalUserEvent == nil {
-			break
-		}
-
-		return e.complexity.Subscription.ActedGlobalUserEvent(childComplexity), true
-
 	case "Subscription.actedRoomUserEvent":
 		if e.complexity.Subscription.ActedRoomUserEvent == nil {
 			break
@@ -887,6 +728,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.ActedRoomUserEvent(childComplexity, args["roomId"].(string)), true
+
+	case "Subscription.actedUserEvent":
+		if e.complexity.Subscription.ActedUserEvent == nil {
+			break
+		}
+
+		return e.complexity.Subscription.ActedUserEvent(childComplexity), true
 
 	case "User.avatarUrl":
 		if e.complexity.User.AvatarURL == nil {
@@ -1071,8 +919,7 @@ input PaginationInput {
   totalUserCount: Int! @goField(forceResolver: true)
   totalMessageCount: Int! @goField(forceResolver: true)
   messages(last: Int, before: String): MessageConnection! @goField(forceResolver: true)
-  # 下記追加
-  users: [RoomUser2!]! @goField(forceResolver: true)
+  users: [RoomUser!]! @goField(forceResolver: true)
 }
 
 type RoomEdge implements Edge {
@@ -1124,12 +971,12 @@ type Query {
   """
   ログイン中のユーザーが自身の情報を取得
   """
-  me: Me!
+  me: User!
 
   """
   オンライン中のユーザー一覧を取得
   """
-  globalUsers: [GlobalUser!]!
+  # globalUsers: [GlobalUser!]!
   onlineUsers: [User!]!
 }
 
@@ -1166,7 +1013,7 @@ type Subscription {
   ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
   """
-  actedGlobalUserEvent: GlobalUserEvent
+  actedUserEvent: UserEvent
 
   """
   ルーム内ユーザーのアクションを待ち受けるサブスクリプション 
@@ -1179,51 +1026,38 @@ directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITI
   | FIELD_DEFINITION
 `, BuiltIn: false},
 	{Name: "schema/user.graphql", Input: `type User {
-  id: ID!
+  id: ID! @goField(forceResolver: true)
   name: String!
   avatarUrl: String!
-  # 下記追加
   """ ルームに入室していなかったらnull """
   joinedRoom: Room @goField(forceResolver: true)
 }
 
-type RoomUser2 {
-  id: ID!
-  user: User!
-  status: RoomUserStatus!
-}
-
-type RoomUserStatus {
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
-# -------------------------------------
-
-type Me {
-  id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
-}
-
-type GlobalUser {
-  id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
-  joined: Room @goField(forceResolver: true)
-}
-
 type RoomUser {
   id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
+  user: User! @goField(forceResolver: true)
   x: Int!
   y: Int!
   lastMessage: Message
   balloonPosition: BalloonPosition!
 }
+
+# type RoomUserStatus {
+#   x: Int!
+#   y: Int!
+#   lastMessage: Message
+#   balloonPosition: BalloonPosition!
+# }
+
+# type RoomUser {
+#   id: ID! @goField(forceResolver: true)
+#   name: String!
+#   avatarUrl: String!
+#   x: Int!
+#   y: Int!
+#   lastMessage: Message
+#   balloonPosition: BalloonPosition!
+# }
 
 input MoveInput {
   roomId: ID!
@@ -1262,14 +1096,13 @@ enum BalloonPosition {
 """
 ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ
 """
-union GlobalUserEvent = OnlinedPayload | OfflinedPayload
+union UserEvent = OnlinedPayload | OfflinedPayload
 type OnlinedPayload {
-  globalUser: GlobalUser!
+  user: User!
 }
 type OfflinedPayload {
-  userId: ID! @goField(forceResolver: true)
+  user: User!
 }
-
 
 """
 ルーム内のユーザーの行動を取得するためのイベントタイプ
@@ -1675,143 +1508,6 @@ func (ec *executionContext) _ExitedPayload_userId(ctx context.Context, field gra
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _GlobalUser_id(ctx context.Context, field graphql.CollectedField, obj *model.GlobalUser) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "GlobalUser",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.GlobalUser().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _GlobalUser_name(ctx context.Context, field graphql.CollectedField, obj *model.GlobalUser) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "GlobalUser",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _GlobalUser_avatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.GlobalUser) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "GlobalUser",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AvatarURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _GlobalUser_joined(ctx context.Context, field graphql.CollectedField, obj *model.GlobalUser) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "GlobalUser",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.GlobalUser().Joined(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Room)
-	fc.Result = res
-	return ec.marshalORoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _JoinedPayload_roomUser(ctx context.Context, field graphql.CollectedField, obj *model.JoinedPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1845,111 +1541,6 @@ func (ec *executionContext) _JoinedPayload_roomUser(ctx context.Context, field g
 	res := resTmp.(*model.RoomUser)
 	fc.Result = res
 	return ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Me_id(ctx context.Context, field graphql.CollectedField, obj *model.Me) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Me",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Me().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Me_name(ctx context.Context, field graphql.CollectedField, obj *model.Me) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Me",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Me_avatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.Me) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Me",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AvatarURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Message_id(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
@@ -2652,7 +2243,7 @@ func (ec *executionContext) _Mutation_changeBalloonPosition(ctx context.Context,
 	return ec.marshalNChangeBalloonPositionPayload2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐChangeBalloonPositionPayload(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OfflinedPayload_userId(ctx context.Context, field graphql.CollectedField, obj *model.OfflinedPayload) (ret graphql.Marshaler) {
+func (ec *executionContext) _OfflinedPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.OfflinedPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2663,14 +2254,14 @@ func (ec *executionContext) _OfflinedPayload_userId(ctx context.Context, field g
 		Object:     "OfflinedPayload",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.OfflinedPayload().UserID(rctx, obj)
+		return obj.User, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2682,12 +2273,12 @@ func (ec *executionContext) _OfflinedPayload_userId(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OnlinedPayload_globalUser(ctx context.Context, field graphql.CollectedField, obj *model.OnlinedPayload) (ret graphql.Marshaler) {
+func (ec *executionContext) _OnlinedPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.OnlinedPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2705,7 +2296,7 @@ func (ec *executionContext) _OnlinedPayload_globalUser(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.GlobalUser, nil
+		return obj.User, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2717,9 +2308,9 @@ func (ec *executionContext) _OnlinedPayload_globalUser(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.GlobalUser)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNGlobalUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
@@ -2970,44 +2561,9 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Me)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNMe2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMe(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_globalUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GlobalUsers(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.GlobalUser)
-	fc.Result = res
-	return ec.marshalNGlobalUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_onlineUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3539,9 +3095,9 @@ func (ec *executionContext) _Room_users(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.RoomUser2)
+	res := resTmp.([]*model.RoomUser)
 	fc.Result = res
-	return ec.marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2ᚄ(ctx, field.Selections, res)
+	return ec.marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RoomConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.RoomConnection) (ret graphql.Marshaler) {
@@ -3789,7 +3345,7 @@ func (ec *executionContext) _RoomUser_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RoomUser_name(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser) (ret graphql.Marshaler) {
+func (ec *executionContext) _RoomUser_user(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3800,14 +3356,14 @@ func (ec *executionContext) _RoomUser_name(ctx context.Context, field graphql.Co
 		Object:     "RoomUser",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return ec.resolvers.RoomUser().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3819,44 +3375,9 @@ func (ec *executionContext) _RoomUser_name(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUser_avatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUser",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AvatarURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RoomUser_x(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser) (ret graphql.Marshaler) {
@@ -3996,248 +3517,6 @@ func (ec *executionContext) _RoomUser_balloonPosition(ctx context.Context, field
 	return ec.marshalNBalloonPosition2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐBalloonPosition(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RoomUser2_id(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUser2",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUser2_user(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUser2",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUser2_status(ctx context.Context, field graphql.CollectedField, obj *model.RoomUser2) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUser2",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.RoomUserStatus)
-	fc.Result = res
-	return ec.marshalNRoomUserStatus2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUserStatus_x(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUserStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.X, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUserStatus_y(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUserStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Y, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUserStatus_lastMessage(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUserStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastMessage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Message)
-	fc.Result = res
-	return ec.marshalOMessage2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RoomUserStatus_balloonPosition(ctx context.Context, field graphql.CollectedField, obj *model.RoomUserStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RoomUserStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.BalloonPosition, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.BalloonPosition)
-	fc.Result = res
-	return ec.marshalNBalloonPosition2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐBalloonPosition(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _SendMassagePaylaod_message(ctx context.Context, field graphql.CollectedField, obj *model.SendMassagePaylaod) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4308,7 +3587,7 @@ func (ec *executionContext) _SentMassagePayload_roomUser(ctx context.Context, fi
 	return ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Subscription_actedGlobalUserEvent(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
+func (ec *executionContext) _Subscription_actedUserEvent(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4326,7 +3605,7 @@ func (ec *executionContext) _Subscription_actedGlobalUserEvent(ctx context.Conte
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().ActedGlobalUserEvent(rctx)
+		return ec.resolvers.Subscription().ActedUserEvent(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4336,7 +3615,7 @@ func (ec *executionContext) _Subscription_actedGlobalUserEvent(ctx context.Conte
 		return nil
 	}
 	return func() graphql.Marshaler {
-		res, ok := <-resTmp.(<-chan model.GlobalUserEvent)
+		res, ok := <-resTmp.(<-chan model.UserEvent)
 		if !ok {
 			return nil
 		}
@@ -4344,7 +3623,7 @@ func (ec *executionContext) _Subscription_actedGlobalUserEvent(ctx context.Conte
 			w.Write([]byte{'{'})
 			graphql.MarshalString(field.Alias).MarshalGQL(w)
 			w.Write([]byte{':'})
-			ec.marshalOGlobalUserEvent2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUserEvent(ctx, field.Selections, res).MarshalGQL(w)
+			ec.marshalOUserEvent2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUserEvent(ctx, field.Selections, res).MarshalGQL(w)
 			w.Write([]byte{'}'})
 		})
 	}
@@ -4410,14 +3689,14 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		Object:     "User",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.User().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5865,29 +5144,6 @@ func (ec *executionContext) _Edge(ctx context.Context, sel ast.SelectionSet, obj
 	}
 }
 
-func (ec *executionContext) _GlobalUserEvent(ctx context.Context, sel ast.SelectionSet, obj model.GlobalUserEvent) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.OnlinedPayload:
-		return ec._OnlinedPayload(ctx, sel, &obj)
-	case *model.OnlinedPayload:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._OnlinedPayload(ctx, sel, obj)
-	case model.OfflinedPayload:
-		return ec._OfflinedPayload(ctx, sel, &obj)
-	case *model.OfflinedPayload:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._OfflinedPayload(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -5957,6 +5213,29 @@ func (ec *executionContext) _RoomUserEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._ChangedBalloonPositionPayload(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _UserEvent(ctx context.Context, sel ast.SelectionSet, obj model.UserEvent) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.OnlinedPayload:
+		return ec._OnlinedPayload(ctx, sel, &obj)
+	case *model.OnlinedPayload:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OnlinedPayload(ctx, sel, obj)
+	case model.OfflinedPayload:
+		return ec._OfflinedPayload(ctx, sel, &obj)
+	case *model.OfflinedPayload:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OfflinedPayload(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -6080,63 +5359,6 @@ func (ec *executionContext) _ExitedPayload(ctx context.Context, sel ast.Selectio
 	return out
 }
 
-var globalUserImplementors = []string{"GlobalUser"}
-
-func (ec *executionContext) _GlobalUser(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalUser) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, globalUserImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("GlobalUser")
-		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._GlobalUser_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "name":
-			out.Values[i] = ec._GlobalUser_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "avatarUrl":
-			out.Values[i] = ec._GlobalUser_avatarUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "joined":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._GlobalUser_joined(ctx, field, obj)
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var joinedPayloadImplementors = []string{"JoinedPayload", "RoomUserEvent"}
 
 func (ec *executionContext) _JoinedPayload(ctx context.Context, sel ast.SelectionSet, obj *model.JoinedPayload) graphql.Marshaler {
@@ -6152,52 +5374,6 @@ func (ec *executionContext) _JoinedPayload(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._JoinedPayload_roomUser(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var meImplementors = []string{"Me"}
-
-func (ec *executionContext) _Me(ctx context.Context, sel ast.SelectionSet, obj *model.Me) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, meImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Me")
-		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Me_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "name":
-			out.Values[i] = ec._Me_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "avatarUrl":
-			out.Values[i] = ec._Me_avatarUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -6459,7 +5635,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	return out
 }
 
-var offlinedPayloadImplementors = []string{"OfflinedPayload", "GlobalUserEvent"}
+var offlinedPayloadImplementors = []string{"OfflinedPayload", "UserEvent"}
 
 func (ec *executionContext) _OfflinedPayload(ctx context.Context, sel ast.SelectionSet, obj *model.OfflinedPayload) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, offlinedPayloadImplementors)
@@ -6470,20 +5646,11 @@ func (ec *executionContext) _OfflinedPayload(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OfflinedPayload")
-		case "userId":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._OfflinedPayload_userId(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+		case "user":
+			out.Values[i] = ec._OfflinedPayload_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6495,7 +5662,7 @@ func (ec *executionContext) _OfflinedPayload(ctx context.Context, sel ast.Select
 	return out
 }
 
-var onlinedPayloadImplementors = []string{"OnlinedPayload", "GlobalUserEvent"}
+var onlinedPayloadImplementors = []string{"OnlinedPayload", "UserEvent"}
 
 func (ec *executionContext) _OnlinedPayload(ctx context.Context, sel ast.SelectionSet, obj *model.OnlinedPayload) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, onlinedPayloadImplementors)
@@ -6506,8 +5673,8 @@ func (ec *executionContext) _OnlinedPayload(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OnlinedPayload")
-		case "globalUser":
-			out.Values[i] = ec._OnlinedPayload_globalUser(ctx, field, obj)
+		case "user":
+			out.Values[i] = ec._OnlinedPayload_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6610,20 +5777,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_me(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "globalUsers":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_globalUsers(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6931,16 +6084,20 @@ func (ec *executionContext) _RoomUser(ctx context.Context, sel ast.SelectionSet,
 				}
 				return res
 			})
-		case "name":
-			out.Values[i] = ec._RoomUser_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "avatarUrl":
-			out.Values[i] = ec._RoomUser_avatarUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+		case "user":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RoomUser_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "x":
 			out.Values[i] = ec._RoomUser_x(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -6957,82 +6114,6 @@ func (ec *executionContext) _RoomUser(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._RoomUser_balloonPosition(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var roomUser2Implementors = []string{"RoomUser2"}
-
-func (ec *executionContext) _RoomUser2(ctx context.Context, sel ast.SelectionSet, obj *model.RoomUser2) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, roomUser2Implementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RoomUser2")
-		case "id":
-			out.Values[i] = ec._RoomUser2_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "user":
-			out.Values[i] = ec._RoomUser2_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "status":
-			out.Values[i] = ec._RoomUser2_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var roomUserStatusImplementors = []string{"RoomUserStatus"}
-
-func (ec *executionContext) _RoomUserStatus(ctx context.Context, sel ast.SelectionSet, obj *model.RoomUserStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, roomUserStatusImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("RoomUserStatus")
-		case "x":
-			out.Values[i] = ec._RoomUserStatus_x(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "y":
-			out.Values[i] = ec._RoomUserStatus_y(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "lastMessage":
-			out.Values[i] = ec._RoomUserStatus_lastMessage(ctx, field, obj)
-		case "balloonPosition":
-			out.Values[i] = ec._RoomUserStatus_balloonPosition(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7112,8 +6193,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "actedGlobalUserEvent":
-		return ec._Subscription_actedGlobalUserEvent(ctx, fields[0])
+	case "actedUserEvent":
+		return ec._Subscription_actedUserEvent(ctx, fields[0])
 	case "actedRoomUserEvent":
 		return ec._Subscription_actedRoomUserEvent(ctx, fields[0])
 	default:
@@ -7133,10 +6214,19 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("User")
 		case "id":
-			out.Values[i] = ec._User_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "name":
 			out.Values[i] = ec._User_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7472,53 +6562,6 @@ func (ec *executionContext) marshalNCreateRoomPayload2ᚖgithubᚗcomᚋlaster18
 	return ec._CreateRoomPayload(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGlobalUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalUser) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNGlobalUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNGlobalUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUser(ctx context.Context, sel ast.SelectionSet, v *model.GlobalUser) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._GlobalUser(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7547,20 +6590,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNMe2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMe(ctx context.Context, sel ast.SelectionSet, v model.Me) graphql.Marshaler {
-	return ec._Me(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMe2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMe(ctx context.Context, sel ast.SelectionSet, v *model.Me) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Me(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMessage2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐMessageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Message) graphql.Marshaler {
@@ -7831,7 +6860,7 @@ func (ec *executionContext) marshalNRoomEdge2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋ
 	return ec._RoomEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2ᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomUser2) graphql.Marshaler {
+func (ec *executionContext) marshalNRoomUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RoomUser) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -7855,7 +6884,7 @@ func (ec *executionContext) marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRoomUser22ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2(ctx, sel, v[i])
+			ret[i] = ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -7868,16 +6897,6 @@ func (ec *executionContext) marshalNRoomUser22ᚕᚖgithubᚗcomᚋlaster18ᚋpo
 	return ret
 }
 
-func (ec *executionContext) marshalNRoomUser22ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser2(ctx context.Context, sel ast.SelectionSet, v *model.RoomUser2) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._RoomUser2(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx context.Context, sel ast.SelectionSet, v *model.RoomUser) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -7886,16 +6905,6 @@ func (ec *executionContext) marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋ
 		return graphql.Null
 	}
 	return ec._RoomUser(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNRoomUserStatus2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUserStatus(ctx context.Context, sel ast.SelectionSet, v *model.RoomUserStatus) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._RoomUserStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSendMassagePaylaod2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐSendMassagePaylaod(ctx context.Context, sel ast.SelectionSet, v model.SendMassagePaylaod) graphql.Marshaler {
@@ -7940,6 +6949,10 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNUser2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+	return ec._User(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
@@ -8250,13 +7263,6 @@ func (ec *executionContext) unmarshalOCreateRoomInput2ᚖgithubᚗcomᚋlaster18
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOGlobalUserEvent2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐGlobalUserEvent(ctx context.Context, sel ast.SelectionSet, v model.GlobalUserEvent) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._GlobalUserEvent(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -8353,6 +7359,13 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOUserEvent2githubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUserEvent(ctx context.Context, sel ast.SelectionSet, v model.UserEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

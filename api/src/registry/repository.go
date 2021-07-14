@@ -9,10 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// handlerはregistryを持ち、registryからrepositoryを取得することができる
-// usecaseはrepositoryを持つ。registryを持たない
-
-// interface化することでテスト時には必要なものだけ実装すればよくなる
 type Repository interface {
 	NewUser() user.Repository
 	NewRoom() room.Repository

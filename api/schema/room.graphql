@@ -7,8 +7,7 @@ type Room implements Node {
   totalUserCount: Int! @goField(forceResolver: true)
   totalMessageCount: Int! @goField(forceResolver: true)
   messages(last: Int, before: String): MessageConnection! @goField(forceResolver: true)
-  # 下記追加
-  users: [RoomUser2!]! @goField(forceResolver: true)
+  users: [RoomUser!]! @goField(forceResolver: true)
 }
 
 type RoomEdge implements Edge {

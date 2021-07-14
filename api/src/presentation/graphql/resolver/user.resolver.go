@@ -18,21 +18,8 @@ import (
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
-func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {
-	return graphql.RoomUserIDStr(obj.UserID), nil
-}
-
-func (r *globalUserResolver) ID(ctx context.Context, obj *model.GlobalUser) (string, error) {
-	return graphql.GlobalUserIDStr(obj.ID), nil
-}
-
-func (r *globalUserResolver) Joined(ctx context.Context, obj *model.GlobalUser) (*model.Room, error) {
-	panic(fmt.Errorf("not impelemented"))
-}
-
-func (r *meResolver) ID(ctx context.Context, obj *model.Me) (string, error) {
-	// return encodeIDStr(globalUserPrefix, obj.ID), nil
-	return graphql.GlobalUserIDStr(obj.ID), nil
+func (r *userResolver) ID(ctx context.Context, obj *model.User) (string, error) {
+	return graphql.UserIDStr(obj.ID), nil
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
@@ -67,29 +54,23 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return presenter.ToMovePayload(userStatusInRoom), nil
 }
 
-func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error) {
-	return graphql.GlobalUserIDStr(obj.UserID), nil
-}
+// func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error) {
+// 	return graphql.GlobalUserIDStr(obj.UserID), nil
+// }
 
-func (r *queryResolver) Me(ctx context.Context) (*model.Me, error) {
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
 		return nil, nil
 	}
 
-	me := &model.Me{
-		ID:        currentUser.UID,
-		Name:      currentUser.Name,
-		AvatarURL: currentUser.AvatarURL,
-	}
-
-	return me, nil
+	return presenter.ToUser(currentUser), nil
 }
 
-func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
-	panic("not impl")
-}
+// func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
+// 	panic("not impl")
+// }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.User, error) {
 	currentUser := acontext.GetUser(ctx)
@@ -108,24 +89,35 @@ func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.User, error) 
 	return presenter.ToUsers(users), nil
 }
 
-func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser2, error) {
+func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.RoomUser, error) {
 	roomID, _ := strconv.Atoi(obj.ID)
 
 	roomRepo := r.repo.NewRoom()
-	users, err := roomRepo.GetUsers(ctx, roomID)
+	userStatuses, err := roomRepo.GetUserStatuses(ctx, roomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetUsers"))
 		return nil, nil
 	}
 
-	return presenter.ToRoomUsers(users), nil
+	return presenter.ToRoomUsers(userStatuses), nil
+}
+
+func (r *roomUserResolver) User(ctx context.Context, obj *model.RoomUser) (*model.User, error) {
+	userRepo := r.repo.NewUser()
+	user, err := userRepo.GetByUID(ctx, obj.ID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.GetByUID"))
+		return nil, nil
+	}
+
+	return presenter.ToUser(user), nil
 }
 
 func (r *roomUserResolver) ID(ctx context.Context, obj *model.RoomUser) (string, error) {
 	return graphql.RoomUserIDStr(obj.ID), nil
 }
 
-func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan model.GlobalUserEvent, error) {
+func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model.UserEvent, error) {
 	logger := acontext.GetLogger(ctx)
 	currentUser := acontext.GetUser(ctx)
 
@@ -134,8 +126,7 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 		return nil, nil
 	}
 
-	ch := make(chan model.GlobalUserEvent)
-	// TODO: subscriber修正
+	ch := make(chan model.UserEvent)
 	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
 
 	userRepo := r.repo.NewUser()
@@ -146,7 +137,6 @@ func (r *subscriptionResolver) ActedGlobalUserEvent(ctx context.Context) (<-chan
 
 	go func() {
 		<-ctx.Done()
-		// TODO: subscriber修正
 		r.globalUserSubscriber.RemoveCh(currentUser.UID)
 
 		if err := userRepo.Offline(context.Background(), currentUser); err != nil {
@@ -176,7 +166,6 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	// TODO: roomの存在チェック
 
 	ch := make(chan model.RoomUserEvent)
-	// TODO: subscriber修正
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	roomRepo := r.repo.NewRoom()
@@ -189,7 +178,6 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 
 	go func() {
 		<-ctx.Done()
-		// TODO: subscriber修正
 		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.UID)
 		if err := roomRepo.DeleteUserStatus(ctx, userStatusInRoom); err != nil {
 			log.Println("failed to delete roomUser, err:", err)
@@ -291,18 +279,14 @@ func (r *userResolver) JoinedRoom(ctx context.Context, obj *model.User) (*model.
 	panic("not implemented")
 }
 
-func (r *Resolver) ExitedPayload() generated.ExitedPayloadResolver { return &exitedPayloadResolver{r} }
-func (r *Resolver) GlobalUser() generated.GlobalUserResolver       { return &globalUserResolver{r} }
-func (r *Resolver) Me() generated.MeResolver                       { return &meResolver{r} }
-func (r *Resolver) OfflinedPayload() generated.OfflinedPayloadResolver {
-	return &offlinedPayloadResolver{r}
+func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {
+	return graphql.UserIDStr(obj.UserID), nil
 }
-func (r *Resolver) RoomUser() generated.RoomUserResolver { return &roomUserResolver{r} }
-func (r *Resolver) User() generated.UserResolver         { return &userResolver{r} }
+
+func (r *Resolver) ExitedPayload() generated.ExitedPayloadResolver { return &exitedPayloadResolver{r} }
+func (r *Resolver) RoomUser() generated.RoomUserResolver           { return &roomUserResolver{r} }
+func (r *Resolver) User() generated.UserResolver                   { return &userResolver{r} }
 
 type exitedPayloadResolver struct{ *Resolver }
-type globalUserResolver struct{ *Resolver }
-type meResolver struct{ *Resolver }
-type offlinedPayloadResolver struct{ *Resolver }
 type roomUserResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

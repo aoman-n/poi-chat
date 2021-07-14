@@ -1,44 +1,14 @@
 type User {
-  id: ID!
+  id: ID! @goField(forceResolver: true)
   name: String!
   avatarUrl: String!
-  # 下記追加
   """ ルームに入室していなかったらnull """
   joinedRoom: Room @goField(forceResolver: true)
 }
 
-type RoomUser2 {
-  id: ID!
-  user: User!
-  status: RoomUserStatus!
-}
-
-type RoomUserStatus {
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
-# -------------------------------------
-
-type Me {
-  id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
-}
-
-type GlobalUser {
-  id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
-  joined: Room @goField(forceResolver: true)
-}
-
 type RoomUser {
   id: ID! @goField(forceResolver: true)
-  name: String!
-  avatarUrl: String!
+  user: User! @goField(forceResolver: true)
   x: Int!
   y: Int!
   lastMessage: Message
@@ -82,14 +52,13 @@ enum BalloonPosition {
 """
 ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ
 """
-union GlobalUserEvent = OnlinedPayload | OfflinedPayload
+union UserEvent = OnlinedPayload | OfflinedPayload
 type OnlinedPayload {
-  globalUser: GlobalUser!
+  user: User!
 }
 type OfflinedPayload {
-  userId: ID! @goField(forceResolver: true)
+  user: User!
 }
-
 
 """
 ルーム内のユーザーの行動を取得するためのイベントタイプ

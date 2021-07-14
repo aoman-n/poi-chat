@@ -18,12 +18,12 @@ type Query {
   """
   ログイン中のユーザーが自身の情報を取得
   """
-  me: Me!
+  me: User!
 
   """
   オンライン中のユーザー一覧を取得
   """
-  globalUsers: [GlobalUser!]!
+  # globalUsers: [GlobalUser!]!
   onlineUsers: [User!]!
 }
 
@@ -60,7 +60,7 @@ type Subscription {
   ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
   """
-  actedGlobalUserEvent: GlobalUserEvent
+  actedUserEvent: UserEvent
 
   """
   ルーム内ユーザーのアクションを待ち受けるサブスクリプション 

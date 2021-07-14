@@ -17,11 +17,6 @@ type Edge interface {
 	IsEdge()
 }
 
-// ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ
-type GlobalUserEvent interface {
-	IsGlobalUserEvent()
-}
-
 type Node interface {
 	IsNode()
 }
@@ -29,6 +24,11 @@ type Node interface {
 // ルーム内のユーザーの行動を取得するためのイベントタイプ
 type RoomUserEvent interface {
 	IsRoomUserEvent()
+}
+
+// ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ
+type UserEvent interface {
+	IsUserEvent()
 }
 
 type ChangeBalloonPositionInput struct {
@@ -62,24 +62,11 @@ type ExitedPayload struct {
 
 func (ExitedPayload) IsRoomUserEvent() {}
 
-type GlobalUser struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	AvatarURL string `json:"avatarUrl"`
-	Joined    *Room  `json:"joined"`
-}
-
 type JoinedPayload struct {
 	RoomUser *RoomUser `json:"roomUser"`
 }
 
 func (JoinedPayload) IsRoomUserEvent() {}
-
-type Me struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	AvatarURL string `json:"avatarUrl"`
-}
 
 type Message struct {
 	ID            string    `json:"id"`
@@ -125,16 +112,16 @@ type MovedPayload struct {
 func (MovedPayload) IsRoomUserEvent() {}
 
 type OfflinedPayload struct {
-	UserID string `json:"userId"`
+	User *User `json:"user"`
 }
 
-func (OfflinedPayload) IsGlobalUserEvent() {}
+func (OfflinedPayload) IsUserEvent() {}
 
 type OnlinedPayload struct {
-	GlobalUser *GlobalUser `json:"globalUser"`
+	User *User `json:"user"`
 }
 
-func (OnlinedPayload) IsGlobalUserEvent() {}
+func (OnlinedPayload) IsUserEvent() {}
 
 type PageInfo struct {
 	StartCursor     *string `json:"startCursor"`
@@ -173,7 +160,7 @@ type Room struct {
 	TotalUserCount    int                `json:"totalUserCount"`
 	TotalMessageCount int                `json:"totalMessageCount"`
 	Messages          *MessageConnection `json:"messages"`
-	Users             []*RoomUser2       `json:"users"`
+	Users             []*RoomUser        `json:"users"`
 }
 
 func (Room) IsNode() {}
@@ -196,21 +183,7 @@ func (RoomEdge) IsEdge() {}
 
 type RoomUser struct {
 	ID              string          `json:"id"`
-	Name            string          `json:"name"`
-	AvatarURL       string          `json:"avatarUrl"`
-	X               int             `json:"x"`
-	Y               int             `json:"y"`
-	LastMessage     *Message        `json:"lastMessage"`
-	BalloonPosition BalloonPosition `json:"balloonPosition"`
-}
-
-type RoomUser2 struct {
-	ID     string          `json:"id"`
-	User   *User           `json:"user"`
-	Status *RoomUserStatus `json:"status"`
-}
-
-type RoomUserStatus struct {
+	User            *User           `json:"user"`
 	X               int             `json:"x"`
 	Y               int             `json:"y"`
 	LastMessage     *Message        `json:"lastMessage"`

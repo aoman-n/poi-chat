@@ -52,7 +52,7 @@ func (r *Room) GetByName(ctx context.Context, name string) (*room.Room, error) {
 	if err := r.db.Where("name = ?", name).First(&room).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			msg := fmt.Sprintf("not found room, name: %s", name)
-			return nil, aerrors.New(msg).SetCode(aerrors.CodeNotFound).Message("not found user")
+			return nil, aerrors.New(msg).SetCode(aerrors.CodeNotFound).Message("not found room")
 		}
 
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
@@ -290,10 +290,14 @@ func (r *Room) GetUserStatus(ctx context.Context, roomID int, userUID string) (*
 	return &us, nil
 }
 
-func (r *Room) GetUserStatuses(ctx context.Context, roomID int, userUIDs []string) ([]*room.UserStatus, error) {
-	keys := make([]string, len(userUIDs))
-	for i, uid := range userUIDs {
-		keys[i] = subscriber.MakeRoomUserStatusKey(roomID, uid)
+func (r *Room) GetUserStatuses(ctx context.Context, roomID int) ([]*room.UserStatus, error) {
+	indexKey := r.makeRoomUserStatusIndexKey(roomID)
+	keys, err := r.redis.SMembers(ctx, indexKey).Result()
+	if err != nil {
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
+	}
+	if len(keys) <= 0 {
+		return []*room.UserStatus{}, nil
 	}
 
 	userStatusJSONs, err := r.redis.MGet(ctx, keys...).Result()
@@ -322,3 +326,36 @@ func (r *Room) GetUserStatuses(ctx context.Context, roomID int, userUIDs []strin
 
 	return userStatuses, nil
 }
+
+// func (r *Room) GetUserStatuses(ctx context.Context, roomID int, userUIDs []string) ([]*room.UserStatus, error) {
+// 	keys := make([]string, len(userUIDs))
+// 	for i, uid := range userUIDs {
+// 		keys[i] = subscriber.MakeRoomUserStatusKey(roomID, uid)
+// 	}
+
+// 	userStatusJSONs, err := r.redis.MGet(ctx, keys...).Result()
+// 	if err != nil {
+// 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
+// 	}
+
+// 	userStatuses := make([]*room.UserStatus, len(userStatusJSONs))
+// 	for i, userStatusJSON := range userStatusJSONs {
+// 		if userStatusJSON == nil {
+// 			continue
+// 		}
+
+// 		jsonStr, ok := userStatusJSON.(string)
+// 		if !ok {
+// 			continue
+// 		}
+
+// 		var status room.UserStatus
+// 		if err := json.Unmarshal([]byte(jsonStr), &status); err != nil {
+// 			continue
+// 		}
+
+// 		userStatuses[i] = &status
+// 	}
+
+// 	return userStatuses, nil
+// }

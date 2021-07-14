@@ -8,29 +8,30 @@ import (
 	"github.com/laster18/poi/api/src/domain/user"
 )
 
-func ToMovePayload(ru *room.UserStatus) *model.MovePayload {
+func ToMovePayload(us *room.UserStatus) *model.MovePayload {
 	return &model.MovePayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
 func ToRemoveLastMessagePayload(us *room.UserStatus) *model.RemoveLastMessagePayload {
 	return &model.RemoveLastMessagePayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
 func ToChangeBalloonPositionPayload(us *room.UserStatus) *model.ChangeBalloonPositionPayload {
 	return &model.ChangeBalloonPositionPayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
 func ToRoomUser(u *room.UserStatus) *model.RoomUser {
 	return &model.RoomUser{
-		X: u.X,
-		Y: u.Y,
-		// LastMessage:     ToMessage(ru.LastMessage),
+		ID:              u.UserUID,
+		X:               u.X,
+		Y:               u.Y,
+		LastMessage:     ToMessage(u.LastMessage),
 		BalloonPosition: ConvertBalloonPosition(u.BalloonPosition),
 	}
 }
@@ -53,65 +54,54 @@ func ToUsers(users []*user.User) []*model.User {
 	return ret
 }
 
-func ToRoomUsers(users []*user.User) []*model.RoomUser2 {
-	roomUsers := make([]*model.RoomUser2, len(users))
-	for i, u := range users {
-		roomUser := &model.RoomUser2{
-			ID:     strconv.Itoa(u.ID),
-			User:   ToUser(u),
-			Status: &model.RoomUserStatus{},
-		}
-		// roomUser := &model.RoomUser2{
-		// 	ID:              r.UID,
-		// 	Name:            r.Name,
-		// 	AvatarURL:       r.AvatarURL,
-		// 	X:               r.X,
-		// 	Y:               r.Y,
-		// 	BalloonPosition: ConvertBalloonPosition(r.BalloonPosition),
-		// }
-		// if r.LastMessage != nil {
-		// 	roomUser.LastMessage = &model.Message{
-		// 		ID:            strconv.Itoa(r.LastMessage.ID),
-		// 		UserID:        r.LastMessage.UserUID,
-		// 		UserName:      r.LastMessage.UserName,
-		// 		UserAvatarURL: r.LastMessage.UserAvatarURL,
-		// 		Body:          r.LastMessage.Body,
-		// 		CreatedAt:     r.LastMessage.CreatedAt,
-		// 	}
-		// }
-		roomUsers[i] = roomUser
+func ToRoomUsers(statuses []*room.UserStatus) []*model.RoomUser {
+	roomUsers := make([]*model.RoomUser, len(statuses))
+	for i, s := range statuses {
+		roomUsers[i] = ToRoomUser(s)
 	}
 
 	return roomUsers
 }
 
-func ToJoinedPayload(ru *room.UserStatus) *model.JoinedPayload {
+func ToOnlinedPayload(u *user.User) *model.OnlinedPayload {
+	return &model.OnlinedPayload{
+		User: ToUser(u),
+	}
+}
+
+func ToOfflinedPayload(u *user.User) *model.OfflinedPayload {
+	return &model.OfflinedPayload{
+		User: ToUser(u),
+	}
+}
+
+func ToJoinedPayload(us *room.UserStatus) *model.JoinedPayload {
 	return &model.JoinedPayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
-func ToMovedPayload(ru *room.UserStatus) *model.MovedPayload {
+func ToMovedPayload(us *room.UserStatus) *model.MovedPayload {
 	return &model.MovedPayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
-func ToSentMassagePayload(ru *room.UserStatus) *model.SentMassagePayload {
+func ToSentMassagePayload(us *room.UserStatus) *model.SentMassagePayload {
 	return &model.SentMassagePayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
-func ToRemovedLastMessagePayload(ru *room.UserStatus) *model.RemovedLastMessagePayload {
+func ToRemovedLastMessagePayload(us *room.UserStatus) *model.RemovedLastMessagePayload {
 	return &model.RemovedLastMessagePayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 
-func ToChangedBalloonPositionPayload(ru *room.UserStatus) *model.ChangedBalloonPositionPayload {
+func ToChangedBalloonPositionPayload(us *room.UserStatus) *model.ChangedBalloonPositionPayload {
 	return &model.ChangedBalloonPositionPayload{
-		// RoomUser: ToRoomUser(ru),
+		RoomUser: ToRoomUser(us),
 	}
 }
 

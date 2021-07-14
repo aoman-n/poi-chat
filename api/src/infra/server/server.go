@@ -40,7 +40,7 @@ func Start() {
 	go roomUserSubscriber.Start(ctx)
 
 	router := chi.NewRouter()
-	resolver := resolver.New(repo, roomUserSubscriber, userSubscriber)
+	resolver := resolver.New(repo, svc, roomUserSubscriber, userSubscriber)
 	conf := generated.Config{Resolvers: resolver}
 
 	// set middlewares
@@ -67,8 +67,8 @@ func Start() {
 	router.Use(middleware.Recoverer)
 	router.Use(customMiddleware.Logger())
 	router.Use(customMiddleware.Authorize())
-	// router.Use(customMiddleware.RoomUserCountLoader(roomUserRepo))
-	// router.Use(customMiddleware.RoomMessageCountLoader(messageRepo))
+	router.Use(customMiddleware.RoomUserCountLoader(repo.NewRoom()))
+	router.Use(customMiddleware.RoomMessageCountLoader(repo.NewRoom()))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))
 

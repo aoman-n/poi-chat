@@ -12,6 +12,8 @@ import (
 func Authorize() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			logger := acontext.GetLogger(r.Context())
+
 			sess, err := session.GetUserSession(r)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -25,12 +27,12 @@ func Authorize() func(http.Handler) http.Handler {
 			}
 
 			u, err := sess.GetUser()
+			logger.Debugf("u: %v, err: %v \n", u, err)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			logger := acontext.GetLogger(r.Context())
 			logger.Debugf("authenticated user is %+v\n", u)
 
 			newCtx := acontext.SetUser(r.Context(), u)
