@@ -20,8 +20,9 @@ const (
 	DefaultY = 100
 )
 
-func NewUserStatus(u *user.User) *UserStatus {
+func NewUserStatus(u *user.User, roomID int) *UserStatus {
 	return &UserStatus{
+		RoomID:      roomID,
 		UserUID:     u.UID,
 		X:           DefaultX,
 		Y:           DefaultY,

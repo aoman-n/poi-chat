@@ -58,6 +58,19 @@ func (r *User) GetByUID(ctx context.Context, uid string) (*user.User, error) {
 	return &u, nil
 }
 
+func (r *User) GetByUIDs(ctx context.Context, uids []string) ([]*user.User, error) {
+	var u []*user.User
+	if err := r.db.Where("uid in ?", uids).Find(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, aerrors.Wrap(err).SetCode(aerrors.CodeNotFound).Message("not found user")
+		}
+
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+
+	return u, nil
+}
+
 func (r *User) Online(ctx context.Context, u *user.User) error {
 	key := subscriber.MakeOnlineUserKey(u.UID)
 

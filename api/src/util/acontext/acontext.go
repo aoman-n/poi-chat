@@ -15,6 +15,7 @@ const (
 	userKey                   key = "user"
 	roomUserCountLoaderKey    key = "roomUserCountLoader"
 	roomMessageCountLoaderKey key = "roomMessageCountLoader"
+	userLoaderKey             key = "userLoeader"
 	loggerKey                 key = "logger"
 )
 
@@ -65,6 +66,24 @@ func GetRoomMessageCountLoader(c context.Context) *generated.RoomMessageCountLoa
 	}
 
 	loader, ok := l.(*generated.RoomMessageCountLoader)
+	if !ok {
+		return nil
+	}
+
+	return loader
+}
+
+func SetUserLoader(c context.Context, l *generated.UserLoader) context.Context {
+	return context.WithValue(c, userLoaderKey, l)
+}
+
+func GetUserLoader(c context.Context) *generated.UserLoader {
+	l := c.Value(userLoaderKey)
+	if l == nil {
+		return nil
+	}
+
+	loader, ok := l.(*generated.UserLoader)
 	if !ok {
 		return nil
 	}

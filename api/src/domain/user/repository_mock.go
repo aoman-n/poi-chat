@@ -77,6 +77,21 @@ func (mr *MockRepositoryMockRecorder) GetByUID(ctx, uid interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUID", reflect.TypeOf((*MockRepository)(nil).GetByUID), ctx, uid)
 }
 
+// GetByUIDs mocks base method
+func (m *MockRepository) GetByUIDs(ctx context.Context, uids []string) ([]*User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByUIDs", ctx, uids)
+	ret0, _ := ret[0].([]*User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByUIDs indicates an expected call of GetByUIDs
+func (mr *MockRepositoryMockRecorder) GetByUIDs(ctx, uids interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUIDs", reflect.TypeOf((*MockRepository)(nil).GetByUIDs), ctx, uids)
+}
+
 // Online mocks base method
 func (m *MockRepository) Online(ctx context.Context, u *User) error {
 	m.ctrl.T.Helper()

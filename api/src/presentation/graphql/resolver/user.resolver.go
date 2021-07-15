@@ -42,7 +42,7 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 		logger.Infof("failed to get userStatusInRoom err: %v", err)
 	}
 	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser)
+		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
 	}
 	userStatusInRoom.SetPosition(input.X, input.Y)
 
@@ -103,10 +103,9 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 }
 
 func (r *roomUserResolver) User(ctx context.Context, obj *model.RoomUser) (*model.User, error) {
-	userRepo := r.repo.NewUser()
-	user, err := userRepo.GetByUID(ctx, obj.ID)
+	user, err := acontext.GetUserLoader(ctx).Load(obj.ID)
 	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.GetByUID"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to get user on userLoader"))
 		return nil, nil
 	}
 
@@ -169,7 +168,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	roomRepo := r.repo.NewRoom()
-	userStatusInRoom := room.NewUserStatus(currentUser)
+	userStatusInRoom := room.NewUserStatus(currentUser, domainRoomID)
 
 	if err := roomRepo.SaveUserStatus(ctx, userStatusInRoom); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
@@ -179,7 +178,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	go func() {
 		<-ctx.Done()
 		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.UID)
-		if err := roomRepo.DeleteUserStatus(ctx, userStatusInRoom); err != nil {
+		if err := roomRepo.DeleteUserStatus(context.Background(), userStatusInRoom); err != nil {
 			log.Println("failed to delete roomUser, err:", err)
 		}
 	}()
@@ -212,7 +211,7 @@ func (r *Resolver) RemoveLastMessage(
 		logger.Infof("failed to get roomUser err: %v", err)
 	}
 	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser)
+		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
 	}
 	userStatusInRoom.RemoveMessgae()
 	if err := roomRepo.SaveUserStatus(ctx, userStatusInRoom); err != nil {
@@ -247,7 +246,7 @@ func (r *Resolver) ChangeBalloonPosition(
 		logger.Infof("failed to get roomUser err: %v", err)
 	}
 	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser)
+		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
 	}
 
 	var domainBalloonPos room.BalloonPosition
