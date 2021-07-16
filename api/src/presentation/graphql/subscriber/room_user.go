@@ -93,7 +93,6 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	defer s.mutex.Unlock()
 
 	chs, ok := s.chans[roomID]
-
 	if !ok {
 		return
 	}

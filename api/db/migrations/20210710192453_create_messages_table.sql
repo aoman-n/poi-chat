@@ -14,7 +14,7 @@ CREATE TABLE messages (
   CONSTRAINT messages_fk_room_id
     FOREIGN KEY (`room_id`)
     REFERENCES rooms (`id`)
-    ON DELETE RESTRICT ON UPDATE CASCADE
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- +goose Down
