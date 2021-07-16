@@ -23,7 +23,6 @@ func (r *userResolver) ID(ctx context.Context, obj *model.User) (string, error) 
 }
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
-	logger := acontext.GetLogger(ctx)
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
@@ -37,13 +36,13 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	}
 
 	roomRepo := r.repo.NewRoom()
-	userStatusInRoom, err := roomRepo.GetUserStatus(ctx, domainRoomID, currentUser.UID)
+	roomSvc := r.service.NewRoom()
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
 	if err != nil {
-		logger.Infof("failed to get userStatusInRoom err: %v", err)
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
+		return nil, nil
 	}
-	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
-	}
+
 	userStatusInRoom.SetPosition(input.X, input.Y)
 
 	if err := roomRepo.SaveUserStatus(ctx, userStatusInRoom); err != nil {
@@ -54,10 +53,6 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 	return presenter.ToMovePayload(userStatusInRoom), nil
 }
 
-// func (r *offlinedPayloadResolver) UserID(ctx context.Context, obj *model.OfflinedPayload) (string, error) {
-// 	return graphql.GlobalUserIDStr(obj.UserID), nil
-// }
-
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
@@ -67,10 +62,6 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 
 	return presenter.ToUser(currentUser), nil
 }
-
-// func (r *queryResolver) GlobalUsers(ctx context.Context) ([]*model.GlobalUser, error) {
-// 	panic("not impl")
-// }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.User, error) {
 	currentUser := acontext.GetUser(ctx)
@@ -168,7 +159,12 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	roomRepo := r.repo.NewRoom()
-	userStatusInRoom := room.NewUserStatus(currentUser, domainRoomID)
+	roomSvc := r.service.NewRoom()
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
+		return nil, nil
+	}
 
 	if err := roomRepo.SaveUserStatus(ctx, userStatusInRoom); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Save"))
@@ -190,8 +186,6 @@ func (r *Resolver) RemoveLastMessage(
 	ctx context.Context,
 	input model.RemoveLastMessageInput,
 ) (*model.RemoveLastMessagePayload, error) {
-	logger := acontext.GetLogger(ctx)
-
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
@@ -205,15 +199,14 @@ func (r *Resolver) RemoveLastMessage(
 	}
 
 	roomRepo := r.repo.NewRoom()
-
-	userStatusInRoom, err := roomRepo.GetUserStatus(ctx, domainRoomID, currentUser.UID)
+	roomSvc := r.service.NewRoom()
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
 	if err != nil {
-		logger.Infof("failed to get roomUser err: %v", err)
-	}
-	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
+		return nil, nil
 	}
 	userStatusInRoom.RemoveMessgae()
+
 	if err := roomRepo.SaveUserStatus(ctx, userStatusInRoom); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.SaveUserStatus"))
 		return nil, nil
@@ -226,8 +219,6 @@ func (r *Resolver) ChangeBalloonPosition(
 	ctx context.Context,
 	input model.ChangeBalloonPositionInput,
 ) (*model.ChangeBalloonPositionPayload, error) {
-	logger := acontext.GetLogger(ctx)
-
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
@@ -241,12 +232,11 @@ func (r *Resolver) ChangeBalloonPosition(
 	}
 
 	roomRepo := r.repo.NewRoom()
-	userStatusInRoom, err := roomRepo.GetUserStatus(ctx, domainRoomID, currentUser.UID)
+	roomSvc := r.service.NewRoom()
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
 	if err != nil {
-		logger.Infof("failed to get roomUser err: %v", err)
-	}
-	if userStatusInRoom == nil {
-		userStatusInRoom = room.NewUserStatus(currentUser, domainRoomID)
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
+		return nil, nil
 	}
 
 	var domainBalloonPos room.BalloonPosition

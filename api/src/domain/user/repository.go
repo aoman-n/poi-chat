@@ -1,4 +1,4 @@
-//go:generate mockgen -package=user -source=repository.go -destination=repository_mock.go
+//go:generate mockgen -package=user -source=repository.go -destination=repository_mock.go -self_package=github.com/laster18/poi/api/src/domain/user
 package user
 
 import (

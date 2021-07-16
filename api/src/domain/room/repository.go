@@ -1,3 +1,4 @@
+//go:generate mockgen -package=room -source=repository.go -destination=repository_mock.go -self_package=github.com/laster18/poi/api/src/domain/room
 package room
 
 import (

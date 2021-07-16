@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 
+	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/util/aerrors"
 )
 
 type Service interface {
 	ExistsRoom(ctx context.Context, roomName string) (bool, error)
+	FindOrNewUserStatus(ctx context.Context, u *user.User, roomID int) (*UserStatus, error)
 }
 
 type service struct {
@@ -33,4 +35,20 @@ func (s *service) ExistsRoom(ctx context.Context, roomName string) (bool, error)
 	}
 
 	return true, nil
+}
+
+func (s *service) FindOrNewUserStatus(ctx context.Context, u *user.User, roomID int) (*UserStatus, error) {
+	us, err := s.repo.GetUserStatus(ctx, roomID, u.UID)
+	if err != nil {
+		var errApp *aerrors.ErrApp
+		if errors.As(err, &errApp) {
+			if errApp.Code() == aerrors.CodeNotFound {
+				return NewUserStatus(u, roomID), nil
+			}
+		}
+
+		return nil, aerrors.Wrap(err)
+	}
+
+	return us, nil
 }

@@ -53,10 +53,11 @@ func (r *mutationResolver) SendMessage(
 	}
 
 	roomRepo := r.repo.NewRoom()
-	roomUserStatus, err := roomRepo.GetUserStatus(ctx, domainRoomID, currentUser.UID)
-	// TODO: statusが見つからなかったら作成する
+	roomSvc := r.service.NewRoom()
+
+	roomUserStatus, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
 	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomUserRepo.Get"))
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
 		return nil, nil
 	}
 
