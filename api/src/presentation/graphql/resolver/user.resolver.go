@@ -94,7 +94,8 @@ func (r *roomResolver) Users(ctx context.Context, obj *model.Room) ([]*model.Roo
 }
 
 func (r *roomUserResolver) User(ctx context.Context, obj *model.RoomUser) (*model.User, error) {
-	user, err := acontext.GetUserLoader(ctx).Load(obj.ID)
+	uID, _ := strconv.Atoi(obj.User.ID)
+	user, err := acontext.GetUserLoader(ctx).Load(uID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to get user on userLoader"))
 		return nil, nil

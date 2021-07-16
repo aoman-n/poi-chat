@@ -7,6 +7,7 @@ import (
 
 type UserStatus struct {
 	RoomID          int
+	UserID          int
 	UserUID         string
 	X               int
 	Y               int
@@ -23,6 +24,7 @@ const (
 func NewUserStatus(u *user.User, roomID int) *UserStatus {
 	return &UserStatus{
 		RoomID:      roomID,
+		UserID:      u.ID,
 		UserUID:     u.UID,
 		X:           DefaultX,
 		Y:           DefaultY,

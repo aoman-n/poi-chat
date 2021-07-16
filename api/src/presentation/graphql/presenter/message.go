@@ -17,6 +17,9 @@ func ToMessage(m *message.Message) *model.Message {
 		ID:        strconv.Itoa(m.ID),
 		Body:      m.Body,
 		CreatedAt: m.CreatedAt,
+		User: &model.User{
+			ID: strconv.Itoa(m.UserID),
+		},
 	}
 }
 

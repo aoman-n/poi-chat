@@ -1,8 +1,6 @@
 type Message implements Node {
   id: ID! @goField(forceResolver: true)
-  userId: ID! @goField(forceResolver: true)
-  userName: String!
-  userAvatarUrl: String!
+  user: User! @goField(forceResolver: true)
   body: String!
   createdAt: Time!
 }

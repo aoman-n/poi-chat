@@ -73,12 +73,10 @@ type ComplexityRoot struct {
 	}
 
 	Message struct {
-		Body          func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		ID            func(childComplexity int) int
-		UserAvatarURL func(childComplexity int) int
-		UserID        func(childComplexity int) int
-		UserName      func(childComplexity int) int
+		Body      func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		User      func(childComplexity int) int
 	}
 
 	MessageConnection struct {
@@ -199,7 +197,7 @@ type ExitedPayloadResolver interface {
 }
 type MessageResolver interface {
 	ID(ctx context.Context, obj *model.Message) (string, error)
-	UserID(ctx context.Context, obj *model.Message) (string, error)
+	User(ctx context.Context, obj *model.Message) (*model.User, error)
 }
 type MutationResolver interface {
 	CreateRoom(ctx context.Context, input *model.CreateRoomInput) (*model.CreateRoomPayload, error)
@@ -308,26 +306,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Message.ID(childComplexity), true
 
-	case "Message.userAvatarUrl":
-		if e.complexity.Message.UserAvatarURL == nil {
+	case "Message.user":
+		if e.complexity.Message.User == nil {
 			break
 		}
 
-		return e.complexity.Message.UserAvatarURL(childComplexity), true
-
-	case "Message.userId":
-		if e.complexity.Message.UserID == nil {
-			break
-		}
-
-		return e.complexity.Message.UserID(childComplexity), true
-
-	case "Message.userName":
-		if e.complexity.Message.UserName == nil {
-			break
-		}
-
-		return e.complexity.Message.UserName(childComplexity), true
+		return e.complexity.Message.User(childComplexity), true
 
 	case "MessageConnection.edges":
 		if e.complexity.MessageConnection.Edges == nil {
@@ -847,9 +831,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "schema/message.graphql", Input: `type Message implements Node {
   id: ID! @goField(forceResolver: true)
-  userId: ID! @goField(forceResolver: true)
-  userName: String!
-  userAvatarUrl: String!
+  user: User! @goField(forceResolver: true)
   body: String!
   createdAt: Time!
 }
@@ -976,7 +958,6 @@ type Query {
   """
   オンライン中のユーザー一覧を取得
   """
-  # globalUsers: [GlobalUser!]!
   onlineUsers: [User!]!
 }
 
@@ -1041,23 +1022,6 @@ type RoomUser {
   lastMessage: Message
   balloonPosition: BalloonPosition!
 }
-
-# type RoomUserStatus {
-#   x: Int!
-#   y: Int!
-#   lastMessage: Message
-#   balloonPosition: BalloonPosition!
-# }
-
-# type RoomUser {
-#   id: ID! @goField(forceResolver: true)
-#   name: String!
-#   avatarUrl: String!
-#   x: Int!
-#   y: Int!
-#   lastMessage: Message
-#   balloonPosition: BalloonPosition!
-# }
 
 input MoveInput {
   roomId: ID!
@@ -1578,7 +1542,7 @@ func (ec *executionContext) _Message_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Message_userId(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_user(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1596,7 +1560,7 @@ func (ec *executionContext) _Message_userId(ctx context.Context, field graphql.C
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Message().UserID(rctx, obj)
+		return ec.resolvers.Message().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1608,79 +1572,9 @@ func (ec *executionContext) _Message_userId(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Message_userName(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Message",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserName, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Message_userAvatarUrl(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Message",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserAvatarURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Message_body(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
@@ -5411,7 +5305,7 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 				}
 				return res
 			})
-		case "userId":
+		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -5419,22 +5313,12 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Message_userId(ctx, field, obj)
+				res = ec._Message_user(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
 				return res
 			})
-		case "userName":
-			out.Values[i] = ec._Message_userName(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "userAvatarUrl":
-			out.Values[i] = ec._Message_userAvatarUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "body":
 			out.Values[i] = ec._Message_body(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

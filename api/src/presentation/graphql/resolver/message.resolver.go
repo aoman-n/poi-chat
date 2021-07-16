@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
@@ -21,8 +22,17 @@ func (r *messageResolver) ID(ctx context.Context, obj *model.Message) (string, e
 	return graphql.MessageIDStr(obj.ID), nil
 }
 
-func (r *messageResolver) UserID(ctx context.Context, obj *model.Message) (string, error) {
-	return graphql.RoomUserIDStr(obj.UserID), nil
+func (r *messageResolver) User(ctx context.Context, obj *model.Message) (*model.User, error) {
+	uID, _ := strconv.Atoi(obj.User.ID)
+	user, err := acontext.GetUserLoader(ctx).Load(uID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userLoader.Load"))
+		return nil, nil
+	}
+
+	fmt.Printf("getted user: %+v \n", user)
+
+	return presenter.ToUser(user), nil
 }
 
 func (r *mutationResolver) SendMessage(
@@ -31,7 +41,8 @@ func (r *mutationResolver) SendMessage(
 ) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
 	if currentUser == nil {
-		return nil, aerrors.Wrap(graphql.ErrUnauthorized)
+		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
+		return nil, nil
 	}
 
 	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)

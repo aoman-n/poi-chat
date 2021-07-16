@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	SaveIfNotExists(context.Context, *User) error
+	FindOrCreate(context.Context, *User) (*User, error)
 }
 
 type service struct {
@@ -19,22 +19,22 @@ func NewService(r Repository) Service {
 	return &service{r}
 }
 
-func (s *service) SaveIfNotExists(ctx context.Context, u *User) error {
-	_, err := s.repo.GetByUID(ctx, u.UID)
-	if err == nil {
-		return nil
-	}
+func (s *service) FindOrCreate(ctx context.Context, u *User) (*User, error) {
+	user, err := s.repo.GetByUID(ctx, u.UID)
+	if err != nil {
+		var aerr *aerrors.ErrApp
+		if errors.As(err, &aerr) {
+			if aerr.Code() == aerrors.CodeNotFound {
+				if err := s.repo.Save(ctx, u); err != nil {
+					return nil, aerrors.Wrap(err)
+				}
 
-	var aerr *aerrors.ErrApp
-	if !errors.As(err, &aerr) {
-		return aerrors.Wrap(err)
-	}
-
-	if aerr.Code() == aerrors.CodeNotFound {
-		if err := s.repo.Save(ctx, u); err != nil {
-			return aerrors.Wrap(err)
+				return u, nil
+			}
 		}
+
+		return nil, aerrors.Wrap(err)
 	}
 
-	return nil
+	return user, nil
 }

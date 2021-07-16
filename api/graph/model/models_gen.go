@@ -69,12 +69,10 @@ type JoinedPayload struct {
 func (JoinedPayload) IsRoomUserEvent() {}
 
 type Message struct {
-	ID            string    `json:"id"`
-	UserID        string    `json:"userId"`
-	UserName      string    `json:"userName"`
-	UserAvatarURL string    `json:"userAvatarUrl"`
-	Body          string    `json:"body"`
-	CreatedAt     time.Time `json:"createdAt"`
+	ID        string    `json:"id"`
+	User      *User     `json:"user"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func (Message) IsNode() {}

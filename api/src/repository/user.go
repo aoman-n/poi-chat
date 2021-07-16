@@ -45,6 +45,19 @@ func (r *User) Get(ctx context.Context, id int) (*user.User, error) {
 	return &u, nil
 }
 
+func (r *User) GetByIDs(ctx context.Context, ids []int) ([]*user.User, error) {
+	var u []*user.User
+	if err := r.db.Where("id in ?", ids).Find(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, aerrors.Wrap(err).SetCode(aerrors.CodeNotFound).Message("not found user")
+		}
+
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+
+	return u, nil
+}
+
 func (r *User) GetByUID(ctx context.Context, uid string) (*user.User, error) {
 	var u user.User
 	if err := r.db.Where("uid = ?", uid).First(&u).Error; err != nil {

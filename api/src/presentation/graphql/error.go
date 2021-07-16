@@ -62,8 +62,6 @@ func HandleErr(ctx context.Context, err error) {
 		return
 	}
 
-	logger.WarnWithErr(err, "handlerErr")
-
 	switch e.Code() {
 	case aerrors.CodeNotFound:
 		AddErr(ctx, getInfoMsg(e), codeNotFound)
@@ -72,10 +70,12 @@ func HandleErr(ctx context.Context, err error) {
 	case aerrors.CodeBadParams, aerrors.CodeDuplicated:
 		AddErr(ctx, getInfoMsg(e), codeUserInput)
 	case aerrors.CodeDatabase, aerrors.CodeRedis, aerrors.CodeInternal:
+		logger.WarnWithErr(err, "handlerErr")
 		AddErr(ctx, getInfoMsg(e), codeInternal)
 	case aerrors.CodeUnknown:
 		fallthrough
 	default:
+		logger.WarnWithErr(err, "handlerErr")
 		AddErr(ctx, getInfoMsg(e), codeInternal)
 	}
 

@@ -23,7 +23,6 @@ type Query {
   """
   オンライン中のユーザー一覧を取得
   """
-  # globalUsers: [GlobalUser!]!
   onlineUsers: [User!]!
 }
 

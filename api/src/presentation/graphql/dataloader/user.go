@@ -16,23 +16,23 @@ func NewUserLoader(
 	return generated.NewUserLoader(generated.UserLoaderConfig{
 		Wait:     2 * time.Millisecond,
 		MaxBatch: 100,
-		Fetch: func(userUIDs []string) ([]*user.User, []error) {
-			users, err := repo.GetByUIDs(ctx, userUIDs)
+		Fetch: func(userIDs []int) ([]*user.User, []error) {
+			users, err := repo.GetByIDs(ctx, userIDs)
 			if err != nil {
-				errs := make([]error, len(userUIDs))
-				for i := range make([]int, len(userUIDs)) {
+				errs := make([]error, len(userIDs))
+				for i := range make([]int, len(userIDs)) {
 					errs[i] = aerrors.Wrap(err)
 				}
 				return nil, errs
 			}
 
-			userMap := make(map[string]*user.User, len(users))
+			userMap := make(map[int]*user.User, len(users))
 			for _, u := range users {
-				userMap[u.UID] = u
+				userMap[u.ID] = u
 			}
 
-			ret := make([]*user.User, len(userUIDs))
-			for i, id := range userUIDs {
+			ret := make([]*user.User, len(userIDs))
+			for i, id := range userIDs {
 				u, ok := userMap[id]
 				if ok {
 					ret[i] = u

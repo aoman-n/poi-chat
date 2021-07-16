@@ -33,6 +33,9 @@ func ToRoomUser(u *room.UserStatus) *model.RoomUser {
 		Y:               u.Y,
 		LastMessage:     ToMessage(u.LastMessage),
 		BalloonPosition: ConvertBalloonPosition(u.BalloonPosition),
+		User: &model.User{
+			ID: strconv.Itoa(u.UserID),
+		},
 	}
 }
 

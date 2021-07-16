@@ -93,13 +93,15 @@ func twitterCallbackHandler(userSvc user.Service) http.HandlerFunc {
 			AvatarURL: account.ProfileImageURL,
 			Provider:  user.ProviderTwitter,
 		}
-		if err := userSvc.SaveIfNotExists(context.Background(), user); err != nil {
+
+		u, err := userSvc.FindOrCreate(context.Background(), user)
+		if err != nil {
 			log.Print("failed to save user err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		userSession.SetUser(user)
+		userSession.SetUser(u)
 		if err := userSession.Save(r, w); err != nil {
 			log.Print("failed to set user to session err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

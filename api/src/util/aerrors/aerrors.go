@@ -75,7 +75,13 @@ type ErrApp struct {
 }
 
 func (e *ErrApp) Error() string {
-	return e.msg
+	if e.next == nil {
+		return e.msg
+	}
+	if e.msg != "" {
+		return e.msg + ": " + e.next.Error()
+	}
+	return e.next.Error()
 }
 
 // Messagef: ユーザー向けのメッセージを保存する
