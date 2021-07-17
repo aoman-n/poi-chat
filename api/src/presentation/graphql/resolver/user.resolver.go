@@ -24,11 +24,6 @@ func (r *userResolver) ID(ctx context.Context, obj *model.User) (string, error) 
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err))
@@ -55,21 +50,10 @@ func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*mo
 
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	return presenter.ToUser(currentUser), nil
 }
 
 func (r *queryResolver) OnlineUsers(ctx context.Context) ([]*model.User, error) {
-	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	userRepo := r.repo.NewUser()
 	users, err := userRepo.GetOnlineUsers(ctx)
 	if err != nil {
@@ -112,11 +96,6 @@ func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model
 	logger := acontext.GetLogger(ctx)
 	currentUser := acontext.GetUser(ctx)
 
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	ch := make(chan model.UserEvent)
 	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
 
@@ -143,10 +122,6 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	roomID string,
 ) (<-chan model.RoomUserEvent, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
 
 	domainRoomID, err := graphql.DecodeRoomID(roomID)
 	if err != nil {
@@ -188,11 +163,6 @@ func (r *Resolver) RemoveLastMessage(
 	input model.RemoveLastMessageInput,
 ) (*model.RemoveLastMessagePayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
@@ -221,11 +191,6 @@ func (r *Resolver) ChangeBalloonPosition(
 	input model.ChangeBalloonPositionInput,
 ) (*model.ChangeBalloonPositionPayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
@@ -265,7 +230,7 @@ func (r *Resolver) ChangeBalloonPosition(
 	return presenter.ToChangeBalloonPositionPayload(userStatusInRoom), nil
 }
 
-func (r *userResolver) JoinedRoom(ctx context.Context, obj *model.User) (*model.Room, error) {
+func (r *userResolver) EnteredRoom(ctx context.Context, obj *model.User) (*model.Room, error) {
 	panic("not implemented")
 }
 

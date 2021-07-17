@@ -208,7 +208,7 @@ type User struct {
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatarUrl"`
 	//  ルームに入室していなかったらnull
-	JoinedRoom *Room `json:"joinedRoom"`
+	EnteredRoom *Room `json:"enteredRoom"`
 }
 
 type BalloonPosition string

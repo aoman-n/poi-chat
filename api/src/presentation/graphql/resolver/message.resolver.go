@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
@@ -30,8 +29,6 @@ func (r *messageResolver) User(ctx context.Context, obj *model.Message) (*model.
 		return nil, nil
 	}
 
-	fmt.Printf("getted user: %+v \n", user)
-
 	return presenter.ToUser(user), nil
 }
 
@@ -40,11 +37,6 @@ func (r *mutationResolver) SendMessage(
 	input *model.SendMessageInput,
 ) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
 	if err != nil {
 		return nil, aerrors.Wrap(err)
@@ -88,12 +80,6 @@ func (r *roomResolver) Messages(
 	last *int,
 	before *string,
 ) (*model.MessageConnection, error) {
-	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(graphql.ErrUnauthorized))
-		return nil, nil
-	}
-
 	roomID, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err))

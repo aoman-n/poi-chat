@@ -3,7 +3,7 @@ type User {
   name: String!
   avatarUrl: String!
   """ ルームに入室していなかったらnull """
-  joinedRoom: Room @goField(forceResolver: true)
+  enteredRoom: Room @goField(forceResolver: true)
 }
 
 type RoomUser {

@@ -41,10 +41,10 @@ func ToRoomUser(u *room.UserStatus) *model.RoomUser {
 
 func ToUser(u *user.User) *model.User {
 	return &model.User{
-		ID:         strconv.Itoa(u.ID),
-		Name:       u.Name,
-		AvatarURL:  u.AvatarURL,
-		JoinedRoom: &model.Room{},
+		ID:          strconv.Itoa(u.ID),
+		Name:        u.Name,
+		AvatarURL:   u.AvatarURL,
+		EnteredRoom: &model.Room{},
 	}
 }
 

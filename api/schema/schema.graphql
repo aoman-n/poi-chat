@@ -6,24 +6,24 @@ schema {
 
 type Query {
   """
-  ルーム情報を取得
-  """
-  room(id: ID!): Room!
-
-  """
   ルーム一覧を取得
   """
   rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
 
   """
+  ルーム情報を取得
+  """
+  room(id: ID!): Room! @requireLoggedIn
+
+  """
   ログイン中のユーザーが自身の情報を取得
   """
-  me: User!
+  me: User! @requireLoggedIn
 
   """
   オンライン中のユーザー一覧を取得
   """
-  onlineUsers: [User!]!
+  onlineUsers: [User!]! @requireLoggedIn
 }
 
 
@@ -31,27 +31,27 @@ type Mutation {
   """
   ルームの作成
   """
-  createRoom(input: CreateRoomInput): CreateRoomPayload!
+  createRoom(input: CreateRoomInput): CreateRoomPayload! @requireLoggedIn
 
   """
   メッセージの送信
   """
-  sendMessage(input: SendMessageInput): SendMassagePaylaod!
+  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireLoggedIn
 
   """
   ルーム内ユーザーのポジション移動
   """
-  move(input: MoveInput!): MovePayload!
+  move(input: MoveInput!): MovePayload! @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し削除
   """
-  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload!
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し位置変更
   """
-  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload!
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireLoggedIn
 }
 
 type Subscription {
@@ -59,14 +59,16 @@ type Subscription {
   ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
   """
-  actedUserEvent: UserEvent
+  actedUserEvent: UserEvent @requireLoggedIn
 
   """
   ルーム内ユーザーのアクションを待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をルームに入室させる
   """
-  actedRoomUserEvent(roomId: ID!): RoomUserEvent
+  actedRoomUserEvent(roomId: ID!): RoomUserEvent @requireLoggedIn
 }
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
   | FIELD_DEFINITION
+directive @requireLoggedIn on FIELD_DEFINITION
+directive @requireEntered on FIELD_DEFINITION

@@ -22,11 +22,6 @@ func (r *mutationResolver) CreateRoom(
 	input *model.CreateRoomInput,
 ) (*model.CreateRoomPayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	if currentUser == nil {
-		graphql.HandleErr(ctx, graphql.ErrUnauthorized)
-		return nil, nil
-	}
-
 	roomRepo := r.repo.NewRoom()
 	roomService := r.service.NewRoom()
 

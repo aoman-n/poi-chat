@@ -49,6 +49,8 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	RequireEntered  func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+	RequireLoggedIn func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -185,10 +187,10 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		AvatarURL  func(childComplexity int) int
-		ID         func(childComplexity int) int
-		JoinedRoom func(childComplexity int) int
-		Name       func(childComplexity int) int
+		AvatarURL   func(childComplexity int) int
+		EnteredRoom func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 }
 
@@ -207,8 +209,8 @@ type MutationResolver interface {
 	ChangeBalloonPosition(ctx context.Context, input model.ChangeBalloonPositionInput) (*model.ChangeBalloonPositionPayload, error)
 }
 type QueryResolver interface {
-	Room(ctx context.Context, id string) (*model.Room, error)
 	Rooms(ctx context.Context, first *int, after *string, orderBy *model.RoomOrderField) (*model.RoomConnection, error)
+	Room(ctx context.Context, id string) (*model.Room, error)
 	Me(ctx context.Context) (*model.User, error)
 	OnlineUsers(ctx context.Context) ([]*model.User, error)
 	Node(ctx context.Context, id string) (model.Node, error)
@@ -232,7 +234,7 @@ type SubscriptionResolver interface {
 type UserResolver interface {
 	ID(ctx context.Context, obj *model.User) (string, error)
 
-	JoinedRoom(ctx context.Context, obj *model.User) (*model.Room, error)
+	EnteredRoom(ctx context.Context, obj *model.User) (*model.Room, error)
 }
 
 type executableSchema struct {
@@ -727,19 +729,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.AvatarURL(childComplexity), true
 
+	case "User.enteredRoom":
+		if e.complexity.User.EnteredRoom == nil {
+			break
+		}
+
+		return e.complexity.User.EnteredRoom(childComplexity), true
+
 	case "User.id":
 		if e.complexity.User.ID == nil {
 			break
 		}
 
 		return e.complexity.User.ID(childComplexity), true
-
-	case "User.joinedRoom":
-		if e.complexity.User.JoinedRoom == nil {
-			break
-		}
-
-		return e.complexity.User.JoinedRoom(childComplexity), true
 
 	case "User.name":
 		if e.complexity.User.Name == nil {
@@ -941,24 +943,24 @@ type CreateRoomPayload {
 
 type Query {
   """
-  ルーム情報を取得
-  """
-  room(id: ID!): Room!
-
-  """
   ルーム一覧を取得
   """
   rooms(first: Int, after: String, orderBy: RoomOrderField): RoomConnection!
 
   """
+  ルーム情報を取得
+  """
+  room(id: ID!): Room! @requireLoggedIn
+
+  """
   ログイン中のユーザーが自身の情報を取得
   """
-  me: User!
+  me: User! @requireLoggedIn
 
   """
   オンライン中のユーザー一覧を取得
   """
-  onlineUsers: [User!]!
+  onlineUsers: [User!]! @requireLoggedIn
 }
 
 
@@ -966,27 +968,27 @@ type Mutation {
   """
   ルームの作成
   """
-  createRoom(input: CreateRoomInput): CreateRoomPayload!
+  createRoom(input: CreateRoomInput): CreateRoomPayload! @requireLoggedIn
 
   """
   メッセージの送信
   """
-  sendMessage(input: SendMessageInput): SendMassagePaylaod!
+  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireLoggedIn
 
   """
   ルーム内ユーザーのポジション移動
   """
-  move(input: MoveInput!): MovePayload!
+  move(input: MoveInput!): MovePayload! @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し削除
   """
-  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload!
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し位置変更
   """
-  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload!
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireLoggedIn
 }
 
 type Subscription {
@@ -994,24 +996,26 @@ type Subscription {
   ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
   """
-  actedUserEvent: UserEvent
+  actedUserEvent: UserEvent @requireLoggedIn
 
   """
   ルーム内ユーザーのアクションを待ち受けるサブスクリプション 
   このサブスクリプションを待ち受けると同時に自身をルームに入室させる
   """
-  actedRoomUserEvent(roomId: ID!): RoomUserEvent
+  actedRoomUserEvent(roomId: ID!): RoomUserEvent @requireLoggedIn
 }
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
   | FIELD_DEFINITION
+directive @requireLoggedIn on FIELD_DEFINITION
+directive @requireEntered on FIELD_DEFINITION
 `, BuiltIn: false},
 	{Name: "schema/user.graphql", Input: `type User {
   id: ID! @goField(forceResolver: true)
   name: String!
   avatarUrl: String!
   """ ルームに入室していなかったらnull """
-  joinedRoom: Room @goField(forceResolver: true)
+  enteredRoom: Room @goField(forceResolver: true)
 }
 
 type RoomUser {
@@ -1951,8 +1955,28 @@ func (ec *executionContext) _Mutation_createRoom(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRoom(rctx, args["input"].(*model.CreateRoomInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateRoom(rctx, args["input"].(*model.CreateRoomInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CreateRoomPayload); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.CreateRoomPayload`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1993,8 +2017,28 @@ func (ec *executionContext) _Mutation_sendMessage(ctx context.Context, field gra
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SendMessage(rctx, args["input"].(*model.SendMessageInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SendMessage(rctx, args["input"].(*model.SendMessageInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.SendMassagePaylaod); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.SendMassagePaylaod`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2035,8 +2079,28 @@ func (ec *executionContext) _Mutation_move(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Move(rctx, args["input"].(model.MoveInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().Move(rctx, args["input"].(model.MoveInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.MovePayload); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.MovePayload`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2077,8 +2141,28 @@ func (ec *executionContext) _Mutation_removeLastMessage(ctx context.Context, fie
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RemoveLastMessage(rctx, args["input"].(model.RemoveLastMessageInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveLastMessage(rctx, args["input"].(model.RemoveLastMessageInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.RemoveLastMessagePayload); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.RemoveLastMessagePayload`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2119,8 +2203,28 @@ func (ec *executionContext) _Mutation_changeBalloonPosition(ctx context.Context,
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ChangeBalloonPosition(rctx, args["input"].(model.ChangeBalloonPositionInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ChangeBalloonPosition(rctx, args["input"].(model.ChangeBalloonPositionInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ChangeBalloonPositionPayload); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.ChangeBalloonPositionPayload`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2341,48 +2445,6 @@ func (ec *executionContext) _PageInfo_hasPreviousPage(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_room(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_room_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Room(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Room)
-	fc.Result = res
-	return ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_rooms(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2425,6 +2487,68 @@ func (ec *executionContext) _Query_rooms(ctx context.Context, field graphql.Coll
 	return ec.marshalNRoomConnection2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomConnection(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_room(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_room_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Room(rctx, args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Room); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.Room`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Room)
+	fc.Result = res
+	return ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2442,8 +2566,28 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Me(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Me(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/laster18/poi/api/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2477,8 +2621,28 @@ func (ec *executionContext) _Query_onlineUsers(ctx context.Context, field graphq
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().OnlineUsers(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OnlineUsers(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/laster18/poi/api/graph/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3498,8 +3662,28 @@ func (ec *executionContext) _Subscription_actedUserEvent(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().ActedUserEvent(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Subscription().ActedUserEvent(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(<-chan model.UserEvent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be <-chan github.com/laster18/poi/api/graph/model.UserEvent`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3547,8 +3731,28 @@ func (ec *executionContext) _Subscription_actedRoomUserEvent(ctx context.Context
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().ActedRoomUserEvent(rctx, args["roomId"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Subscription().ActedRoomUserEvent(rctx, args["roomId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireLoggedIn == nil {
+				return nil, errors.New("directive requireLoggedIn is not implemented")
+			}
+			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(<-chan model.RoomUserEvent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be <-chan github.com/laster18/poi/api/graph/model.RoomUserEvent`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3677,7 +3881,7 @@ func (ec *executionContext) _User_avatarUrl(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _User_joinedRoom(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_enteredRoom(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3695,7 +3899,7 @@ func (ec *executionContext) _User_joinedRoom(ctx context.Context, field graphql.
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.User().JoinedRoom(rctx, obj)
+		return ec.resolvers.User().EnteredRoom(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5624,20 +5828,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "room":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_room(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "rooms":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5647,6 +5837,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_rooms(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "room":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_room(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -6121,7 +6325,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "joinedRoom":
+		case "enteredRoom":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -6129,7 +6333,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._User_joinedRoom(ctx, field, obj)
+				res = ec._User_enteredRoom(ctx, field, obj)
 				return res
 			})
 		default:

@@ -18,6 +18,7 @@ import (
 	"github.com/laster18/poi/api/src/config"
 	"github.com/laster18/poi/api/src/infra/db"
 	"github.com/laster18/poi/api/src/infra/redis"
+	"github.com/laster18/poi/api/src/presentation/graphql/directive"
 	customMiddleware "github.com/laster18/poi/api/src/presentation/graphql/middleware"
 	"github.com/laster18/poi/api/src/presentation/graphql/resolver"
 	"github.com/laster18/poi/api/src/presentation/rest"
@@ -41,7 +42,8 @@ func Start() {
 
 	router := chi.NewRouter()
 	resolver := resolver.New(repo, svc, roomUserSubscriber, userSubscriber)
-	conf := generated.Config{Resolvers: resolver}
+	directive := directive.New(repo)
+	conf := generated.Config{Resolvers: resolver, Directives: *directive}
 
 	// set middlewares
 	router.Use(cors.New(cors.Options{
