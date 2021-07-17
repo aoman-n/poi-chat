@@ -36,7 +36,7 @@ type Mutation {
   """
   メッセージの送信
   """
-  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireLoggedIn
+  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーのポジション移動
@@ -68,7 +68,6 @@ type Subscription {
   actedRoomUserEvent(roomId: ID!): RoomUserEvent @requireLoggedIn
 }
 
-directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
-  | FIELD_DEFINITION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 directive @requireLoggedIn on FIELD_DEFINITION
 directive @requireEntered on FIELD_DEFINITION
