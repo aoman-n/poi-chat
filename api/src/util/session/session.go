@@ -83,18 +83,15 @@ func GetUserSession(r *http.Request) (*UserSession, error) {
 	return &UserSession{sess: sess}, nil
 }
 
-func (s *UserSession) SetUser(u *user.User) {
-	s.sess.Values[idKey] = u.ID
+func (s *UserSession) SetUserUID(u *user.User) {
 	s.sess.Values[uidKey] = u.UID
-	s.sess.Values[nameKey] = u.Name
-	s.sess.Values[avatarKey] = u.AvatarURL
 }
 
 func (s *UserSession) Save(r *http.Request, w http.ResponseWriter) error {
 	// TODO: add domain option
 	s.sess.Options.HttpOnly = true
-	// s.sess.Options.SameSite = http.SameSiteStrictMode
-	s.sess.Options.SameSite = http.SameSiteLaxMode
+	s.sess.Options.SameSite = http.SameSiteStrictMode
+	// s.sess.Options.SameSite = http.SameSiteLaxMode
 	s.sess.Options.Path = "/"
 	if config.IsProd() {
 		s.sess.Options.Secure = true
@@ -106,33 +103,13 @@ func (s *UserSession) IsNew() bool {
 	return s.sess.IsNew
 }
 
-func (s *UserSession) GetUser() (*user.User, error) {
-	id, ok := s.sess.Values[idKey].(int)
-	if !ok {
-		return nil, fmt.Errorf("not found user id in session")
-	}
-
+func (s *UserSession) GetUserUID() (string, error) {
 	uid, ok := s.sess.Values[uidKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("not found user uid in session")
+		return "", fmt.Errorf("not found user uid in session")
 	}
 
-	name, ok := s.sess.Values[nameKey].(string)
-	if !ok {
-		return nil, fmt.Errorf("not found userName in session")
-	}
-
-	avatarURL, ok := s.sess.Values[avatarKey].(string)
-	if !ok {
-		return nil, fmt.Errorf("not found avatarUrl in session")
-	}
-
-	return &user.User{
-		ID:        id,
-		UID:       uid,
-		Name:      name,
-		AvatarURL: avatarURL,
-	}, nil
+	return uid, nil
 }
 
 func (s *UserSession) RemoveUser(r *http.Request, w http.ResponseWriter) error {

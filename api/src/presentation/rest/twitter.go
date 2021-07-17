@@ -101,7 +101,7 @@ func twitterCallbackHandler(userSvc user.Service) http.HandlerFunc {
 			return
 		}
 
-		userSession.SetUser(u)
+		userSession.SetUserUID(u)
 		if err := userSession.Save(r, w); err != nil {
 			log.Print("failed to set user to session err:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
