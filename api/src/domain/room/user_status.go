@@ -29,7 +29,7 @@ func NewUserStatus(u *user.User, roomID int) *UserStatus {
 		X:           DefaultX,
 		Y:           DefaultY,
 		LastMessage: nil,
-		LastEvent:   JoinEvent,
+		LastEvent:   EnterEvent,
 		// default balloon position is TopRight
 		BalloonPosition: BalloonPositionTopRight,
 	}
@@ -59,7 +59,7 @@ func (u *UserStatus) ChangeBalloonPosition(p BalloonPosition) {
 type Event int
 
 const (
-	JoinEvent Event = iota + 1
+	EnterEvent Event = iota + 1
 	MoveEvent
 	AddMessageEvent
 	RemoveLastMessageEvent
@@ -68,8 +68,8 @@ const (
 
 func (r Event) String() string {
 	switch r {
-	case JoinEvent:
-		return "join_event"
+	case EnterEvent:
+		return "enter_event"
 	case MoveEvent:
 		return "move_event"
 	case AddMessageEvent:

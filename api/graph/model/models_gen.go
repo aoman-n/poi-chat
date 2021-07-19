@@ -56,17 +56,17 @@ type CreateRoomPayload struct {
 	Room *Room `json:"room"`
 }
 
+type EnteredPayload struct {
+	RoomUser *RoomUser `json:"roomUser"`
+}
+
+func (EnteredPayload) IsRoomUserEvent() {}
+
 type ExitedPayload struct {
 	UserID string `json:"userId"`
 }
 
 func (ExitedPayload) IsRoomUserEvent() {}
-
-type JoinedPayload struct {
-	RoomUser *RoomUser `json:"roomUser"`
-}
-
-func (JoinedPayload) IsRoomUserEvent() {}
 
 type Message struct {
 	ID        string    `json:"id"`

@@ -66,12 +66,12 @@ type ComplexityRoot struct {
 		Room func(childComplexity int) int
 	}
 
-	ExitedPayload struct {
-		UserID func(childComplexity int) int
+	EnteredPayload struct {
+		RoomUser func(childComplexity int) int
 	}
 
-	JoinedPayload struct {
-		RoomUser func(childComplexity int) int
+	ExitedPayload struct {
+		UserID func(childComplexity int) int
 	}
 
 	Message struct {
@@ -273,19 +273,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CreateRoomPayload.Room(childComplexity), true
 
+	case "EnteredPayload.roomUser":
+		if e.complexity.EnteredPayload.RoomUser == nil {
+			break
+		}
+
+		return e.complexity.EnteredPayload.RoomUser(childComplexity), true
+
 	case "ExitedPayload.userId":
 		if e.complexity.ExitedPayload.UserID == nil {
 			break
 		}
 
 		return e.complexity.ExitedPayload.UserID(childComplexity), true
-
-	case "JoinedPayload.roomUser":
-		if e.complexity.JoinedPayload.RoomUser == nil {
-			break
-		}
-
-		return e.complexity.JoinedPayload.RoomUser(childComplexity), true
 
 	case "Message.body":
 		if e.complexity.Message.Body == nil {
@@ -932,6 +932,72 @@ enum RoomOrderField {
 type CreateRoomPayload {
   room: Room!
 }
+
+type RoomUser {
+  id: ID! @goField(forceResolver: true)
+  user: User! @goField(forceResolver: true)
+  x: Int!
+  y: Int!
+  lastMessage: Message
+  balloonPosition: BalloonPosition!
+}
+
+input MoveInput {
+  roomId: ID!
+  x: Int!
+  y: Int!
+}
+
+input RemoveLastMessageInput {
+  roomId: ID!
+}
+
+type RemoveLastMessagePayload {
+  roomUser: RoomUser
+}
+
+input ChangeBalloonPositionInput {
+  roomId: ID!
+  balloonPosition: BalloonPosition!
+}
+
+type ChangeBalloonPositionPayload {
+  roomUser: RoomUser
+}
+
+type MovePayload {
+  roomUser: RoomUser!
+}
+
+"""
+ルーム内のユーザーの行動を取得するためのイベントタイプ
+"""
+union RoomUserEvent =
+  EnteredPayload |
+  ExitedPayload |
+  MovedPayload |
+  SentMassagePayload |
+  RemovedLastMessagePayload |
+  ChangedBalloonPositionPayload
+
+type EnteredPayload {
+  roomUser: RoomUser!
+}
+type ExitedPayload {
+  userId: ID! @goField(forceResolver: true)
+}
+type MovedPayload {
+  roomUser: RoomUser!
+}
+type SentMassagePayload {
+  roomUser: RoomUser!
+}
+type RemovedLastMessagePayload {
+  roomUser: RoomUser!
+}
+type ChangedBalloonPositionPayload {
+  roomUser: RoomUser!
+}
 `, BuiltIn: false},
 	{Name: "schema/scalar.graphql", Input: `scalar Time
 `, BuiltIn: false},
@@ -1017,42 +1083,6 @@ directive @requireEntered on FIELD_DEFINITION
   enteredRoom: Room @goField(forceResolver: true)
 }
 
-type RoomUser {
-  id: ID! @goField(forceResolver: true)
-  user: User! @goField(forceResolver: true)
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
-input MoveInput {
-  roomId: ID!
-  x: Int!
-  y: Int!
-}
-
-input RemoveLastMessageInput {
-  roomId: ID!
-}
-
-type RemoveLastMessagePayload {
-  roomUser: RoomUser
-}
-
-input ChangeBalloonPositionInput {
-  roomId: ID!
-  balloonPosition: BalloonPosition!
-}
-
-type ChangeBalloonPositionPayload {
-  roomUser: RoomUser
-}
-
-type MovePayload {
-  roomUser: RoomUser!
-}
-
 enum BalloonPosition {
   TOP_LEFT
   TOP_RIGHT
@@ -1069,36 +1099,6 @@ type OnlinedPayload {
 }
 type OfflinedPayload {
   user: User!
-}
-
-"""
-ルーム内のユーザーの行動を取得するためのイベントタイプ
-"""
-union RoomUserEvent =
-  JoinedPayload |
-  ExitedPayload |
-  MovedPayload |
-  SentMassagePayload |
-  RemovedLastMessagePayload |
-  ChangedBalloonPositionPayload
-
-type JoinedPayload {
-  roomUser: RoomUser!
-}
-type ExitedPayload {
-  userId: ID! @goField(forceResolver: true)
-}
-type MovedPayload {
-  roomUser: RoomUser!
-}
-type SentMassagePayload {
-  roomUser: RoomUser!
-}
-type RemovedLastMessagePayload {
-  roomUser: RoomUser!
-}
-type ChangedBalloonPositionPayload {
-  roomUser: RoomUser!
 }
 `, BuiltIn: false},
 }
@@ -1440,6 +1440,41 @@ func (ec *executionContext) _CreateRoomPayload_room(ctx context.Context, field g
 	return ec.marshalNRoom2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoom(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _EnteredPayload_roomUser(ctx context.Context, field graphql.CollectedField, obj *model.EnteredPayload) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "EnteredPayload",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RoomUser, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.RoomUser)
+	fc.Result = res
+	return ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ExitedPayload_userId(ctx context.Context, field graphql.CollectedField, obj *model.ExitedPayload) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1473,41 +1508,6 @@ func (ec *executionContext) _ExitedPayload_userId(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _JoinedPayload_roomUser(ctx context.Context, field graphql.CollectedField, obj *model.JoinedPayload) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "JoinedPayload",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RoomUser, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.RoomUser)
-	fc.Result = res
-	return ec.marshalNRoomUser2ᚖgithubᚗcomᚋlaster18ᚋpoiᚋapiᚋgraphᚋmodelᚐRoomUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Message_id(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
@@ -5292,13 +5292,13 @@ func (ec *executionContext) _RoomUserEvent(ctx context.Context, sel ast.Selectio
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.JoinedPayload:
-		return ec._JoinedPayload(ctx, sel, &obj)
-	case *model.JoinedPayload:
+	case model.EnteredPayload:
+		return ec._EnteredPayload(ctx, sel, &obj)
+	case *model.EnteredPayload:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._JoinedPayload(ctx, sel, obj)
+		return ec._EnteredPayload(ctx, sel, obj)
 	case model.ExitedPayload:
 		return ec._ExitedPayload(ctx, sel, &obj)
 	case *model.ExitedPayload:
@@ -5444,6 +5444,33 @@ func (ec *executionContext) _CreateRoomPayload(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var enteredPayloadImplementors = []string{"EnteredPayload", "RoomUserEvent"}
+
+func (ec *executionContext) _EnteredPayload(ctx context.Context, sel ast.SelectionSet, obj *model.EnteredPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, enteredPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EnteredPayload")
+		case "roomUser":
+			out.Values[i] = ec._EnteredPayload_roomUser(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var exitedPayloadImplementors = []string{"ExitedPayload", "RoomUserEvent"}
 
 func (ec *executionContext) _ExitedPayload(ctx context.Context, sel ast.SelectionSet, obj *model.ExitedPayload) graphql.Marshaler {
@@ -5469,33 +5496,6 @@ func (ec *executionContext) _ExitedPayload(ctx context.Context, sel ast.Selectio
 				}
 				return res
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var joinedPayloadImplementors = []string{"JoinedPayload", "RoomUserEvent"}
-
-func (ec *executionContext) _JoinedPayload(ctx context.Context, sel ast.SelectionSet, obj *model.JoinedPayload) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, joinedPayloadImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("JoinedPayload")
-		case "roomUser":
-			out.Values[i] = ec._JoinedPayload_roomUser(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

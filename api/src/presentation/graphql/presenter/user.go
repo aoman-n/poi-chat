@@ -78,8 +78,8 @@ func ToOfflinedPayload(u *user.User) *model.OfflinedPayload {
 	}
 }
 
-func ToJoinedPayload(us *room.UserStatus) *model.JoinedPayload {
-	return &model.JoinedPayload{
+func ToEnteredPayload(us *room.UserStatus) *model.EnteredPayload {
+	return &model.EnteredPayload{
 		RoomUser: ToRoomUser(us),
 	}
 }

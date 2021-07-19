@@ -77,14 +77,14 @@ type MovePayload {
 ルーム内のユーザーの行動を取得するためのイベントタイプ
 """
 union RoomUserEvent =
-  JoinedPayload |
+  EnteredPayload |
   ExitedPayload |
   MovedPayload |
   SentMassagePayload |
   RemovedLastMessagePayload |
   ChangedBalloonPositionPayload
 
-type JoinedPayload {
+type EnteredPayload {
   roomUser: RoomUser!
 }
 type ExitedPayload {

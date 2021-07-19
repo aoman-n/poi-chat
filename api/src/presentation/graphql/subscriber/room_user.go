@@ -126,8 +126,8 @@ func (s *RoomUserSubscriber) RemoveCh(roomID int, userID int) {
 
 func (s *RoomUserSubscriber) makePublishDataFromSetEvent(ru *room.UserStatus) (model.RoomUserEvent, error) {
 	switch ru.LastEvent {
-	case room.JoinEvent:
-		return presenter.ToJoinedPayload(ru), nil
+	case room.EnterEvent:
+		return presenter.ToEnteredPayload(ru), nil
 	case room.MoveEvent:
 		return presenter.ToMovedPayload(ru), nil
 	case room.AddMessageEvent:
