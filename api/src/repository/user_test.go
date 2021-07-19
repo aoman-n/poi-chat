@@ -54,7 +54,7 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 		Provider:  user.ProviderTwitter,
 	}
 	assert.NoError(t, repo.Save(mockCtx, user1))
-	user1Status := user.NewStatus()
+	user1Status := user.NewStatus(user1)
 
 	// create user1
 	user2 := &user.User{
@@ -65,7 +65,7 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 		Provider:  user.ProviderTwitter,
 	}
 	assert.NoError(t, repo.Save(mockCtx, user2))
-	user2Status := user.NewStatus()
+	user2Status := user.NewStatus(user2)
 
 	// user1とuser2をonlineにする
 	assert.NoError(t, repo.SaveStatus(mockCtx, user1.UID, user1Status))
@@ -121,28 +121,28 @@ func TestUser_Save_GetStatuses(t *testing.T) {
 
 	roomID := 100
 
-	uid1 := "user1"
 	status1 := &user.Status{
+		UserUID:       "user1",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
-	uid2 := "user2"
 	status2 := &user.Status{
+		UserUID:       "user2",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
-	uid3 := "user3"
 	status3 := &user.Status{
+		UserUID:       "user3",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
 
-	assert.NoError(t, repo.SaveStatus(mockCtx, uid1, status1))
-	assert.NoError(t, repo.SaveStatus(mockCtx, uid2, status2))
-	assert.NoError(t, repo.SaveStatus(mockCtx, uid3, status3))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status1.UserUID, status1))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status2.UserUID, status2))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status3.UserUID, status3))
 
 	t.Run("正しくstatusのスライスを取得できること", func(t *testing.T) {
-		uids := []string{uid1, uid2, uid3}
+		uids := []string{status1.UserUID, status2.UserUID, status3.UserUID}
 
 		actual, err := repo.GetStatuses(mockCtx, uids)
 		assert.NoError(t, err)
@@ -157,7 +157,7 @@ func TestUser_Save_GetStatuses(t *testing.T) {
 	})
 
 	t.Run("存在しないuidがあった場合には見つかったものだけが返されること", func(t *testing.T) {
-		uids := []string{"notFoundID1", uid1, uid2, "notFoundID2", uid3}
+		uids := []string{"notFoundID1", status1.UserUID, status2.UserUID, "notFoundID2", status3.UserUID}
 
 		actual, err := repo.GetStatuses(mockCtx, uids)
 		assert.NoError(t, err)

@@ -100,7 +100,7 @@ func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model
 		return nil, nil
 	}
 	if !exists {
-		status := user.NewStatus()
+		status := user.NewStatus(currentUser)
 		if err := userRepo.SaveStatus(ctx, currentUser.UID, status); err != nil {
 			graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
 			return nil, nil
@@ -147,7 +147,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
 	userRepo := r.repo.NewUser()
-	userStatus := user.NewStatus()
+	userStatus := user.NewStatus(currentUser)
 	userStatus.ChangeEnteredRoom(domainRoomID)
 	if err := userRepo.SaveStatus(ctx, currentUser.UID, userStatus); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
@@ -248,9 +248,24 @@ func (r *Resolver) ChangeBalloonPosition(
 }
 
 func (r *userResolver) EnteredRoom(ctx context.Context, obj *model.User) (*model.Room, error) {
-	panic("not implemented")
-	// 入室中のroomIDを取得 (dataloader)
-	// ルームを取得 (dataloader)
+	// TODO: IDを渡せるようにする
+	userStatus, err := acontext.GetUserStatusLoader(ctx).Load(obj.ID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to load user status from dataloader"))
+		return nil, nil
+	}
+
+	if userStatus.EnteredRoomID == nil {
+		return nil, nil
+	}
+
+	room, err := acontext.GetRoomLoader(ctx).Load(*userStatus.EnteredRoomID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to get room from dataloader"))
+		return nil, nil
+	}
+
+	return presenter.ToRoom(room), nil
 }
 
 func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {

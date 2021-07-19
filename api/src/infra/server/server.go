@@ -72,6 +72,8 @@ func Start() {
 	router.Use(customMiddleware.RoomUserCountLoader(repo.NewRoom()))
 	router.Use(customMiddleware.RoomMessageCountLoader(repo.NewRoom()))
 	router.Use(customMiddleware.UserLoader(repo.NewUser()))
+	router.Use(customMiddleware.UserStatusLoader(repo.NewUser()))
+	router.Use(customMiddleware.RoomLoader(repo.NewRoom()))
 
 	srv := handler.New(generated.NewExecutableSchema(conf))
 

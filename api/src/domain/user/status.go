@@ -1,12 +1,14 @@
 package user
 
 type Status struct {
+	UserUID       string
 	EnteredRoomID *int
 	State         State
 }
 
-func NewStatus() *Status {
+func NewStatus(u *User) *Status {
 	return &Status{
+		UserUID:       u.UID,
 		EnteredRoomID: nil,
 		State:         StateNormal,
 	}

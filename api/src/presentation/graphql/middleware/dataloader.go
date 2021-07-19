@@ -38,3 +38,23 @@ func UserLoader(repo user.Repository) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+func UserStatusLoader(repo user.Repository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			dataloader := dataloader.NewUserStatusLoader(r.Context(), repo)
+			newCtx := acontext.SetUserStatusLoader(r.Context(), dataloader)
+			next.ServeHTTP(w, r.WithContext(newCtx))
+		})
+	}
+}
+
+func RoomLoader(repo room.Repository) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			dataloader := dataloader.NewRoomLoader(r.Context(), repo)
+			newCtx := acontext.SetRoomLoader(r.Context(), dataloader)
+			next.ServeHTTP(w, r.WithContext(newCtx))
+		})
+	}
+}
