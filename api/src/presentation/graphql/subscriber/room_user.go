@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/laster18/poi/api/graph/model"
@@ -19,13 +20,13 @@ type RoomUserSubscriber struct {
 	client *redis.Client
 	mutex  sync.Mutex
 	// channels map[roomId]map[userId]chan ...
-	chans map[int]map[string]chan model.RoomUserEvent
+	chans map[int]map[int]chan model.RoomUserEvent
 }
 
 func NewRoomUserSubscriber(client *redis.Client) *RoomUserSubscriber {
 	subscriber := &RoomUserSubscriber{
 		client: client,
-		chans:  make(map[int]map[string]chan model.RoomUserEvent),
+		chans:  make(map[int]map[int]chan model.RoomUserEvent),
 	}
 	return subscriber
 }
@@ -46,7 +47,7 @@ func (s *RoomUserSubscriber) Start(ctx context.Context) {
 			logger.Debugf("subscribe roomUser, channel: %s, payload: %s\n\n", msg.Channel, msg.Payload)
 
 			ch := removeKeyspacePrefix(msg.Channel)
-			roomID, userUID, err := DestructRoomUserStatusKey(ch)
+			roomID, userID, err := DestructRoomUserStatusKey(ch)
 			if err != nil {
 				log.Println("getted invalid channel key from redis, err:", err)
 				continue
@@ -78,7 +79,7 @@ func (s *RoomUserSubscriber) Start(ctx context.Context) {
 				fallthrough
 			case redis.EventExpired:
 				data := &model.ExitedPayload{
-					UserID: userUID,
+					UserID: strconv.Itoa(userID),
 				}
 				s.deliver(roomID, data)
 			default:
@@ -102,25 +103,25 @@ func (s *RoomUserSubscriber) deliver(roomID int, data model.RoomUserEvent) {
 	}
 }
 
-func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, userUID string) {
+func (s *RoomUserSubscriber) AddCh(ch chan model.RoomUserEvent, roomID int, userID int) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	userChannels, ok := s.chans[roomID]
 	if !ok {
-		userChannels = make(map[string]chan model.RoomUserEvent)
+		userChannels = make(map[int]chan model.RoomUserEvent)
 		s.chans[roomID] = userChannels
 	}
-	userChannels[userUID] = ch
+	userChannels[userID] = ch
 }
 
-func (s *RoomUserSubscriber) RemoveCh(roomID int, userUID string) {
+func (s *RoomUserSubscriber) RemoveCh(roomID int, userID int) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	userChannels, ok := s.chans[roomID]
 	if !ok {
 		return
 	}
-	delete(userChannels, userUID)
+	delete(userChannels, userID)
 }
 
 func (s *RoomUserSubscriber) makePublishDataFromSetEvent(ru *room.UserStatus) (model.RoomUserEvent, error) {

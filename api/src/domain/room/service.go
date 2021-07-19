@@ -38,7 +38,7 @@ func (s *service) ExistsRoom(ctx context.Context, roomName string) (bool, error)
 }
 
 func (s *service) FindOrNewUserStatus(ctx context.Context, u *user.User, roomID int) (*UserStatus, error) {
-	us, err := s.repo.GetUserStatus(ctx, roomID, u.UID)
+	us, err := s.repo.GetUserStatus(ctx, roomID, u.ID)
 	if err != nil {
 		var errApp *aerrors.ErrApp
 		if errors.As(err, &errApp) {

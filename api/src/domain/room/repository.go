@@ -19,7 +19,7 @@ type Repository interface {
 	GetUsers(ctx context.Context, roomID int) ([]*user.User, error)
 	SaveUserStatus(ctx context.Context, status *UserStatus) error
 	DeleteUserStatus(ctx context.Context, status *UserStatus) error
-	GetUserStatus(ctx context.Context, roomID int, userUID string) (*UserStatus, error)
+	GetUserStatus(ctx context.Context, roomID int, userID int) (*UserStatus, error)
 	GetUserStatuses(ctx context.Context, roomID int) ([]*UserStatus, error)
 }
 

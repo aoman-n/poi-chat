@@ -85,13 +85,13 @@ func (r *User) GetByUIDs(ctx context.Context, uids []string) ([]*user.User, erro
 	return u, nil
 }
 
-func (r *User) SaveStatus(ctx context.Context, uid string, status *user.Status) error {
+func (r *User) SaveStatus(ctx context.Context, id int, status *user.Status) error {
 	statusBytes, err := json.Marshal(status)
 	if err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
-	key := subscriber.MakeOnlineUserKey(uid)
+	key := subscriber.MakeOnlineUserKey(id)
 
 	if err := r.redisClient.Set(ctx, key, statusBytes, expireTimeSecond).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
@@ -103,8 +103,8 @@ func (r *User) SaveStatus(ctx context.Context, uid string, status *user.Status) 
 	return nil
 }
 
-func (r *User) DeleteStatus(ctx context.Context, uid string) error {
-	key := subscriber.MakeOnlineUserKey(uid)
+func (r *User) DeleteStatus(ctx context.Context, id int) error {
+	key := subscriber.MakeOnlineUserKey(id)
 
 	if err := r.redisClient.Del(ctx, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
@@ -116,8 +116,8 @@ func (r *User) DeleteStatus(ctx context.Context, uid string) error {
 	return nil
 }
 
-func (r *User) GetStatus(ctx context.Context, uid string) (*user.Status, error) {
-	key := subscriber.MakeOnlineUserKey(uid)
+func (r *User) GetStatus(ctx context.Context, id int) (*user.Status, error) {
+	key := subscriber.MakeOnlineUserKey(id)
 
 	j, err := r.redisClient.Get(ctx, key).Result()
 	if err != nil {
@@ -136,10 +136,10 @@ func (r *User) GetStatus(ctx context.Context, uid string) (*user.Status, error) 
 	return &status, nil
 }
 
-func (r *User) GetStatuses(ctx context.Context, uids []string) ([]*user.Status, error) {
-	keys := make([]string, len(uids))
-	for i, uid := range uids {
-		keys[i] = subscriber.MakeOnlineUserKey(uid)
+func (r *User) GetStatuses(ctx context.Context, ids []int) ([]*user.Status, error) {
+	keys := make([]string, len(ids))
+	for i, id := range ids {
+		keys[i] = subscriber.MakeOnlineUserKey(id)
 	}
 
 	statusJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
@@ -179,17 +179,17 @@ func (r *User) GetOnlineUsers(ctx context.Context) ([]*user.User, error) {
 		return []*user.User{}, nil
 	}
 
-	userUIDs := make([]string, len(keys))
+	userIDs := make([]int, len(keys))
 	for i, key := range keys {
 		uID, err := subscriber.DestructOnlineUserKey(key)
 		if err != nil {
 			return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 		}
-		userUIDs[i] = uID
+		userIDs[i] = uID
 	}
 
 	var users []*user.User
-	if err := r.db.Where("uid IN ?", userUIDs).Find(&users).Error; err != nil {
+	if err := r.db.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
 	}
 

@@ -6,42 +6,6 @@ type User {
   enteredRoom: Room @goField(forceResolver: true)
 }
 
-type RoomUser {
-  id: ID! @goField(forceResolver: true)
-  user: User! @goField(forceResolver: true)
-  x: Int!
-  y: Int!
-  lastMessage: Message
-  balloonPosition: BalloonPosition!
-}
-
-input MoveInput {
-  roomId: ID!
-  x: Int!
-  y: Int!
-}
-
-input RemoveLastMessageInput {
-  roomId: ID!
-}
-
-type RemoveLastMessagePayload {
-  roomUser: RoomUser
-}
-
-input ChangeBalloonPositionInput {
-  roomId: ID!
-  balloonPosition: BalloonPosition!
-}
-
-type ChangeBalloonPositionPayload {
-  roomUser: RoomUser
-}
-
-type MovePayload {
-  roomUser: RoomUser!
-}
-
 enum BalloonPosition {
   TOP_LEFT
   TOP_RIGHT
@@ -58,34 +22,4 @@ type OnlinedPayload {
 }
 type OfflinedPayload {
   user: User!
-}
-
-"""
-ルーム内のユーザーの行動を取得するためのイベントタイプ
-"""
-union RoomUserEvent =
-  JoinedPayload |
-  ExitedPayload |
-  MovedPayload |
-  SentMassagePayload |
-  RemovedLastMessagePayload |
-  ChangedBalloonPositionPayload
-
-type JoinedPayload {
-  roomUser: RoomUser!
-}
-type ExitedPayload {
-  userId: ID! @goField(forceResolver: true)
-}
-type MovedPayload {
-  roomUser: RoomUser!
-}
-type SentMassagePayload {
-  roomUser: RoomUser!
-}
-type RemovedLastMessagePayload {
-  roomUser: RoomUser!
-}
-type ChangedBalloonPositionPayload {
-  roomUser: RoomUser!
 }

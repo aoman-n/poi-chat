@@ -117,7 +117,7 @@ func SetRoomLoader(c context.Context, l *generated.RoomLoader) context.Context {
 }
 
 func GetRoomLoader(c context.Context) *generated.RoomLoader {
-	l := c.Value(userStatusLoaderKey)
+	l := c.Value(roomLoaderKey)
 	if l == nil {
 		return nil
 	}

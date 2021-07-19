@@ -255,7 +255,7 @@ func (r *Room) SaveUserStatus(ctx context.Context, status *room.UserStatus) erro
 		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
 	}
 
-	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserUID)
+	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserID)
 
 	if err := r.redis.Set(ctx, key, statusBytes, expireTimeSecond).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
@@ -268,7 +268,7 @@ func (r *Room) SaveUserStatus(ctx context.Context, status *room.UserStatus) erro
 }
 
 func (r *Room) DeleteUserStatus(ctx context.Context, status *room.UserStatus) error {
-	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserUID)
+	key := subscriber.MakeRoomUserStatusKey(status.RoomID, status.UserID)
 
 	if err := r.redis.Del(ctx, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
@@ -280,8 +280,8 @@ func (r *Room) DeleteUserStatus(ctx context.Context, status *room.UserStatus) er
 	return nil
 }
 
-func (r *Room) GetUserStatus(ctx context.Context, roomID int, userUID string) (*room.UserStatus, error) {
-	key := subscriber.MakeRoomUserStatusKey(roomID, userUID)
+func (r *Room) GetUserStatus(ctx context.Context, roomID int, userID int) (*room.UserStatus, error) {
+	key := subscriber.MakeRoomUserStatusKey(roomID, userID)
 
 	userStatusStr, err := r.redis.Get(ctx, key).Result()
 	if err != nil {

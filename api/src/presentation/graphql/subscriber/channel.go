@@ -26,60 +26,68 @@ const (
 // --------------------------------------------
 // For OnlineUser
 
-// onlineUser:<userUID>
-var onlineUserChannelReg = regexp.MustCompile(OnlineUserChannel + `:([a-zA-Z\d-]+)`)
+// onlineUser:<userID>
+var onlineUserChannelReg = regexp.MustCompile(OnlineUserChannel + `:(\d+)`)
 
-func DestructOnlineUserKey(key string) (userUID string, err error) {
+func DestructOnlineUserKey(key string) (userID int, err error) {
 	matches := onlineUserChannelReg.FindStringSubmatch(key)
 
 	if len(matches) == 0 {
-		return "", fmt.Errorf(`onlineUserKey is invalid format", key: "%s"`, key)
+		return 0, fmt.Errorf(`onlineUserKey is invalid format", key: "%s"`, key)
 	}
 
 	userIDStr := matches[1]
 	if userIDStr == "" {
-		return "", fmt.Errorf(`onlineUserKey is invalid format", key: "%s"`, key)
+		return 0, fmt.Errorf(`onlineUserKey is invalid format", key: "%s"`, key)
 	}
 
-	userUID = userIDStr
+	userID, err = strconv.Atoi(userIDStr)
+	if err != nil {
+		return 0, fmt.Errorf(`onlineUserKey is invalid format", key: "%s"`, key)
+	}
+
 	return
 }
 
-// MakeRoomUserKey "onlineUser:<userUID>"
-func MakeOnlineUserKey(userUID string) string {
-	return fmt.Sprintf("%s:%s", OnlineUserChannel, userUID)
+// MakeRoomUserKey "onlineUser:<userID>"
+func MakeOnlineUserKey(userID int) string {
+	return fmt.Sprintf("%s:%d", OnlineUserChannel, userID)
 }
 
 // --------------------------------------------
 // --------------------------------------------
 // For RoomUserStatus
 
-// MakeRoomUserStatusKey "roomUserStatus:<roomID>:<userUID>"
-func MakeRoomUserStatusKey(roomID int, userUID string) string {
-	return fmt.Sprintf("%s:%d:%s", RoomUserStatusChannel, roomID, userUID)
+// MakeRoomUserStatusKey "roomUserStatus:<roomID>:<userID>"
+func MakeRoomUserStatusKey(roomID int, userID int) string {
+	return fmt.Sprintf("%s:%d:%d", RoomUserStatusChannel, roomID, userID)
 }
 
-// roomUserStatus:<roomID>:<userUID>
-var roomUserStatusChannelReg = regexp.MustCompile(RoomUserStatusChannel + `:(\d+):([a-zA-Z\d-]+)`)
+// roomUserStatus:<roomID>:<userID>
+var roomUserStatusChannelReg = regexp.MustCompile(RoomUserStatusChannel + `:(\d+):(\d+)`)
 
-func DestructRoomUserStatusKey(key string) (roomID int, userUID string, err error) {
+func DestructRoomUserStatusKey(key string) (roomID int, userID int, err error) {
 	matches := roomUserStatusChannelReg.FindStringSubmatch(key)
 
 	if len(matches) == 0 {
-		return 0, "", fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
+		return 0, 0, fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
 	}
 
 	roomIDStr := matches[1]
-	userUIDStr := matches[2]
-	if roomIDStr == "" || userUIDStr == "" {
-		return 0, "", fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
+	userIDStr := matches[2]
+	if roomIDStr == "" || userIDStr == "" {
+		return 0, 0, fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
 	}
 
 	roomID, err = strconv.Atoi(roomIDStr)
 	if err != nil {
-		return 0, "", fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
+		return 0, 0, fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
 	}
 
-	userUID = userUIDStr
+	userID, err = strconv.Atoi(userIDStr)
+	if err != nil {
+		return 0, 0, fmt.Errorf(`roomUserStatus is invalid format", key: "%s"`, key)
+	}
+
 	return
 }

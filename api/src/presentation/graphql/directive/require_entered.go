@@ -17,7 +17,7 @@ func (d *Directive) RequireEntered(
 	currentUser := acontext.GetUser(ctx)
 	userRepo := d.repo.NewUser()
 
-	userStatus, err := userRepo.GetStatus(ctx, currentUser.UID)
+	userStatus, err := userRepo.GetStatus(ctx, currentUser.ID)
 	if err != nil {
 		errApp := aerrors.AsErrApp(err)
 		if errApp != nil {

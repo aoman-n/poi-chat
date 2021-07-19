@@ -169,18 +169,18 @@ func (mr *MockRepositoryMockRecorder) GetByName(ctx, name interface{}) *gomock.C
 }
 
 // GetUserStatus mocks base method.
-func (m *MockRepository) GetUserStatus(ctx context.Context, roomID int, userUID string) (*UserStatus, error) {
+func (m *MockRepository) GetUserStatus(ctx context.Context, roomID, userID int) (*UserStatus, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserStatus", ctx, roomID, userUID)
+	ret := m.ctrl.Call(m, "GetUserStatus", ctx, roomID, userID)
 	ret0, _ := ret[0].(*UserStatus)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserStatus indicates an expected call of GetUserStatus.
-func (mr *MockRepositoryMockRecorder) GetUserStatus(ctx, roomID, userUID interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetUserStatus(ctx, roomID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserStatus", reflect.TypeOf((*MockRepository)(nil).GetUserStatus), ctx, roomID, userUID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserStatus", reflect.TypeOf((*MockRepository)(nil).GetUserStatus), ctx, roomID, userID)
 }
 
 // GetUserStatuses mocks base method.

@@ -46,7 +46,7 @@ func (s *GlobalUserSubscriber) Start(ctx context.Context) {
 			logger.Debugf("subscribe user onlined or offlined event, channel: %s, payload: %s", msg.Channel, msg.Payload)
 
 			ch := removeKeyspacePrefix(msg.Channel)
-			userUID, err := DestructOnlineUserKey(ch)
+			userID, err := DestructOnlineUserKey(ch)
 			if err != nil {
 				logger.Warnf("received invalid channel key from redis, err: %v", err)
 				continue
@@ -55,7 +55,7 @@ func (s *GlobalUserSubscriber) Start(ctx context.Context) {
 			switch msg.Payload {
 			// onlineになった
 			case redis.EventSet:
-				user, err := s.userRepo.GetByUID(ctx, userUID)
+				user, err := s.userRepo.Get(ctx, userID)
 				if err != nil {
 					logger.Warnf("failed to get user on subscriber, err: %v", err)
 					continue
@@ -66,7 +66,7 @@ func (s *GlobalUserSubscriber) Start(ctx context.Context) {
 				fallthrough
 			// offlineになった
 			case redis.EventExpired:
-				user, err := s.userRepo.GetByUID(ctx, userUID)
+				user, err := s.userRepo.Get(ctx, userID)
 				if err != nil {
 					logger.Warnf("failed to get user on subscriber, err: %v", err)
 					continue

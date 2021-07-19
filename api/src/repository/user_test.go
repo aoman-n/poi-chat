@@ -47,7 +47,7 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 
 	// create user1
 	user1 := &user.User{
-		ID:        0,
+		ID:        100,
 		UID:       "uid1",
 		Name:      "hoge1",
 		AvatarURL: "http://example.com/avatar.png",
@@ -58,7 +58,7 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 
 	// create user1
 	user2 := &user.User{
-		ID:        0,
+		ID:        200,
 		UID:       "uid2",
 		Name:      "hoge2",
 		AvatarURL: "http://example.com/avatar.png",
@@ -68,8 +68,8 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 	user2Status := user.NewStatus(user2)
 
 	// user1とuser2をonlineにする
-	assert.NoError(t, repo.SaveStatus(mockCtx, user1.UID, user1Status))
-	assert.NoError(t, repo.SaveStatus(mockCtx, user2.UID, user2Status))
+	assert.NoError(t, repo.SaveStatus(mockCtx, user1.ID, user1Status))
+	assert.NoError(t, repo.SaveStatus(mockCtx, user2.ID, user2Status))
 
 	t.Run("オンラインにしたユーザーが取得されること", func(t *testing.T) {
 		expectOnlineUsers := []*user.User{
@@ -85,7 +85,7 @@ func TestUser_Save_Delete_Status(t *testing.T) {
 
 	t.Run("オフラインにしたユーザーは取得されないこと", func(t *testing.T) {
 		// user1をofflineにする
-		assert.NoError(t, repo.DeleteStatus(mockCtx, user1.UID))
+		assert.NoError(t, repo.DeleteStatus(mockCtx, user1.ID))
 
 		expectOnlineUsers := []*user.User{
 			user2,
@@ -100,16 +100,16 @@ func TestUser_Save_Get_Status(t *testing.T) {
 	mockCtx := testutil.NewMockCtx()
 	repo := setupUserRepository(t)
 
-	userUID := "hoge_uid"
 	roomID := 50000
 	status := &user.Status{
+		UserID:        1000,
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
 
-	assert.NoError(t, repo.SaveStatus(mockCtx, userUID, status))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status.UserID, status))
 
-	actual, err := repo.GetStatus(mockCtx, userUID)
+	actual, err := repo.GetStatus(mockCtx, status.UserID)
 	assert.NoError(t, err)
 
 	assert.Equal(t, status, actual)
@@ -122,29 +122,32 @@ func TestUser_Save_GetStatuses(t *testing.T) {
 	roomID := 100
 
 	status1 := &user.Status{
+		UserID:        100,
 		UserUID:       "user1",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
 	status2 := &user.Status{
+		UserID:        200,
 		UserUID:       "user2",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
 	status3 := &user.Status{
+		UserID:        300,
 		UserUID:       "user3",
 		EnteredRoomID: &roomID,
 		State:         user.StateNormal,
 	}
 
-	assert.NoError(t, repo.SaveStatus(mockCtx, status1.UserUID, status1))
-	assert.NoError(t, repo.SaveStatus(mockCtx, status2.UserUID, status2))
-	assert.NoError(t, repo.SaveStatus(mockCtx, status3.UserUID, status3))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status1.UserID, status1))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status2.UserID, status2))
+	assert.NoError(t, repo.SaveStatus(mockCtx, status3.UserID, status3))
 
 	t.Run("正しくstatusのスライスを取得できること", func(t *testing.T) {
-		uids := []string{status1.UserUID, status2.UserUID, status3.UserUID}
+		ids := []int{status1.UserID, status2.UserID, status3.UserID}
 
-		actual, err := repo.GetStatuses(mockCtx, uids)
+		actual, err := repo.GetStatuses(mockCtx, ids)
 		assert.NoError(t, err)
 
 		expect := []*user.Status{
@@ -157,9 +160,9 @@ func TestUser_Save_GetStatuses(t *testing.T) {
 	})
 
 	t.Run("存在しないuidがあった場合には見つかったものだけが返されること", func(t *testing.T) {
-		uids := []string{"notFoundID1", status1.UserUID, status2.UserUID, "notFoundID2", status3.UserUID}
+		ids := []int{888, status1.UserID, status2.UserID, 999, status3.UserID}
 
-		actual, err := repo.GetStatuses(mockCtx, uids)
+		actual, err := repo.GetStatuses(mockCtx, ids)
 		assert.NoError(t, err)
 
 		expect := []*user.Status{

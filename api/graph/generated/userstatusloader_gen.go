@@ -12,7 +12,7 @@ import (
 // UserStatusLoaderConfig captures the config to create a new UserStatusLoader
 type UserStatusLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []string) ([]*user.Status, []error)
+	Fetch func(keys []int) ([]*user.Status, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -33,7 +33,7 @@ func NewUserStatusLoader(config UserStatusLoaderConfig) *UserStatusLoader {
 // UserStatusLoader batches and caches requests
 type UserStatusLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []string) ([]*user.Status, []error)
+	fetch func(keys []int) ([]*user.Status, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -44,7 +44,7 @@ type UserStatusLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[string]*user.Status
+	cache map[int]*user.Status
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -55,7 +55,7 @@ type UserStatusLoader struct {
 }
 
 type userStatusLoaderBatch struct {
-	keys    []string
+	keys    []int
 	data    []*user.Status
 	error   []error
 	closing bool
@@ -63,14 +63,14 @@ type userStatusLoaderBatch struct {
 }
 
 // Load a Status by key, batching and caching will be applied automatically
-func (l *UserStatusLoader) Load(key string) (*user.Status, error) {
+func (l *UserStatusLoader) Load(key int) (*user.Status, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a Status.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *UserStatusLoader) LoadThunk(key string) func() (*user.Status, error) {
+func (l *UserStatusLoader) LoadThunk(key int) func() (*user.Status, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -113,7 +113,7 @@ func (l *UserStatusLoader) LoadThunk(key string) func() (*user.Status, error) {
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *UserStatusLoader) LoadAll(keys []string) ([]*user.Status, []error) {
+func (l *UserStatusLoader) LoadAll(keys []int) ([]*user.Status, []error) {
 	results := make([]func() (*user.Status, error), len(keys))
 
 	for i, key := range keys {
@@ -131,7 +131,7 @@ func (l *UserStatusLoader) LoadAll(keys []string) ([]*user.Status, []error) {
 // LoadAllThunk returns a function that when called will block waiting for a Statuss.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *UserStatusLoader) LoadAllThunk(keys []string) func() ([]*user.Status, []error) {
+func (l *UserStatusLoader) LoadAllThunk(keys []int) func() ([]*user.Status, []error) {
 	results := make([]func() (*user.Status, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -149,7 +149,7 @@ func (l *UserStatusLoader) LoadAllThunk(keys []string) func() ([]*user.Status, [
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *UserStatusLoader) Prime(key string, value *user.Status) bool {
+func (l *UserStatusLoader) Prime(key int, value *user.Status) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -163,22 +163,22 @@ func (l *UserStatusLoader) Prime(key string, value *user.Status) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *UserStatusLoader) Clear(key string) {
+func (l *UserStatusLoader) Clear(key int) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *UserStatusLoader) unsafeSet(key string, value *user.Status) {
+func (l *UserStatusLoader) unsafeSet(key int, value *user.Status) {
 	if l.cache == nil {
-		l.cache = map[string]*user.Status{}
+		l.cache = map[int]*user.Status{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *userStatusLoaderBatch) keyIndex(l *UserStatusLoader, key string) int {
+func (b *userStatusLoaderBatch) keyIndex(l *UserStatusLoader, key int) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i

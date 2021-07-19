@@ -1,6 +1,7 @@
 package user
 
 type Status struct {
+	UserID        int
 	UserUID       string
 	EnteredRoomID *int
 	State         State
@@ -8,6 +9,7 @@ type Status struct {
 
 func NewStatus(u *User) *Status {
 	return &Status{
+		UserID:        u.ID,
 		UserUID:       u.UID,
 		EnteredRoomID: nil,
 		State:         StateNormal,

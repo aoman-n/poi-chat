@@ -2,6 +2,7 @@ package dataloader
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/laster18/poi/api/graph/generated"
@@ -17,6 +18,7 @@ func NewRoomLoader(
 		Wait:     2 * time.Millisecond,
 		MaxBatch: 100,
 		Fetch: func(ids []int) ([]*room.Room, []error) {
+			fmt.Printf("ids: %v \n", ids)
 			rooms, err := repo.GetByIDs(ctx, ids)
 			if err != nil {
 				errs := make([]error, len(ids))

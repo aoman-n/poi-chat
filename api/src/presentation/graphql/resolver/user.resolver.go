@@ -94,14 +94,14 @@ func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model
 
 	userRepo := r.repo.NewUser()
 	userSvc := r.service.NewUser()
-	exists, err := userSvc.ExistsStatus(ctx, currentUser.UID)
+	exists, err := userSvc.ExistsStatus(ctx, currentUser.ID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userSvc.ExistsStatus"))
 		return nil, nil
 	}
 	if !exists {
 		status := user.NewStatus(currentUser)
-		if err := userRepo.SaveStatus(ctx, currentUser.UID, status); err != nil {
+		if err := userRepo.SaveStatus(ctx, currentUser.ID, status); err != nil {
 			graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
 			return nil, nil
 		}
@@ -114,7 +114,7 @@ func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model
 		<-ctx.Done()
 		r.globalUserSubscriber.RemoveCh(currentUser.UID)
 
-		if err := userRepo.DeleteStatus(context.Background(), currentUser.UID); err != nil {
+		if err := userRepo.DeleteStatus(context.Background(), currentUser.ID); err != nil {
 			logger.WarnWithErr(err, "failed to delete globalUser")
 		}
 	}()
@@ -144,12 +144,12 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	}
 
 	ch := make(chan model.RoomUserEvent)
-	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
+	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.ID)
 
 	userRepo := r.repo.NewUser()
 	userStatus := user.NewStatus(currentUser)
 	userStatus.ChangeEnteredRoom(domainRoomID)
-	if err := userRepo.SaveStatus(ctx, currentUser.UID, userStatus); err != nil {
+	if err := userRepo.SaveStatus(ctx, currentUser.ID, userStatus); err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
 		return nil, nil
 	}
@@ -168,14 +168,14 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 
 	go func() {
 		<-ctx.Done()
-		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.UID)
+		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.ID)
 		if err := roomRepo.DeleteUserStatus(context.Background(), userStatusInRoom); err != nil {
 			logger.Warnf("failed to roomRepo.DeleteUserStatus, err: %v", err)
 		}
 
 		// TODO: ステータスが存在する場合に更新するようにする - userSvc.UpdateStatusIfExits(...)
 		userStatus.LeaveRoom()
-		if err := userRepo.SaveStatus(context.Background(), currentUser.UID, userStatus); err != nil {
+		if err := userRepo.SaveStatus(context.Background(), currentUser.ID, userStatus); err != nil {
 			logger.Warnf("failed to userRepo.SaveStatus, err: %v", err)
 		}
 	}()
@@ -248,10 +248,14 @@ func (r *Resolver) ChangeBalloonPosition(
 }
 
 func (r *userResolver) EnteredRoom(ctx context.Context, obj *model.User) (*model.Room, error) {
-	// TODO: IDを渡せるようにする
-	userStatus, err := acontext.GetUserStatusLoader(ctx).Load(obj.ID)
+	userID, _ := strconv.Atoi(obj.ID)
+	userStatus, err := acontext.GetUserStatusLoader(ctx).Load(userID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to load user status from dataloader"))
+		return nil, nil
+	}
+
+	if userStatus == nil {
 		return nil, nil
 	}
 
@@ -262,6 +266,10 @@ func (r *userResolver) EnteredRoom(ctx context.Context, obj *model.User) (*model
 	room, err := acontext.GetRoomLoader(ctx).Load(*userStatus.EnteredRoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to get room from dataloader"))
+		return nil, nil
+	}
+
+	if room == nil {
 		return nil, nil
 	}
 

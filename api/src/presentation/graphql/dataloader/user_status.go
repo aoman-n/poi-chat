@@ -16,24 +16,24 @@ func NewUserStatusLoader(
 	return generated.NewUserStatusLoader(generated.UserStatusLoaderConfig{
 		Wait:     2 * time.Millisecond,
 		MaxBatch: 100,
-		Fetch: func(uids []string) ([]*user.Status, []error) {
-			statuses, err := repo.GetStatuses(ctx, uids)
+		Fetch: func(ids []int) ([]*user.Status, []error) {
+			statuses, err := repo.GetStatuses(ctx, ids)
 			if err != nil {
-				errs := make([]error, len(uids))
-				for i := range make([]int, len(uids)) {
+				errs := make([]error, len(ids))
+				for i := range make([]int, len(ids)) {
 					errs[i] = aerrors.Wrap(err)
 				}
 				return nil, errs
 			}
 
-			statusMap := make(map[string]*user.Status, len(statuses))
+			statusMap := make(map[int]*user.Status, len(statuses))
 			for _, s := range statuses {
-				statusMap[s.UserUID] = s
+				statusMap[s.UserID] = s
 			}
 
-			ret := make([]*user.Status, len(uids))
-			for i, uid := range uids {
-				s, ok := statusMap[uid]
+			ret := make([]*user.Status, len(ids))
+			for i, id := range ids {
+				s, ok := statusMap[id]
 				if ok {
 					ret[i] = s
 				}

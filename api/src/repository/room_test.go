@@ -113,6 +113,7 @@ func createUserAndStatus(ctx context.Context, t *testing.T, rdb *gorm.DB, repo r
 	user := testutil.CreateUser(t, rdb, index)
 	userStatus := &room.UserStatus{
 		RoomID:          roomID,
+		UserID:          index * 100,
 		UserUID:         user.UID,
 		X:               10 * index,
 		Y:               20 * index,
@@ -199,6 +200,7 @@ func Test_Room_GetUsers(t *testing.T) {
 	userStatus1 := &room.UserStatus{
 		RoomID:          1000,
 		UserUID:         user1.UID,
+		UserID:          user1.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -206,9 +208,9 @@ func Test_Room_GetUsers(t *testing.T) {
 		BalloonPosition: room.BalloonPositionBottomLeft,
 	}
 	userStatus2 := &room.UserStatus{
-		RoomID: 1000,
-
+		RoomID:          1000,
 		UserUID:         user2.UID,
+		UserID:          user2.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -218,6 +220,7 @@ func Test_Room_GetUsers(t *testing.T) {
 	userStatus3 := &room.UserStatus{
 		RoomID:          1000,
 		UserUID:         user3.UID,
+		UserID:          user3.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -247,6 +250,7 @@ func Test_Room_Save_GetUserStatus(t *testing.T) {
 
 	roomID := 1000
 	userStatus := &room.UserStatus{
+		UserID:          10000,
 		RoomID:          roomID,
 		UserUID:         "uid_hoge",
 		X:               100,
@@ -258,7 +262,7 @@ func Test_Room_Save_GetUserStatus(t *testing.T) {
 
 	assert.NoError(t, repo.SaveUserStatus(ctx, userStatus))
 
-	actual, err := repo.GetUserStatus(ctx, roomID, userStatus.UserUID)
+	actual, err := repo.GetUserStatus(ctx, roomID, userStatus.UserID)
 	assert.NoError(t, err)
 	assert.Equal(t, userStatus, actual)
 }
@@ -274,6 +278,7 @@ func Test_Room_Delete(t *testing.T) {
 	userStatus1 := &room.UserStatus{
 		RoomID:          roomID,
 		UserUID:         user1.UID,
+		UserID:          user1.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -283,6 +288,7 @@ func Test_Room_Delete(t *testing.T) {
 	userStatus2 := &room.UserStatus{
 		RoomID:          roomID,
 		UserUID:         user2.UID,
+		UserID:          user2.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -292,6 +298,7 @@ func Test_Room_Delete(t *testing.T) {
 	userStatus3 := &room.UserStatus{
 		RoomID:          roomID,
 		UserUID:         user3.UID,
+		UserID:          user3.ID,
 		X:               100,
 		Y:               200,
 		LastMessage:     nil,
@@ -323,6 +330,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 	roomID := 1000
 	userStatus1 := &room.UserStatus{
 		RoomID:          roomID,
+		UserID:          100,
 		UserUID:         "uid_hoge1",
 		X:               100,
 		Y:               200,
@@ -332,6 +340,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 	}
 	userStatus2 := &room.UserStatus{
 		RoomID:          roomID,
+		UserID:          200,
 		UserUID:         "uid_hoge2",
 		X:               100,
 		Y:               200,
@@ -341,6 +350,7 @@ func Test_Room_GetUserStatuses(t *testing.T) {
 	}
 	userStatus3 := &room.UserStatus{
 		RoomID:          roomID,
+		UserID:          300,
 		UserUID:         "uid_hoge3",
 		X:               100,
 		Y:               200,

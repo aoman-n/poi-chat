@@ -35,17 +35,17 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // DeleteStatus mocks base method.
-func (m *MockRepository) DeleteStatus(ctx context.Context, uid string) error {
+func (m *MockRepository) DeleteStatus(ctx context.Context, id int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteStatus", ctx, uid)
+	ret := m.ctrl.Call(m, "DeleteStatus", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteStatus indicates an expected call of DeleteStatus.
-func (mr *MockRepositoryMockRecorder) DeleteStatus(ctx, uid interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) DeleteStatus(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatus", reflect.TypeOf((*MockRepository)(nil).DeleteStatus), ctx, uid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatus", reflect.TypeOf((*MockRepository)(nil).DeleteStatus), ctx, id)
 }
 
 // Get mocks base method.
@@ -124,33 +124,33 @@ func (mr *MockRepositoryMockRecorder) GetOnlineUsers(ctx interface{}) *gomock.Ca
 }
 
 // GetStatus mocks base method.
-func (m *MockRepository) GetStatus(ctx context.Context, uid string) (*Status, error) {
+func (m *MockRepository) GetStatus(ctx context.Context, id int) (*Status, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatus", ctx, uid)
+	ret := m.ctrl.Call(m, "GetStatus", ctx, id)
 	ret0, _ := ret[0].(*Status)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatus indicates an expected call of GetStatus.
-func (mr *MockRepositoryMockRecorder) GetStatus(ctx, uid interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetStatus(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockRepository)(nil).GetStatus), ctx, uid)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockRepository)(nil).GetStatus), ctx, id)
 }
 
 // GetStatuses mocks base method.
-func (m *MockRepository) GetStatuses(ctx context.Context, uids []string) ([]*Status, error) {
+func (m *MockRepository) GetStatuses(ctx context.Context, ids []int) ([]*Status, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatuses", ctx, uids)
+	ret := m.ctrl.Call(m, "GetStatuses", ctx, ids)
 	ret0, _ := ret[0].([]*Status)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatuses indicates an expected call of GetStatuses.
-func (mr *MockRepositoryMockRecorder) GetStatuses(ctx, uids interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetStatuses(ctx, ids interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatuses", reflect.TypeOf((*MockRepository)(nil).GetStatuses), ctx, uids)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatuses", reflect.TypeOf((*MockRepository)(nil).GetStatuses), ctx, ids)
 }
 
 // Save mocks base method.
@@ -168,15 +168,15 @@ func (mr *MockRepositoryMockRecorder) Save(ctx, u interface{}) *gomock.Call {
 }
 
 // SaveStatus mocks base method.
-func (m *MockRepository) SaveStatus(ctx context.Context, uid string, status *Status) error {
+func (m *MockRepository) SaveStatus(ctx context.Context, id int, status *Status) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveStatus", ctx, uid, status)
+	ret := m.ctrl.Call(m, "SaveStatus", ctx, id, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveStatus indicates an expected call of SaveStatus.
-func (mr *MockRepositoryMockRecorder) SaveStatus(ctx, uid, status interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveStatus(ctx, id, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveStatus", reflect.TypeOf((*MockRepository)(nil).SaveStatus), ctx, uid, status)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveStatus", reflect.TypeOf((*MockRepository)(nil).SaveStatus), ctx, id, status)
 }
