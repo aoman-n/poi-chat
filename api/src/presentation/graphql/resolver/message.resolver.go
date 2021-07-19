@@ -37,15 +37,12 @@ func (r *mutationResolver) SendMessage(
 	input *model.SendMessageInput,
 ) (*model.SendMassagePaylaod, error) {
 	currentUser := acontext.GetUser(ctx)
-	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
-	if err != nil {
-		return nil, aerrors.Wrap(err)
-	}
+	currentUserStatus := acontext.GetUserStatus(ctx)
 
 	msg := &message.Message{
 		UserID:    currentUser.ID,
 		Body:      input.Body,
-		RoomID:    domainRoomID,
+		RoomID:    *currentUserStatus.EnteredRoomID,
 		CreatedAt: clock.Now(),
 	}
 
@@ -58,7 +55,7 @@ func (r *mutationResolver) SendMessage(
 	roomRepo := r.repo.NewRoom()
 	roomSvc := r.service.NewRoom()
 
-	roomUserStatus, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
+	roomUserStatus, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, *currentUserStatus.EnteredRoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
 		return nil, nil

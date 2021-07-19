@@ -15,10 +15,11 @@ import (
 type GraphErrCode string
 
 const (
-	codeUnauthorized GraphErrCode = "AUTHENTICATION_ERROR"
-	codeInternal     GraphErrCode = "INTERNAL_SERVER_ERROR"
-	codeUserInput    GraphErrCode = "USER_INPUT_ERROR"
-	codeNotFound     GraphErrCode = "NOT_FOUND_ERROR"
+	codeUnauthorized   GraphErrCode = "AUTHENTICATION_ERROR"
+	codeInternal       GraphErrCode = "INTERNAL_SERVER_ERROR"
+	codeUserInput      GraphErrCode = "USER_INPUT_ERROR"
+	codeNotFound       GraphErrCode = "NOT_FOUND_ERROR"
+	codeRequireEntered GraphErrCode = "REQUIRE_ENTERED"
 )
 
 func AddErr(ctx context.Context, message string, code GraphErrCode) {
@@ -69,6 +70,8 @@ func HandleErr(ctx context.Context, err error) {
 		AddErr(ctx, getInfoMsg(e), codeUnauthorized)
 	case aerrors.CodeBadParams, aerrors.CodeDuplicated:
 		AddErr(ctx, getInfoMsg(e), codeUserInput)
+	case aerrors.CodeRequireEntered:
+		AddErr(ctx, getInfoMsg(e), codeRequireEntered)
 	case aerrors.CodeDatabase, aerrors.CodeRedis, aerrors.CodeInternal:
 		logger.WarnWithErr(err, "handlerErr")
 		AddErr(ctx, getInfoMsg(e), codeInternal)

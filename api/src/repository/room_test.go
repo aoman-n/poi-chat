@@ -36,6 +36,29 @@ func Test_Room_GetByID(t *testing.T) {
 	assert.Equal(t, room, gettedRoom)
 }
 
+func Test_Room_GetByIDs(t *testing.T) {
+	ctx, rdb, _, repo := setupRoomRepo(t)
+
+	user := testutil.CreateUser(t, rdb, 1)
+	room1 := testutil.CreateRoom(t, rdb, 1, user.ID)
+	room2 := testutil.CreateRoom(t, rdb, 2, user.ID)
+	room3 := testutil.CreateRoom(t, rdb, 3, user.ID)
+	room1.CreatedAt = time.Time{}
+	room2.CreatedAt = time.Time{}
+	room3.CreatedAt = time.Time{}
+
+	gettedRooms, err := repo.GetByIDs(ctx, []int{room1.ID, 200, room2.ID, room3.ID})
+	assert.NoError(t, err)
+
+	expect := []*room.Room{room1, room2, room3}
+
+	for _, room := range gettedRooms {
+		room.CreatedAt = time.Time{}
+	}
+
+	assert.Equal(t, expect, gettedRooms)
+}
+
 func Test_Room_GetByName(t *testing.T) {
 	ctx, rdb, _, repo := setupRoomRepo(t)
 

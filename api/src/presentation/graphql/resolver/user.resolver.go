@@ -6,12 +6,12 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/laster18/poi/api/graph/generated"
 	"github.com/laster18/poi/api/graph/model"
 	"github.com/laster18/poi/api/src/domain/room"
+	"github.com/laster18/poi/api/src/domain/user"
 	"github.com/laster18/poi/api/src/presentation/graphql"
 	"github.com/laster18/poi/api/src/presentation/graphql/presenter"
 	"github.com/laster18/poi/api/src/util/acontext"
@@ -24,15 +24,11 @@ func (r *userResolver) ID(ctx context.Context, obj *model.User) (string, error) 
 
 func (r *mutationResolver) Move(ctx context.Context, input model.MoveInput) (*model.MovePayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
-	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err))
-		return nil, nil
-	}
+	currentUserStatus := acontext.GetUserStatus(ctx)
 
 	roomRepo := r.repo.NewRoom()
 	roomSvc := r.service.NewRoom()
-	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, *currentUserStatus.EnteredRoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
 		return nil, nil
@@ -96,20 +92,29 @@ func (r *subscriptionResolver) ActedUserEvent(ctx context.Context) (<-chan model
 	logger := acontext.GetLogger(ctx)
 	currentUser := acontext.GetUser(ctx)
 
-	ch := make(chan model.UserEvent)
-	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
-
 	userRepo := r.repo.NewUser()
-	if err := userRepo.Online(ctx, currentUser); err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err))
+	userSvc := r.service.NewUser()
+	exists, err := userSvc.ExistsStatus(ctx, currentUser.UID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userSvc.ExistsStatus"))
 		return nil, nil
 	}
+	if !exists {
+		status := user.NewStatus()
+		if err := userRepo.SaveStatus(ctx, currentUser.UID, status); err != nil {
+			graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
+			return nil, nil
+		}
+	}
+
+	ch := make(chan model.UserEvent)
+	r.globalUserSubscriber.AddCh(ch, currentUser.UID)
 
 	go func() {
 		<-ctx.Done()
 		r.globalUserSubscriber.RemoveCh(currentUser.UID)
 
-		if err := userRepo.Offline(context.Background(), currentUser); err != nil {
+		if err := userRepo.DeleteStatus(context.Background(), currentUser.UID); err != nil {
 			logger.WarnWithErr(err, "failed to delete globalUser")
 		}
 	}()
@@ -121,6 +126,7 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 	ctx context.Context,
 	roomID string,
 ) (<-chan model.RoomUserEvent, error) {
+	logger := acontext.GetLogger(ctx)
 	currentUser := acontext.GetUser(ctx)
 
 	domainRoomID, err := graphql.DecodeRoomID(roomID)
@@ -129,12 +135,25 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 		return nil, nil
 	}
 
-	// TODO: roomの存在チェック
+	// 対象roomの存在チェック
+	roomRepo := r.repo.NewRoom()
+	_, err = roomRepo.GetByID(ctx, domainRoomID)
+	if err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomRepo.GetByID"))
+		return nil, nil
+	}
 
 	ch := make(chan model.RoomUserEvent)
 	r.roomUserSubscriber.AddCh(ch, domainRoomID, currentUser.UID)
 
-	roomRepo := r.repo.NewRoom()
+	userRepo := r.repo.NewUser()
+	userStatus := user.NewStatus()
+	userStatus.ChangeEnteredRoom(domainRoomID)
+	if err := userRepo.SaveStatus(ctx, currentUser.UID, userStatus); err != nil {
+		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to userRepo.SaveStatus"))
+		return nil, nil
+	}
+
 	roomSvc := r.service.NewRoom()
 	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
 	if err != nil {
@@ -151,7 +170,13 @@ func (r *subscriptionResolver) ActedRoomUserEvent(
 		<-ctx.Done()
 		r.roomUserSubscriber.RemoveCh(domainRoomID, currentUser.UID)
 		if err := roomRepo.DeleteUserStatus(context.Background(), userStatusInRoom); err != nil {
-			log.Println("failed to delete roomUser, err:", err)
+			logger.Warnf("failed to roomRepo.DeleteUserStatus, err: %v", err)
+		}
+
+		// TODO: ステータスが存在する場合に更新するようにする - userSvc.UpdateStatusIfExits(...)
+		userStatus.LeaveRoom()
+		if err := userRepo.SaveStatus(context.Background(), currentUser.UID, userStatus); err != nil {
+			logger.Warnf("failed to userRepo.SaveStatus, err: %v", err)
 		}
 	}()
 
@@ -163,15 +188,11 @@ func (r *Resolver) RemoveLastMessage(
 	input model.RemoveLastMessageInput,
 ) (*model.RemoveLastMessagePayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
-	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
-		return nil, nil
-	}
+	currentUserStatus := acontext.GetUserStatus(ctx)
 
 	roomRepo := r.repo.NewRoom()
 	roomSvc := r.service.NewRoom()
-	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, *currentUserStatus.EnteredRoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
 		return nil, nil
@@ -191,15 +212,11 @@ func (r *Resolver) ChangeBalloonPosition(
 	input model.ChangeBalloonPositionInput,
 ) (*model.ChangeBalloonPositionPayload, error) {
 	currentUser := acontext.GetUser(ctx)
-	domainRoomID, err := graphql.DecodeRoomID(input.RoomID)
-	if err != nil {
-		graphql.HandleErr(ctx, aerrors.Wrap(err, "roomId is invalid format"))
-		return nil, nil
-	}
+	currentUserStatus := acontext.GetUserStatus(ctx)
 
 	roomRepo := r.repo.NewRoom()
 	roomSvc := r.service.NewRoom()
-	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, domainRoomID)
+	userStatusInRoom, err := roomSvc.FindOrNewUserStatus(ctx, currentUser, *currentUserStatus.EnteredRoomID)
 	if err != nil {
 		graphql.HandleErr(ctx, aerrors.Wrap(err, "failed to roomSvc.FindOrNewUserStatus"))
 		return nil, nil
@@ -232,6 +249,8 @@ func (r *Resolver) ChangeBalloonPosition(
 
 func (r *userResolver) EnteredRoom(ctx context.Context, obj *model.User) (*model.Room, error) {
 	panic("not implemented")
+	// 入室中のroomIDを取得 (dataloader)
+	// ルームを取得 (dataloader)
 }
 
 func (r *exitedPayloadResolver) UserID(ctx context.Context, obj *model.ExitedPayload) (string, error) {

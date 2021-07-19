@@ -1,4 +1,3 @@
-//go:generate mockgen -package=room -source=repository.go -destination=repository_mock.go -self_package=github.com/laster18/poi/api/src/domain/room
 package room
 
 import (
@@ -9,6 +8,7 @@ import (
 
 type Repository interface {
 	GetByID(ctx context.Context, id int) (*Room, error)
+	GetByIDs(ctx context.Context, ids []int) ([]*Room, error)
 	GetByName(ctx context.Context, name string) (*Room, error)
 	GetAll(ctx context.Context) ([]*Room, error)
 	List(ctx context.Context, req *ListReq) (*ListResp, error)

@@ -41,17 +41,17 @@ type Mutation {
   """
   ルーム内ユーザーのポジション移動
   """
-  move(input: MoveInput!): MovePayload! @requireLoggedIn
+  move(input: MoveInput!): MovePayload! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し削除
   """
-  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireLoggedIn
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し位置変更
   """
-  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireLoggedIn
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireEntered @requireLoggedIn
 }
 
 type Subscription {

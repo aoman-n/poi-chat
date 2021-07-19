@@ -8,7 +8,8 @@ import (
 )
 
 type Service interface {
-	FindOrCreate(context.Context, *User) (*User, error)
+	FindOrCreate(ctx context.Context, u *User) (*User, error)
+	ExistsStatus(ctx context.Context, uid string) (bool, error)
 }
 
 type service struct {
@@ -37,4 +38,20 @@ func (s *service) FindOrCreate(ctx context.Context, u *User) (*User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *service) ExistsStatus(ctx context.Context, uid string) (bool, error) {
+	_, err := s.repo.GetStatus(ctx, uid)
+	if err != nil {
+		var errApp *aerrors.ErrApp
+		if errors.As(err, &errApp) {
+			if errApp.Code() == aerrors.CodeNotFound {
+				return false, nil
+			}
+		}
+
+		return false, aerrors.Wrap(err)
+	}
+
+	return true, nil
 }

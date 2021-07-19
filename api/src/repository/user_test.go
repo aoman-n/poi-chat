@@ -41,7 +41,7 @@ func TestUser_Save_Get(t *testing.T) {
 	assert.Equal(t, user, uu)
 }
 
-func TestUser_Online_Offline(t *testing.T) {
+func TestUser_Save_Delete_Status(t *testing.T) {
 	mockCtx := testutil.NewMockCtx()
 	repo := setupUserRepository(t)
 
@@ -54,6 +54,7 @@ func TestUser_Online_Offline(t *testing.T) {
 		Provider:  user.ProviderTwitter,
 	}
 	assert.NoError(t, repo.Save(mockCtx, user1))
+	user1Status := user.NewStatus()
 
 	// create user1
 	user2 := &user.User{
@@ -64,10 +65,11 @@ func TestUser_Online_Offline(t *testing.T) {
 		Provider:  user.ProviderTwitter,
 	}
 	assert.NoError(t, repo.Save(mockCtx, user2))
+	user2Status := user.NewStatus()
 
 	// user1とuser2をonlineにする
-	assert.NoError(t, repo.Online(mockCtx, user1))
-	assert.NoError(t, repo.Online(mockCtx, user2))
+	assert.NoError(t, repo.SaveStatus(mockCtx, user1.UID, user1Status))
+	assert.NoError(t, repo.SaveStatus(mockCtx, user2.UID, user2Status))
 
 	t.Run("オンラインにしたユーザーが取得されること", func(t *testing.T) {
 		expectOnlineUsers := []*user.User{
@@ -83,7 +85,7 @@ func TestUser_Online_Offline(t *testing.T) {
 
 	t.Run("オフラインにしたユーザーは取得されないこと", func(t *testing.T) {
 		// user1をofflineにする
-		assert.NoError(t, repo.Offline(mockCtx, user1))
+		assert.NoError(t, repo.DeleteStatus(mockCtx, user1.UID))
 
 		expectOnlineUsers := []*user.User{
 			user2,
@@ -91,5 +93,81 @@ func TestUser_Online_Offline(t *testing.T) {
 		onlineUsers, err := repo.GetOnlineUsers(mockCtx)
 		assert.NoError(t, err)
 		assert.Equal(t, expectOnlineUsers, onlineUsers)
+	})
+}
+
+func TestUser_Save_Get_Status(t *testing.T) {
+	mockCtx := testutil.NewMockCtx()
+	repo := setupUserRepository(t)
+
+	userUID := "hoge_uid"
+	roomID := 50000
+	status := &user.Status{
+		EnteredRoomID: &roomID,
+		State:         user.StateNormal,
+	}
+
+	assert.NoError(t, repo.SaveStatus(mockCtx, userUID, status))
+
+	actual, err := repo.GetStatus(mockCtx, userUID)
+	assert.NoError(t, err)
+
+	assert.Equal(t, status, actual)
+}
+
+func TestUser_Save_GetStatuses(t *testing.T) {
+	mockCtx := testutil.NewMockCtx()
+	repo := setupUserRepository(t)
+
+	roomID := 100
+
+	uid1 := "user1"
+	status1 := &user.Status{
+		EnteredRoomID: &roomID,
+		State:         user.StateNormal,
+	}
+	uid2 := "user2"
+	status2 := &user.Status{
+		EnteredRoomID: &roomID,
+		State:         user.StateNormal,
+	}
+	uid3 := "user3"
+	status3 := &user.Status{
+		EnteredRoomID: &roomID,
+		State:         user.StateNormal,
+	}
+
+	assert.NoError(t, repo.SaveStatus(mockCtx, uid1, status1))
+	assert.NoError(t, repo.SaveStatus(mockCtx, uid2, status2))
+	assert.NoError(t, repo.SaveStatus(mockCtx, uid3, status3))
+
+	t.Run("正しくstatusのスライスを取得できること", func(t *testing.T) {
+		uids := []string{uid1, uid2, uid3}
+
+		actual, err := repo.GetStatuses(mockCtx, uids)
+		assert.NoError(t, err)
+
+		expect := []*user.Status{
+			status1,
+			status2,
+			status3,
+		}
+
+		assert.Equal(t, expect, actual)
+	})
+
+	t.Run("存在しないuidがあった場合には見つかったものだけが返されること", func(t *testing.T) {
+		uids := []string{"notFoundID1", uid1, uid2, "notFoundID2", uid3}
+
+		actual, err := repo.GetStatuses(mockCtx, uids)
+		assert.NoError(t, err)
+
+		expect := []*user.Status{
+			status1,
+			status2,
+			status3,
+		}
+
+		assert.Equal(t, expect, actual)
 	})
 }

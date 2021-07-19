@@ -973,22 +973,22 @@ type Mutation {
   """
   メッセージの送信
   """
-  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireLoggedIn
+  sendMessage(input: SendMessageInput): SendMassagePaylaod! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーのポジション移動
   """
-  move(input: MoveInput!): MovePayload! @requireLoggedIn
+  move(input: MoveInput!): MovePayload! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し削除
   """
-  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireLoggedIn
+  removeLastMessage(input: RemoveLastMessageInput!): RemoveLastMessagePayload! @requireEntered @requireLoggedIn
 
   """
   ルーム内ユーザーの吹き出し位置変更
   """
-  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireLoggedIn
+  changeBalloonPosition(input: ChangeBalloonPositionInput!): ChangeBalloonPositionPayload! @requireEntered @requireLoggedIn
 }
 
 type Subscription {
@@ -1005,8 +1005,7 @@ type Subscription {
   actedRoomUserEvent(roomId: ID!): RoomUserEvent @requireLoggedIn
 }
 
-directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
-  | FIELD_DEFINITION
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 directive @requireLoggedIn on FIELD_DEFINITION
 directive @requireEntered on FIELD_DEFINITION
 `, BuiltIn: false},
@@ -2022,13 +2021,19 @@ func (ec *executionContext) _Mutation_sendMessage(ctx context.Context, field gra
 			return ec.resolvers.Mutation().SendMessage(rctx, args["input"].(*model.SendMessageInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireEntered == nil {
+				return nil, errors.New("directive requireEntered is not implemented")
+			}
+			return ec.directives.RequireEntered(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.RequireLoggedIn == nil {
 				return nil, errors.New("directive requireLoggedIn is not implemented")
 			}
-			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+			return ec.directives.RequireLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -2084,13 +2089,19 @@ func (ec *executionContext) _Mutation_move(ctx context.Context, field graphql.Co
 			return ec.resolvers.Mutation().Move(rctx, args["input"].(model.MoveInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireEntered == nil {
+				return nil, errors.New("directive requireEntered is not implemented")
+			}
+			return ec.directives.RequireEntered(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.RequireLoggedIn == nil {
 				return nil, errors.New("directive requireLoggedIn is not implemented")
 			}
-			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+			return ec.directives.RequireLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -2146,13 +2157,19 @@ func (ec *executionContext) _Mutation_removeLastMessage(ctx context.Context, fie
 			return ec.resolvers.Mutation().RemoveLastMessage(rctx, args["input"].(model.RemoveLastMessageInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireEntered == nil {
+				return nil, errors.New("directive requireEntered is not implemented")
+			}
+			return ec.directives.RequireEntered(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.RequireLoggedIn == nil {
 				return nil, errors.New("directive requireLoggedIn is not implemented")
 			}
-			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+			return ec.directives.RequireLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}
@@ -2208,13 +2225,19 @@ func (ec *executionContext) _Mutation_changeBalloonPosition(ctx context.Context,
 			return ec.resolvers.Mutation().ChangeBalloonPosition(rctx, args["input"].(model.ChangeBalloonPositionInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.RequireEntered == nil {
+				return nil, errors.New("directive requireEntered is not implemented")
+			}
+			return ec.directives.RequireEntered(ctx, nil, directive0)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.RequireLoggedIn == nil {
 				return nil, errors.New("directive requireLoggedIn is not implemented")
 			}
-			return ec.directives.RequireLoggedIn(ctx, nil, directive0)
+			return ec.directives.RequireLoggedIn(ctx, nil, directive1)
 		}
 
-		tmp, err := directive1(rctx)
+		tmp, err := directive2(rctx)
 		if err != nil {
 			return nil, graphql.ErrorOnPath(ctx, err)
 		}

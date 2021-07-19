@@ -47,6 +47,15 @@ func (r *Room) GetByID(ctx context.Context, id int) (*room.Room, error) {
 	return &room, nil
 }
 
+func (r *Room) GetByIDs(ctx context.Context, ids []int) ([]*room.Room, error) {
+	var rooms []*room.Room
+	if err := r.db.Where("id IN ?", ids).Find(&rooms).Error; err != nil {
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeDatabase)
+	}
+
+	return rooms, nil
+}
+
 func (r *Room) GetByName(ctx context.Context, name string) (*room.Room, error) {
 	var room room.Room
 	if err := r.db.Where("name = ?", name).First(&room).Error; err != nil {

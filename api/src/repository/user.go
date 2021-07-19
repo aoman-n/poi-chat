@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/laster18/poi/api/src/domain/user"
@@ -11,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const OnlineUserIndexKey = "onlineUserIndex"
+const GlobalUserIndexKey = "onlineUserIndex"
 
 type User struct {
 	db          *gorm.DB
@@ -84,34 +85,92 @@ func (r *User) GetByUIDs(ctx context.Context, uids []string) ([]*user.User, erro
 	return u, nil
 }
 
-func (r *User) Online(ctx context.Context, u *user.User) error {
-	key := subscriber.MakeOnlineUserKey(u.UID)
+func (r *User) SaveStatus(ctx context.Context, uid string, status *user.Status) error {
+	statusBytes, err := json.Marshal(status)
+	if err != nil {
+		return aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
+	}
 
-	if err := r.redisClient.Set(ctx, key, nil, expireTimeSecond).Err(); err != nil {
+	key := subscriber.MakeOnlineUserKey(uid)
+
+	if err := r.redisClient.Set(ctx, key, statusBytes, expireTimeSecond).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
-	if err := r.redisClient.SAdd(ctx, OnlineUserIndexKey, key).Err(); err != nil {
+	if err := r.redisClient.SAdd(ctx, GlobalUserIndexKey, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
 }
 
-func (r *User) Offline(ctx context.Context, u *user.User) error {
-	key := subscriber.MakeOnlineUserKey(u.UID)
+func (r *User) DeleteStatus(ctx context.Context, uid string) error {
+	key := subscriber.MakeOnlineUserKey(uid)
 
 	if err := r.redisClient.Del(ctx, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
-	if err := r.redisClient.SRem(ctx, OnlineUserIndexKey, key).Err(); err != nil {
+	if err := r.redisClient.SRem(ctx, GlobalUserIndexKey, key).Err(); err != nil {
 		return aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}
 
 	return nil
 }
 
+func (r *User) GetStatus(ctx context.Context, uid string) (*user.Status, error) {
+	key := subscriber.MakeOnlineUserKey(uid)
+
+	j, err := r.redisClient.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, aerrors.Wrap(err).SetCode(aerrors.CodeNotFound).Message("not found user status")
+		}
+
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
+	}
+
+	var status user.Status
+	if err := json.Unmarshal([]byte(j), &status); err != nil {
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeInternal)
+	}
+
+	return &status, nil
+}
+
+func (r *User) GetStatuses(ctx context.Context, uids []string) ([]*user.Status, error) {
+	keys := make([]string, len(uids))
+	for i, uid := range uids {
+		keys[i] = subscriber.MakeOnlineUserKey(uid)
+	}
+
+	statusJSONs, err := r.redisClient.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
+	}
+
+	statuses := []*user.Status{}
+	for _, statusJSON := range statusJSONs {
+		if statusJSON == nil {
+			continue
+		}
+
+		str, ok := statusJSON.(string)
+		if !ok {
+			continue
+		}
+
+		var s user.Status
+		if err := json.Unmarshal([]byte(str), &s); err != nil {
+			continue
+		}
+
+		statuses = append(statuses, &s)
+	}
+
+	return statuses, nil
+}
+
 func (r *User) GetOnlineUsers(ctx context.Context) ([]*user.User, error) {
-	keys, err := r.redisClient.SMembers(ctx, OnlineUserIndexKey).Result()
+	keys, err := r.redisClient.SMembers(ctx, GlobalUserIndexKey).Result()
 	if err != nil {
 		return nil, aerrors.Wrap(err).SetCode(aerrors.CodeRedis)
 	}

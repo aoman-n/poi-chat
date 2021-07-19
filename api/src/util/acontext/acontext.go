@@ -13,6 +13,7 @@ type key string
 
 const (
 	userKey                   key = "user"
+	userStatusKey             key = "userStatus"
 	roomUserCountLoaderKey    key = "roomUserCountLoader"
 	roomMessageCountLoaderKey key = "roomMessageCountLoader"
 	userLoaderKey             key = "userLoeader"
@@ -110,4 +111,19 @@ func GetLogger(c context.Context) alog.Logger {
 	}
 
 	return alog.DefaultLogger
+}
+
+func SetUserStatus(c context.Context, us *user.Status) context.Context {
+	return context.WithValue(c, userStatusKey, us)
+}
+
+func GetUserStatus(c context.Context) *user.Status {
+	us := c.Value(userStatusKey)
+	if us != nil {
+		if us, ok := us.(*user.Status); ok {
+			return us
+		}
+	}
+
+	return nil
 }
