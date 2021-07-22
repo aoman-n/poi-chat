@@ -1,8 +1,30 @@
 query Common {
   me {
-    id
-    name
-    avatarUrl
+    ... UserFields
   }
-  ... GlobalUserList
+
+  onlineUsers {
+    ... UserFields
+  }
+}
+
+fragment UserFields on User {
+  id
+  name
+  avatarUrl
+}
+
+subscription actedUserEvent {
+  actedUserEvent {
+    ... on OnlinedPayload {
+      user {
+        ... UserFields
+      }
+    }
+    ... on OfflinedPayload {
+      user {
+        ... UserFields
+      }
+    }
+  }
 }

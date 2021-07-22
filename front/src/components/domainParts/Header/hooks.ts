@@ -1,22 +1,22 @@
-import { useGlobalUsers } from '@/hooks'
-import { useActedGlobalUserEventSubscription } from '@/graphql'
+import { useOnlineUsers } from '@/hooks'
+import { useActedUserEventSubscription } from '@/graphql'
 
 export const useSubscribeGlobalUserEvent = () => {
-  const { onlineUsers, addOnlineUser, removeOnlineUser } = useGlobalUsers()
+  const { onlineUsers, addOnlineUser, removeOnlineUser } = useOnlineUsers()
 
-  useActedGlobalUserEventSubscription({
+  useActedUserEventSubscription({
     onSubscriptionData: async ({ subscriptionData }) => {
       if (!subscriptionData.data) return
-      if (!subscriptionData.data.actedGlobalUserEvent) return
+      if (!subscriptionData.data.actedUserEvent) return
 
-      const { actedGlobalUserEvent } = subscriptionData.data
+      const { actedUserEvent } = subscriptionData.data
 
-      switch (actedGlobalUserEvent.__typename) {
+      switch (actedUserEvent.__typename) {
         case 'OnlinedPayload':
-          addOnlineUser(actedGlobalUserEvent.globalUser)
+          addOnlineUser(actedUserEvent.user)
           break
         case 'OfflinedPayload':
-          removeOnlineUser(actedGlobalUserEvent.userId)
+          removeOnlineUser(actedUserEvent.user.id)
       }
     },
   })

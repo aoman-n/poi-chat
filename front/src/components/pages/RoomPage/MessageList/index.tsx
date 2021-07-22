@@ -1,11 +1,11 @@
 import React from 'react'
 import { useScrollBottom, useReverseFetchMore } from '@/hooks'
-import { RoomFragment } from '@/graphql'
+import { MessageFieldsFragment } from '@/graphql'
 
 export type MessageListProps = {
   handleMoreMessage: () => void
   moreLoading: boolean
-  messages: RoomFragment['room']['messages']['nodes']
+  messages: MessageFieldsFragment[]
   hasMoreMessage: boolean
 }
 
@@ -63,14 +63,14 @@ const MessageList: React.VFC<MessageListProps> = ({
 }
 
 type MessageProps = {
-  message: RoomFragment['room']['messages']['nodes'][0]
+  message: MessageFieldsFragment
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
   return (
     <div className="m-0">
       <span className="text-gray-400 font-medium pr-1.5">
-        {message.userName}:
+        {message.user.name}:
       </span>
       <span>{message.body}</span>
     </div>

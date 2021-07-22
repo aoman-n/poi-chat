@@ -1,9 +1,5 @@
-query IndexPage {
-  ... RoomList
-}
-
-fragment RoomList on Query {
-  rooms {
+query IndexPage($first: Int!, $after: String) {
+  rooms(first: $first, after: $after, orderBy: LATEST) {
     pageInfo {
       startCursor
       endCursor
@@ -11,12 +7,21 @@ fragment RoomList on Query {
       hasPreviousPage
     }
     nodes {
-      id
-      name
-      createdAt
-      totalUserCount
-      totalMessageCount
+     ... RoomFieldsForList
+    }
+    edges {
+      node {
+        ... RoomFieldsForList
+      }
     }
     roomCount
   }
+}
+
+fragment RoomFieldsForList on Room {
+  id
+  name
+  createdAt
+  totalUserCount
+  totalMessageCount
 }

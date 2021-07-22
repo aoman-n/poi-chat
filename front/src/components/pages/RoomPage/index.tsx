@@ -6,7 +6,7 @@ import {
   useMovePos,
   useBalloon,
 } from '@/hooks'
-import { RoomFragment, RoomFragmentDoc, RoomPageQuery } from '@/graphql'
+import { RoomPageQuery } from '@/graphql'
 import { UserManager } from '@/utils/painter'
 import { getErrorMsg } from './errors'
 import Skeleton from './Skeleton'
@@ -44,8 +44,7 @@ const RoomPage: React.VFC<RoomPageProps> = ({
     handleChangeInitialBalloonState,
   )
 
-  const room =
-    (data && filter<RoomFragment>(RoomFragmentDoc, data).room) || null
+  const room = data.room
 
   if (error) return <div>{getErrorMsg(error)}</div>
   if (!room || !userManager) return <Skeleton />

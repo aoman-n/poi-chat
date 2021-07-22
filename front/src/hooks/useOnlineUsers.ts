@@ -1,10 +1,9 @@
 import { useCallback } from 'react'
+import { produce } from 'immer'
 import { useApolloClient } from '@apollo/client'
+import { CommonQuery, CommonDocument, useCommonQuery, User } from '@/graphql'
 
-import { CommonQuery, CommonDocument, useCommonQuery } from '@/graphql'
-import { GlobalUser } from '@/types/user'
-
-export const useGlobalUsers = () => {
+export const useOnlineUsers = () => {
   const client = useApolloClient()
 
   const { data } = useCommonQuery({
@@ -12,19 +11,20 @@ export const useGlobalUsers = () => {
   })
 
   const addOnlineUser = useCallback(
-    (user: GlobalUser) => {
+    (user: User) => {
       const data = client.readQuery<CommonQuery>({
         query: CommonDocument,
       })
 
       if (!data) return
 
+      const newData = produce(data, (draft) => {
+        draft.onlineUsers.push(user)
+      })
+
       client.writeQuery<CommonQuery>({
         query: CommonDocument,
-        data: {
-          ...data,
-          globalUsers: data.globalUsers.concat(user),
-        },
+        data: newData,
       })
     },
     [client],
@@ -42,7 +42,7 @@ export const useGlobalUsers = () => {
         query: CommonDocument,
         data: {
           ...data,
-          globalUsers: data.globalUsers.filter((u) => u.id !== id),
+          onlineUsers: data.onlineUsers.filter((u) => u.id !== id),
         },
       })
     },
@@ -50,7 +50,7 @@ export const useGlobalUsers = () => {
   )
 
   return {
-    onlineUsers: data?.globalUsers || [],
+    onlineUsers: data?.onlineUsers || [],
     addOnlineUser,
     removeOnlineUser,
   }

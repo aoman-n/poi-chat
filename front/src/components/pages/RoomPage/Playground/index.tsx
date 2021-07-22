@@ -7,7 +7,7 @@ const mainLoop = (
   userManager: UserManager,
   roomScreenPainter: RoomScreenPainter,
 ) => {
-  setInterval(() => {
+  return setInterval(() => {
     roomScreenPainter.draw(ctx)
     userManager.update()
     if (roomScreenPainter.isInitialized) {
@@ -35,12 +35,13 @@ const Playground: React.FC<PlaygroundProps> = ({
     const canvas = document.getElementById('canvas') as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const roomScreenPainter = new RoomScreenPainter({ bgColor, bgUrl })
-    mainLoop(ctx, userManager, roomScreenPainter)
+    const intervalId = mainLoop(ctx, userManager, roomScreenPainter)
 
     canvas.addEventListener('click', handleMovePos)
 
     return () => {
       canvas.removeEventListener('click', handleMovePos)
+      clearInterval(intervalId)
     }
   }, [])
 

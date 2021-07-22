@@ -16,7 +16,7 @@ export type Scalars = {
   Boolean: boolean
   Int: number
   Float: number
-  Time: string
+  Time: Date
 }
 
 export enum BalloonPosition {
@@ -63,40 +63,20 @@ export type Edge = {
   node: Node
 }
 
+export type EnteredPayload = {
+  __typename?: 'EnteredPayload'
+  roomUser: RoomUser
+}
+
 export type ExitedPayload = {
   __typename?: 'ExitedPayload'
   userId: Scalars['ID']
 }
 
-export type GlobalUser = {
-  __typename?: 'GlobalUser'
-  id: Scalars['ID']
-  name: Scalars['String']
-  avatarUrl: Scalars['String']
-  joined?: Maybe<Room>
-}
-
-/** ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ */
-export type GlobalUserEvent = OnlinedPayload | OfflinedPayload
-
-export type JoinedPayload = {
-  __typename?: 'JoinedPayload'
-  roomUser: RoomUser
-}
-
-export type Me = {
-  __typename?: 'Me'
-  id: Scalars['ID']
-  name: Scalars['String']
-  avatarUrl: Scalars['String']
-}
-
 export type Message = Node & {
   __typename?: 'Message'
   id: Scalars['ID']
-  userId: Scalars['ID']
-  userName: Scalars['String']
-  userAvatarUrl: Scalars['String']
+  user: User
   body: Scalars['String']
   createdAt: Scalars['Time']
 }
@@ -133,8 +113,10 @@ export type MovedPayload = {
 
 export type Mutation = {
   __typename?: 'Mutation'
-  sendMessage: SendMassagePaylaod
+  /** ルームの作成 */
   createRoom: CreateRoomPayload
+  /** メッセージの送信 */
+  sendMessage: SendMassagePaylaod
   /** ルーム内ユーザーのポジション移動 */
   move: MovePayload
   /** ルーム内ユーザーの吹き出し削除 */
@@ -143,12 +125,12 @@ export type Mutation = {
   changeBalloonPosition: ChangeBalloonPositionPayload
 }
 
-export type MutationSendMessageArgs = {
-  input?: Maybe<SendMessageInput>
-}
-
 export type MutationCreateRoomArgs = {
   input?: Maybe<CreateRoomInput>
+}
+
+export type MutationSendMessageArgs = {
+  input?: Maybe<SendMessageInput>
 }
 
 export type MutationMoveArgs = {
@@ -169,12 +151,12 @@ export type Node = {
 
 export type OfflinedPayload = {
   __typename?: 'OfflinedPayload'
-  userId: Scalars['ID']
+  user: User
 }
 
 export type OnlinedPayload = {
   __typename?: 'OnlinedPayload'
-  globalUser: GlobalUser
+  user: User
 }
 
 export type PageInfo = {
@@ -194,17 +176,15 @@ export type PaginationInput = {
 
 export type Query = {
   __typename?: 'Query'
-  node?: Maybe<Node>
+  /** ルーム一覧を取得 */
   rooms: RoomConnection
+  /** ルーム情報を取得 */
   room: Room
   /** ログイン中のユーザーが自身の情報を取得 */
-  me: Me
-  /** 本アプリケーションにオンラインしているユーザー一覧を取得 */
-  globalUsers: Array<GlobalUser>
-}
-
-export type QueryNodeArgs = {
-  id: Scalars['ID']
+  me: User
+  /** オンライン中のユーザー一覧を取得 */
+  onlineUsers: Array<User>
+  node?: Maybe<Node>
 }
 
 export type QueryRoomsArgs = {
@@ -214,6 +194,10 @@ export type QueryRoomsArgs = {
 }
 
 export type QueryRoomArgs = {
+  id: Scalars['ID']
+}
+
+export type QueryNodeArgs = {
   id: Scalars['ID']
 }
 
@@ -241,7 +225,6 @@ export type Room = Node & {
   totalUserCount: Scalars['Int']
   totalMessageCount: Scalars['Int']
   messages: MessageConnection
-  /** ルーム内のユーザー一覧を取得 */
   users: Array<RoomUser>
 }
 
@@ -272,8 +255,7 @@ export enum RoomOrderField {
 export type RoomUser = {
   __typename?: 'RoomUser'
   id: Scalars['ID']
-  name: Scalars['String']
-  avatarUrl: Scalars['String']
+  user: User
   x: Scalars['Int']
   y: Scalars['Int']
   lastMessage?: Maybe<Message>
@@ -282,7 +264,7 @@ export type RoomUser = {
 
 /** ルーム内のユーザーの行動を取得するためのイベントタイプ */
 export type RoomUserEvent =
-  | JoinedPayload
+  | EnteredPayload
   | ExitedPayload
   | MovedPayload
   | SentMassagePayload
@@ -307,13 +289,13 @@ export type SentMassagePayload = {
 export type Subscription = {
   __typename?: 'Subscription'
   /**
-   * ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション。
-   * このサブスクリプションを待ち受けると同時に自身をオンライン状態にする。
+   * ユーザーのオンラインステータスの更新を待ち受けるサブスクリプション
+   * このサブスクリプションを待ち受けると同時に自身をオンライン状態にする
    */
-  actedGlobalUserEvent?: Maybe<GlobalUserEvent>
+  actedUserEvent?: Maybe<UserEvent>
   /**
-   * ルーム内ユーザーのアクションを待ち受けるサブスクリプション。
-   * このサブスクリプションを待ち受けると同時に自身をルームに入室させる。
+   * ルーム内ユーザーのアクションを待ち受けるサブスクリプション
+   * このサブスクリプションを待ち受けると同時に自身をルームに入室させる
    */
   actedRoomUserEvent?: Maybe<RoomUserEvent>
 }
@@ -321,6 +303,18 @@ export type Subscription = {
 export type SubscriptionActedRoomUserEventArgs = {
   roomId: Scalars['ID']
 }
+
+export type User = {
+  __typename?: 'User'
+  id: Scalars['ID']
+  name: Scalars['String']
+  avatarUrl: Scalars['String']
+  /**  ルームに入室していなかったらnull  */
+  enteredRoom?: Maybe<Room>
+}
+
+/** ユーザーのオンライン・オフライン状態の変更を取得するためのイベントタイプ */
+export type UserEvent = OnlinedPayload | OfflinedPayload
 
 export type CreateRoomMutationVariables = Exact<{
   name: Scalars['String']
@@ -333,35 +327,12 @@ export type CreateRoomMutation = { __typename?: 'Mutation' } & {
   }
 }
 
-export type GlobalUserListFragment = { __typename?: 'Query' } & {
-  globalUsers: Array<{ __typename?: 'GlobalUser' } & GlobalUserFieldsFragment>
-}
-
-export type ActedGlobalUserEventSubscriptionVariables = Exact<{
-  [key: string]: never
+export type IndexPageQueryVariables = Exact<{
+  first: Scalars['Int']
+  after?: Maybe<Scalars['String']>
 }>
 
-export type ActedGlobalUserEventSubscription = {
-  __typename?: 'Subscription'
-} & {
-  actedGlobalUserEvent?: Maybe<
-    | ({ __typename: 'OnlinedPayload' } & {
-        globalUser: { __typename?: 'GlobalUser' } & GlobalUserFieldsFragment
-      })
-    | ({ __typename: 'OfflinedPayload' } & Pick<OfflinedPayload, 'userId'>)
-  >
-}
-
-export type GlobalUserFieldsFragment = { __typename?: 'GlobalUser' } & Pick<
-  GlobalUser,
-  'id' | 'name' | 'avatarUrl'
->
-
-export type IndexPageQueryVariables = Exact<{ [key: string]: never }>
-
-export type IndexPageQuery = { __typename?: 'Query' } & RoomListFragment
-
-export type RoomListFragment = { __typename?: 'Query' } & {
+export type IndexPageQuery = { __typename?: 'Query' } & {
   rooms: { __typename?: 'RoomConnection' } & Pick<
     RoomConnection,
     'roomCount'
@@ -370,39 +341,39 @@ export type RoomListFragment = { __typename?: 'Query' } & {
         PageInfo,
         'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
       >
-      nodes: Array<
-        { __typename?: 'Room' } & Pick<
-          Room,
-          'id' | 'name' | 'createdAt' | 'totalUserCount' | 'totalMessageCount'
-        >
+      nodes: Array<{ __typename?: 'Room' } & RoomFieldsForListFragment>
+      edges: Array<
+        { __typename?: 'RoomEdge' } & {
+          node: { __typename?: 'Room' } & RoomFieldsForListFragment
+        }
       >
     }
 }
+
+export type RoomFieldsForListFragment = { __typename?: 'Room' } & Pick<
+  Room,
+  'id' | 'name' | 'createdAt' | 'totalUserCount' | 'totalMessageCount'
+>
 
 export type RoomPageQueryVariables = Exact<{
   roomId: Scalars['ID']
   before?: Maybe<Scalars['String']>
 }>
 
-export type RoomPageQuery = { __typename?: 'Query' } & RoomFragment
-
-export type RoomFragment = { __typename?: 'Query' } & {
+export type RoomPageQuery = { __typename?: 'Query' } & {
   room: { __typename?: 'Room' } & Pick<
     Room,
     'id' | 'name' | 'bgColor' | 'bgUrl'
   > & {
       users: Array<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
-    } & PageMessagesFieldFragment
-}
-
-export type PageMessagesFieldFragment = { __typename?: 'Room' } & {
-  messages: { __typename?: 'MessageConnection' } & {
-    pageInfo: { __typename?: 'PageInfo' } & Pick<
-      PageInfo,
-      'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
-    >
-    nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
-  }
+      messages: { __typename?: 'MessageConnection' } & {
+        pageInfo: { __typename?: 'PageInfo' } & Pick<
+          PageInfo,
+          'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
+        >
+        nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
+      }
+    }
 }
 
 export type MoreRoomMessagesQueryVariables = Exact<{
@@ -437,11 +408,11 @@ export type MoveMutation = { __typename?: 'Mutation' } & {
   }
 }
 
-export type RemoveBalloonMutationVariables = Exact<{
+export type RemoveLastMessageMutationVariables = Exact<{
   roomId: Scalars['ID']
 }>
 
-export type RemoveBalloonMutation = { __typename?: 'Mutation' } & {
+export type RemoveLastMessageMutation = { __typename?: 'Mutation' } & {
   removeLastMessage: { __typename?: 'RemoveLastMessagePayload' } & {
     roomUser?: Maybe<{ __typename?: 'RoomUser' } & RoomUserFieldsFragment>
   }
@@ -464,99 +435,95 @@ export type ActedRoomUserEventSubscriptionVariables = Exact<{
 
 export type ActedRoomUserEventSubscription = { __typename?: 'Subscription' } & {
   actedRoomUserEvent?: Maybe<
-    | ({ __typename: 'JoinedPayload' } & {
+    | ({ __typename?: 'EnteredPayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
-    | ({ __typename: 'ExitedPayload' } & Pick<ExitedPayload, 'userId'>)
-    | ({ __typename: 'MovedPayload' } & {
+    | ({ __typename?: 'ExitedPayload' } & Pick<ExitedPayload, 'userId'>)
+    | ({ __typename?: 'MovedPayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
-    | ({ __typename: 'SentMassagePayload' } & {
+    | ({ __typename?: 'SentMassagePayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
-    | ({ __typename: 'RemovedLastMessagePayload' } & {
+    | ({ __typename?: 'RemovedLastMessagePayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
-    | ({ __typename: 'ChangedBalloonPositionPayload' } & {
+    | ({ __typename?: 'ChangedBalloonPositionPayload' } & {
         roomUser: { __typename?: 'RoomUser' } & RoomUserFieldsFragment
       })
   >
 }
 
+export type PageMessagesFieldFragment = { __typename?: 'Room' } & {
+  messages: { __typename?: 'MessageConnection' } & {
+    pageInfo: { __typename?: 'PageInfo' } & Pick<
+      PageInfo,
+      'startCursor' | 'endCursor' | 'hasNextPage' | 'hasPreviousPage'
+    >
+    nodes: Array<{ __typename?: 'Message' } & MessageFieldsFragment>
+  }
+}
+
 export type MessageFieldsFragment = { __typename?: 'Message' } & Pick<
   Message,
-  'id' | 'userId' | 'userName' | 'userAvatarUrl' | 'body' | 'createdAt'
->
+  'id' | 'body' | 'createdAt'
+> & { user: { __typename?: 'User' } & Pick<User, 'id' | 'name' | 'avatarUrl'> }
 
 export type RoomUserFieldsFragment = { __typename?: 'RoomUser' } & Pick<
   RoomUser,
-  'id' | 'name' | 'avatarUrl' | 'x' | 'y' | 'balloonPosition'
-> & { lastMessage?: Maybe<{ __typename?: 'Message' } & MessageFieldsFragment> }
+  'id' | 'x' | 'y' | 'balloonPosition'
+> & {
+    user: { __typename?: 'User' } & Pick<User, 'id' | 'name' | 'avatarUrl'>
+    lastMessage?: Maybe<{ __typename?: 'Message' } & MessageFieldsFragment>
+  }
 
 export type CommonQueryVariables = Exact<{ [key: string]: never }>
 
 export type CommonQuery = { __typename?: 'Query' } & {
-  me: { __typename?: 'Me' } & Pick<Me, 'id' | 'name' | 'avatarUrl'>
-} & GlobalUserListFragment
+  me: { __typename?: 'User' } & UserFieldsFragment
+  onlineUsers: Array<{ __typename?: 'User' } & UserFieldsFragment>
+}
 
-export const GlobalUserFieldsFragmentDoc = gql`
-  fragment GlobalUserFields on GlobalUser {
+export type UserFieldsFragment = { __typename?: 'User' } & Pick<
+  User,
+  'id' | 'name' | 'avatarUrl'
+>
+
+export type ActedUserEventSubscriptionVariables = Exact<{
+  [key: string]: never
+}>
+
+export type ActedUserEventSubscription = { __typename?: 'Subscription' } & {
+  actedUserEvent?: Maybe<
+    | ({ __typename?: 'OnlinedPayload' } & {
+        user: { __typename?: 'User' } & UserFieldsFragment
+      })
+    | ({ __typename?: 'OfflinedPayload' } & {
+        user: { __typename?: 'User' } & UserFieldsFragment
+      })
+  >
+}
+
+export const RoomFieldsForListFragmentDoc = gql`
+  fragment RoomFieldsForList on Room {
     id
     name
-    avatarUrl
-  }
-`
-export const GlobalUserListFragmentDoc = gql`
-  fragment GlobalUserList on Query {
-    globalUsers {
-      ...GlobalUserFields
-    }
-  }
-  ${GlobalUserFieldsFragmentDoc}
-`
-export const RoomListFragmentDoc = gql`
-  fragment RoomList on Query {
-    rooms {
-      pageInfo {
-        startCursor
-        endCursor
-        hasNextPage
-        hasPreviousPage
-      }
-      nodes {
-        id
-        name
-        createdAt
-        totalUserCount
-        totalMessageCount
-      }
-      roomCount
-    }
+    createdAt
+    totalUserCount
+    totalMessageCount
   }
 `
 export const MessageFieldsFragmentDoc = gql`
   fragment MessageFields on Message {
     id
-    userId
-    userName
-    userAvatarUrl
     body
     createdAt
-  }
-`
-export const RoomUserFieldsFragmentDoc = gql`
-  fragment RoomUserFields on RoomUser {
-    id
-    name
-    avatarUrl
-    x
-    y
-    lastMessage {
-      ...MessageFields
+    user {
+      id
+      name
+      avatarUrl
     }
-    balloonPosition
   }
-  ${MessageFieldsFragmentDoc}
 `
 export const PageMessagesFieldFragmentDoc = gql`
   fragment PageMessagesField on Room {
@@ -574,21 +541,29 @@ export const PageMessagesFieldFragmentDoc = gql`
   }
   ${MessageFieldsFragmentDoc}
 `
-export const RoomFragmentDoc = gql`
-  fragment Room on Query {
-    room(id: $roomId) {
+export const RoomUserFieldsFragmentDoc = gql`
+  fragment RoomUserFields on RoomUser {
+    id
+    user {
       id
       name
-      bgColor
-      bgUrl
-      users {
-        ...RoomUserFields
-      }
-      ...PageMessagesField
+      avatarUrl
     }
+    x
+    y
+    lastMessage {
+      ...MessageFields
+    }
+    balloonPosition
   }
-  ${RoomUserFieldsFragmentDoc}
-  ${PageMessagesFieldFragmentDoc}
+  ${MessageFieldsFragmentDoc}
+`
+export const UserFieldsFragmentDoc = gql`
+  fragment UserFields on User {
+    id
+    name
+    avatarUrl
+  }
 `
 export const CreateRoomDocument = gql`
   mutation CreateRoom($name: String!, $bgUrl: String!) {
@@ -643,59 +618,27 @@ export type CreateRoomMutationOptions = Apollo.BaseMutationOptions<
   CreateRoomMutation,
   CreateRoomMutationVariables
 >
-export const ActedGlobalUserEventDocument = gql`
-  subscription actedGlobalUserEvent {
-    actedGlobalUserEvent {
-      __typename
-      ... on OnlinedPayload {
-        globalUser {
-          ...GlobalUserFields
+export const IndexPageDocument = gql`
+  query IndexPage($first: Int!, $after: String) {
+    rooms(first: $first, after: $after, orderBy: LATEST) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        ...RoomFieldsForList
+      }
+      edges {
+        node {
+          ...RoomFieldsForList
         }
       }
-      ... on OfflinedPayload {
-        userId
-      }
+      roomCount
     }
   }
-  ${GlobalUserFieldsFragmentDoc}
-`
-
-/**
- * __useActedGlobalUserEventSubscription__
- *
- * To run a query within a React component, call `useActedGlobalUserEventSubscription` and pass it any options that fit your needs.
- * When your component renders, `useActedGlobalUserEventSubscription` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useActedGlobalUserEventSubscription({
- *   variables: {
- *   },
- * });
- */
-export function useActedGlobalUserEventSubscription(
-  baseOptions?: Apollo.SubscriptionHookOptions<
-    ActedGlobalUserEventSubscription,
-    ActedGlobalUserEventSubscriptionVariables
-  >,
-) {
-  const options = { ...defaultOptions, ...baseOptions }
-  return Apollo.useSubscription<
-    ActedGlobalUserEventSubscription,
-    ActedGlobalUserEventSubscriptionVariables
-  >(ActedGlobalUserEventDocument, options)
-}
-export type ActedGlobalUserEventSubscriptionHookResult = ReturnType<
-  typeof useActedGlobalUserEventSubscription
->
-export type ActedGlobalUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedGlobalUserEventSubscription>
-export const IndexPageDocument = gql`
-  query IndexPage {
-    ...RoomList
-  }
-  ${RoomListFragmentDoc}
+  ${RoomFieldsForListFragmentDoc}
 `
 
 /**
@@ -710,14 +653,13 @@ export const IndexPageDocument = gql`
  * @example
  * const { data, loading, error } = useIndexPageQuery({
  *   variables: {
+ *      first: // value for 'first'
+ *      after: // value for 'after'
  *   },
  * });
  */
 export function useIndexPageQuery(
-  baseOptions?: Apollo.QueryHookOptions<
-    IndexPageQuery,
-    IndexPageQueryVariables
-  >,
+  baseOptions: Apollo.QueryHookOptions<IndexPageQuery, IndexPageQueryVariables>,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
   return Apollo.useQuery<IndexPageQuery, IndexPageQueryVariables>(
@@ -747,9 +689,29 @@ export type IndexPageQueryResult = Apollo.QueryResult<
 >
 export const RoomPageDocument = gql`
   query RoomPage($roomId: ID!, $before: String) {
-    ...Room
+    room(id: $roomId) {
+      id
+      name
+      bgColor
+      bgUrl
+      users {
+        ...RoomUserFields
+      }
+      messages(last: 10, before: $before) {
+        pageInfo {
+          startCursor
+          endCursor
+          hasNextPage
+          hasPreviousPage
+        }
+        nodes {
+          ...MessageFields
+        }
+      }
+    }
   }
-  ${RoomFragmentDoc}
+  ${RoomUserFieldsFragmentDoc}
+  ${MessageFieldsFragmentDoc}
 `
 
 /**
@@ -961,8 +923,8 @@ export type MoveMutationOptions = Apollo.BaseMutationOptions<
   MoveMutation,
   MoveMutationVariables
 >
-export const RemoveBalloonDocument = gql`
-  mutation RemoveBalloon($roomId: ID!) {
+export const RemoveLastMessageDocument = gql`
+  mutation RemoveLastMessage($roomId: ID!) {
     removeLastMessage(input: { roomId: $roomId }) {
       roomUser {
         ...RoomUserFields
@@ -971,47 +933,47 @@ export const RemoveBalloonDocument = gql`
   }
   ${RoomUserFieldsFragmentDoc}
 `
-export type RemoveBalloonMutationFn = Apollo.MutationFunction<
-  RemoveBalloonMutation,
-  RemoveBalloonMutationVariables
+export type RemoveLastMessageMutationFn = Apollo.MutationFunction<
+  RemoveLastMessageMutation,
+  RemoveLastMessageMutationVariables
 >
 
 /**
- * __useRemoveBalloonMutation__
+ * __useRemoveLastMessageMutation__
  *
- * To run a mutation, you first call `useRemoveBalloonMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useRemoveBalloonMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useRemoveLastMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveLastMessageMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [removeBalloonMutation, { data, loading, error }] = useRemoveBalloonMutation({
+ * const [removeLastMessageMutation, { data, loading, error }] = useRemoveLastMessageMutation({
  *   variables: {
  *      roomId: // value for 'roomId'
  *   },
  * });
  */
-export function useRemoveBalloonMutation(
+export function useRemoveLastMessageMutation(
   baseOptions?: Apollo.MutationHookOptions<
-    RemoveBalloonMutation,
-    RemoveBalloonMutationVariables
+    RemoveLastMessageMutation,
+    RemoveLastMessageMutationVariables
   >,
 ) {
   const options = { ...defaultOptions, ...baseOptions }
   return Apollo.useMutation<
-    RemoveBalloonMutation,
-    RemoveBalloonMutationVariables
-  >(RemoveBalloonDocument, options)
+    RemoveLastMessageMutation,
+    RemoveLastMessageMutationVariables
+  >(RemoveLastMessageDocument, options)
 }
-export type RemoveBalloonMutationHookResult = ReturnType<
-  typeof useRemoveBalloonMutation
+export type RemoveLastMessageMutationHookResult = ReturnType<
+  typeof useRemoveLastMessageMutation
 >
-export type RemoveBalloonMutationResult = Apollo.MutationResult<RemoveBalloonMutation>
-export type RemoveBalloonMutationOptions = Apollo.BaseMutationOptions<
-  RemoveBalloonMutation,
-  RemoveBalloonMutationVariables
+export type RemoveLastMessageMutationResult = Apollo.MutationResult<RemoveLastMessageMutation>
+export type RemoveLastMessageMutationOptions = Apollo.BaseMutationOptions<
+  RemoveLastMessageMutation,
+  RemoveLastMessageMutationVariables
 >
 export const ChangeBalloonPositionDocument = gql`
   mutation ChangeBalloonPosition(
@@ -1074,8 +1036,7 @@ export type ChangeBalloonPositionMutationOptions = Apollo.BaseMutationOptions<
 export const ActedRoomUserEventDocument = gql`
   subscription actedRoomUserEvent($roomId: ID!) {
     actedRoomUserEvent(roomId: $roomId) {
-      __typename
-      ... on JoinedPayload {
+      ... on EnteredPayload {
         roomUser {
           ...RoomUserFields
         }
@@ -1143,13 +1104,13 @@ export type ActedRoomUserEventSubscriptionResult = Apollo.SubscriptionResult<Act
 export const CommonDocument = gql`
   query Common {
     me {
-      id
-      name
-      avatarUrl
+      ...UserFields
     }
-    ...GlobalUserList
+    onlineUsers {
+      ...UserFields
+    }
   }
-  ${GlobalUserListFragmentDoc}
+  ${UserFieldsFragmentDoc}
 `
 
 /**
@@ -1191,3 +1152,52 @@ export type CommonQueryResult = Apollo.QueryResult<
   CommonQuery,
   CommonQueryVariables
 >
+export const ActedUserEventDocument = gql`
+  subscription actedUserEvent {
+    actedUserEvent {
+      ... on OnlinedPayload {
+        user {
+          ...UserFields
+        }
+      }
+      ... on OfflinedPayload {
+        user {
+          ...UserFields
+        }
+      }
+    }
+  }
+  ${UserFieldsFragmentDoc}
+`
+
+/**
+ * __useActedUserEventSubscription__
+ *
+ * To run a query within a React component, call `useActedUserEventSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useActedUserEventSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useActedUserEventSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useActedUserEventSubscription(
+  baseOptions?: Apollo.SubscriptionHookOptions<
+    ActedUserEventSubscription,
+    ActedUserEventSubscriptionVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useSubscription<
+    ActedUserEventSubscription,
+    ActedUserEventSubscriptionVariables
+  >(ActedUserEventDocument, options)
+}
+export type ActedUserEventSubscriptionHookResult = ReturnType<
+  typeof useActedUserEventSubscription
+>
+export type ActedUserEventSubscriptionResult = Apollo.SubscriptionResult<ActedUserEventSubscription>

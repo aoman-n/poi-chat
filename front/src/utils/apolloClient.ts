@@ -39,11 +39,23 @@ const makeCache = () => {
           },
         },
       },
+      Message: {
+        fields: {
+          createdAt: {
+            // MEMO: https://github.com/apollographql/apollo-client/issues/585
+            // https://stackoverflow.com/questions/66085887/how-can-you-retrieve-a-date-field-in-apollo-client-from-a-query-as-a-date-and-no
+            read(existing) {
+              return new Date(existing)
+            },
+          },
+        },
+      },
       Room: {
         fields: {
           messages: {
             keyArgs: false,
             merge(existing, incoming, { readField }) {
+              console.log({ existing, incoming })
               if (!incoming) return existing
               if (!existing) return incoming
               const { nodes, ...rest } = incoming
@@ -60,13 +72,11 @@ const makeCache = () => {
                   .values(),
               )
               const sorted = filteredDup.sort((a, b) => {
-                const aId = readField('id', a)
-                const bId = readField('id', b)
-
-                if (typeof aId === 'string' && typeof bId === 'string') {
-                  if (aId > bId) return 1
-                }
-                return -1
+                const aCreatedAt = readField<Date>('createdAt', a)
+                const bCreatedAt = readField<Date>('createdAt', b)
+                return (
+                  (aCreatedAt?.getTime() || 0) - (bCreatedAt?.getTime() || 0)
+                )
               })
 
               result.nodes = sorted
@@ -84,7 +94,7 @@ const createLinks = () => {
 
   if (!process.browser) return httpLink
 
-  return split(
+  const links = split(
     ({ query }) => {
       const definition = getMainDefinition(query)
       return (
@@ -95,6 +105,8 @@ const createLinks = () => {
     getWsLink(),
     httpLink,
   )
+
+  return links
 }
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | null = null

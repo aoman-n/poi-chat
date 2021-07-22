@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSubscribeGlobalUserEvent } from './hooks'
 import { useAuthContext } from '@/contexts/auth'
+import withAuthcheckRequired from '@/components/domainParts/withAuthcheckRequired'
 import Header from './presenter'
 
 const HeaderContainer: React.FC = () => {
@@ -22,4 +23,6 @@ const HeaderContainer: React.FC = () => {
   return <Header {...props} />
 }
 
-export default HeaderContainer
+export default withAuthcheckRequired(HeaderContainer, () => (
+  <div>display skelton</div>
+))

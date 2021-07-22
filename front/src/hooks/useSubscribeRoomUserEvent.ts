@@ -25,9 +25,9 @@ export const useSubscribeRoomUserEvent = (
       const { actedRoomUserEvent } = subscriptionData.data
 
       switch (actedRoomUserEvent.__typename) {
-        case 'JoinedPayload': {
+        case 'EnteredPayload': {
           const { roomUser } = actedRoomUserEvent
-          enqueueSnackbar(`${roomUser.name} さんが入室しました`)
+          enqueueSnackbar(`${roomUser.user.name} さんが入室しました`)
           userManager.addUser(roomUser)
           break
         }

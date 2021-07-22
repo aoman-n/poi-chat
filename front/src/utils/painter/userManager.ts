@@ -1,16 +1,17 @@
-import { User, BalloonPosition } from './user'
-import { RoomFragment } from '@/graphql'
+import { User } from './user'
+import { BalloonPosition } from '@/constants'
+import { RoomUserFieldsFragment } from '@/graphql'
 
 export class UserManager {
   #users: User[]
 
-  constructor(roomUsers: RoomFragment['room']['users']) {
+  constructor(roomUsers: RoomUserFieldsFragment[]) {
     this.#users = roomUsers.map(
       (u) =>
         new User({
           id: u.id,
-          name: u.name,
-          avatarUrl: u.avatarUrl,
+          name: u.user.name,
+          avatarUrl: u.user.avatarUrl,
           currentX: u.x,
           currentY: u.y,
           lastMessage: u.lastMessage?.body || '',
@@ -31,12 +32,12 @@ export class UserManager {
     user?.changePos(targetX, targetY)
   }
 
-  addUser(roomUser: RoomFragment['room']['users'][0]) {
+  addUser(roomUser: RoomUserFieldsFragment) {
     this.#users.push(
       new User({
         id: roomUser.id,
-        name: roomUser.name,
-        avatarUrl: roomUser.avatarUrl,
+        name: roomUser.user.name,
+        avatarUrl: roomUser.user.avatarUrl,
         currentX: roomUser.x,
         currentY: roomUser.y,
       }),

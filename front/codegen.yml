@@ -15,7 +15,7 @@ generates:
       withComponent: false
       withHooks: true
       scalars:
-        Time: string
+        Time: Date
         ID: string
     hooks:
       afterOneFileWrite:

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { UserManager } from '@/utils/painter'
 import {
-  useRemoveBalloonMutation,
+  useRemoveLastMessageMutation,
   useChangeBalloonPositionMutation,
 } from '@/graphql'
 import { useCurrentUser } from '@/contexts/auth'
@@ -19,7 +19,7 @@ export const useBalloon = (userManager: UserManager, roomId: string) => {
     initialBalloonState,
   )
   const [changeBalloonPos] = useChangeBalloonPositionMutation()
-  const [removeBalloon] = useRemoveBalloonMutation()
+  const [removeLastMessage] = useRemoveLastMessageMutation()
 
   const handleChangeBalloonPos = (balloonPosition: BalloonPosition) => {
     if (currentUser) {
@@ -44,14 +44,14 @@ export const useBalloon = (userManager: UserManager, roomId: string) => {
   }
 
   const handleRemoveBalloon = useCallback(() => {
-    removeBalloon({
+    removeLastMessage({
       variables: { roomId },
     })
     setBalloonState((prev) => ({
       ...prev,
       hasBalloon: false,
     }))
-  }, [removeBalloon, roomId])
+  }, [removeLastMessage, roomId])
 
   const handleChangeInitialBalloonState = useCallback(() => {
     setBalloonState({

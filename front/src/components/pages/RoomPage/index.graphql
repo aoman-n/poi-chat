@@ -1,10 +1,4 @@
 query RoomPage ($roomId: ID!, $before: String) {
-  ...Room
-}
-
-# -----------------------------------
-# query fragments on root Query
-fragment Room on Query {
   room(id: $roomId) {
     id
     name
@@ -13,20 +7,17 @@ fragment Room on Query {
     users {
       ... RoomUserFields
     }
-    ... PageMessagesField
-  }
-}
 
-fragment PageMessagesField on Room {
-  messages(last: 10, before: $before) {
-    pageInfo {
-      startCursor
-      endCursor
-      hasNextPage
-      hasPreviousPage
-    }
-    nodes {
-      ... MessageFields
+    messages(last: 10, before: $before) {
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        ... MessageFields
+      }
     }
   }
 }
@@ -64,7 +55,7 @@ mutation Move($roomId: ID!, $x: Int!, $y: Int!) {
   }
 }
 
-mutation RemoveBalloon($roomId: ID!) {
+mutation RemoveLastMessage($roomId: ID!) {
   removeLastMessage(input: { roomId: $roomId }) {
     roomUser {
       ... RoomUserFields
@@ -87,8 +78,7 @@ mutation ChangeBalloonPosition($roomId: ID!, $balloonPosition: BalloonPosition!)
 # subscriptions
 subscription actedRoomUserEvent($roomId: ID!) {
   actedRoomUserEvent(roomId: $roomId) {
-    __typename
-    ... on JoinedPayload {
+    ... on EnteredPayload {
       roomUser {
         ... RoomUserFields
       }
@@ -121,19 +111,38 @@ subscription actedRoomUserEvent($roomId: ID!) {
 
 # -----------------------------------
 # fields fragments
+fragment PageMessagesField on Room {
+  messages(last: 10, before: $before) {
+    pageInfo {
+      startCursor
+      endCursor
+      hasNextPage
+      hasPreviousPage
+    }
+    nodes {
+      ... MessageFields
+    }
+  }
+}
+
 fragment MessageFields on Message {
   id
-  userId
-  userName
-  userAvatarUrl
   body
   createdAt
+  user {
+    id
+    name
+    avatarUrl
+  }
 }
 
 fragment RoomUserFields on RoomUser {
   id
-  name
-  avatarUrl
+  user {
+    id
+    name
+    avatarUrl
+  }
   x
   y
   lastMessage {
